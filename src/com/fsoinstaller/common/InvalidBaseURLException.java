@@ -19,6 +19,13 @@
 
 package com.fsoinstaller.common;
 
+/**
+ * Thrown when the application tries to construct a BaseURL without satisfying
+ * its preconditions.
+ * 
+ * @see com.fsoinstaller.common.BaseURL
+ * @author Goober5000
+ */
 public class InvalidBaseURLException extends Exception
 {
 	public InvalidBaseURLException()

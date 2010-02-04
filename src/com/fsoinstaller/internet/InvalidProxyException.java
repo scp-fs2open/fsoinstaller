@@ -17,31 +17,31 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-package com.fsoinstaller.common;
+package com.fsoinstaller.internet;
 
 /**
- * Thrown when an InstallerNode cannot be constructed from the supplied input.
+ * Thrown when the supplied information cannot be used to construct a proxy.
  * 
  * @author Goober5000
  */
-public class InstallerNodeParseException extends Exception
+public class InvalidProxyException extends Exception
 {
-	public InstallerNodeParseException()
+	public InvalidProxyException()
 	{
 		super();
 	}
 
-	public InstallerNodeParseException(String message, Throwable cause)
+	public InvalidProxyException(String message, Throwable cause)
 	{
 		super(message, cause);
 	}
 
-	public InstallerNodeParseException(String message)
+	public InvalidProxyException(String message)
 	{
 		super(message);
 	}
 
-	public InstallerNodeParseException(Throwable cause)
+	public InvalidProxyException(Throwable cause)
 	{
 		super(cause);
 	}
