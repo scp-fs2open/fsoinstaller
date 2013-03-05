@@ -231,6 +231,11 @@ public class ConfigPage extends WizardPage
 					ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "The Java security manager is prohibiting the installer from making any changes to the file system.  You will need to change the permissions in the Java control panel before the installer will be able to run successfully.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
+				else if (exception instanceof InterruptedException)
+				{
+					ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "Validation was interrupted.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					return;
+				}
 				else
 				{
 					ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "An unexpected runtime exception occurred.  Please visit Hard Light Productions for technical support.  Make sure you provide the log file.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
@@ -487,9 +492,6 @@ public class ConfigPage extends WizardPage
 									List<String> filenameLines = MiscUtils.readTextFile(tempFilenames);
 									if (!filenameLines.isEmpty())
 									{
-										settings.put(Configuration.REMOTE_VERSION_KEY, thisVersion);
-										settings.put(Configuration.MOD_URLS_KEY, filenameLines);
-										
 										maxVersion = thisVersion;
 										maxVersionURL = versionLines.get(1);
 										
@@ -508,6 +510,10 @@ public class ConfigPage extends WizardPage
 											if (!basicLines.isEmpty())
 												settings.put(Configuration.BASIC_CONFIG_MODS_KEY, basicLines);
 										}
+										
+										// save our settings... save REMOTE_VERSION_KEY last because it is tested in the if() blocks
+										settings.put(Configuration.MOD_URLS_KEY, filenameLines);
+										settings.put(Configuration.REMOTE_VERSION_KEY, thisVersion);
 									}
 								}
 							}
@@ -834,7 +840,8 @@ public class ConfigPage extends WizardPage
 					return null;
 			}
 			
-			// TODO: see about copying the GOG movies from data2 and data3 to data/movies
+			// TODO: if there are MVE files in data2 and data3 folders, offer to copy them to data/movies
+			// (this is where the GOG installer puts them)
 			
 			// directory is good to go
 			EventQueue.invokeLater(new Runnable()
