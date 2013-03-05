@@ -23,18 +23,24 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
 import com.fsoinstaller.common.BaseURL;
 import com.fsoinstaller.common.InstallerNode;
+import com.fsoinstaller.common.InstallerNodeFactory;
+import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
 import com.fsoinstaller.common.InstallerNode.RenamePair;
 import com.fsoinstaller.internet.Connector;
@@ -44,6 +50,7 @@ import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.ProgressBarDialog;
+import com.fsoinstaller.utils.MiscUtils;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
 
@@ -64,6 +71,10 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 		
 		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN));
 		setLayout(new BorderLayout(0, SMALL_MARGIN));
+		
+		
+		
+		
 		
 		bar = new JProgressBar(0, 100);
 		bar.setIndeterminate(true);
@@ -176,6 +187,9 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 			// these could be files to download, or they could later be files to extract
 			for (InstallUnit install: node.getInstallList())
 			{
+				// TODO
+				//todo();	// try mirrors in random order
+				
 				List<BaseURL> urls = install.getBaseURLList();
 				for (String file: install.getFileList())
 				{
@@ -336,5 +350,20 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 			item.setRatioComplete(((double) event.getDownloadedBytes()) / event.getTotalBytes());
 			item.setText("Downloading '" + file + "'..." + event.getDownloadedBytes() + " of " + event.getTotalBytes() + " bytes");
 		}
+	}
+	
+	public static void main(String[] args) throws IOException, InstallerNodeParseException
+	{
+		Reader reader = new FileReader("fsport.txt");
+		InstallerNode fsport = InstallerNodeFactory.readNode(reader);
+		reader.close();
+
+		JPanel panel = new InstallItem(fsport);
+		JFrame frame = new JFrame("test");
+		frame.setContentPane(panel);
+		frame.pack();
+		
+		MiscUtils.centerWindowOnScreen(frame);
+		frame.setVisible(true);
 	}
 }

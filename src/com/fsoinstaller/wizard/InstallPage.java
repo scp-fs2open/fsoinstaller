@@ -20,13 +20,9 @@
 package com.fsoinstaller.wizard;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -91,16 +87,16 @@ public class InstallPage extends WizardPage
 		for (String mod: selectedMods)
 			logger.info(mod);
 		
-		// prepare to bring out the big guns: create an ExecutorService
-		// IMPLEMENTATION DETAIL: since tasks are queued from the event thread, we need to use an implementation that never blocks on adding a task
-		ExecutorService exec = Executors.newCachedThreadPool();
-		
-		
+
 		// OK HERE'S HOW IT WORKS
 		
 		// submit an InstallItem for an individual node
 		// each InstallItem is basically its own task or thread
 		// if that node's future returns true (meaning success) then submit InstallItems for its child nodes		
+		
+		// OR
+		
+		// if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
 		
 		for (InstallerNode node: modNodes)
 		{
@@ -109,7 +105,7 @@ public class InstallPage extends WizardPage
 			
 			InstallItem item = new InstallItem(node);
 			installPanel.add(item);
-			Future<InstallItem> f = exec.submit(item);
+//			Future<InstallItem> f = exec.submit(item);
 			// TODO: do something with F
 		}
 		installPanel.add(Box.createGlue());
