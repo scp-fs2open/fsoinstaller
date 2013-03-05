@@ -165,6 +165,21 @@ public class Downloader
 			
 			return false;
 		}
+		catch (InterruptedException ie)
+		{
+			logger.warn("The download was interrupted!", ie);
+			fireDownloadFailed(destinationFile.getName(), 0, totalBytes, ie);
+			
+			// try to delete incomplete file
+			cleanup(inputStream, outputStream);
+			inputStream = null;
+			outputStream = null;
+			destinationFile.delete();
+			
+			// restore interrupt and exit
+			Thread.currentThread().interrupt();
+			return false;
+		}
 		finally
 		{
 			cleanup(inputStream, outputStream);
@@ -180,6 +195,7 @@ public class Downloader
 		long lastModified = -1;
 		ZipInputStream zipInputStream = null;
 		OutputStream outputStream = null;
+		File destinationFile = null;
 		try
 		{
 			logger.debug("Opening connection...");
@@ -204,7 +220,7 @@ public class Downloader
 				}
 				
 				logger.debug("Checking if the file is up to date...");
-				File destinationFile = new File(destinationDirectory, currentEntry);
+				destinationFile = new File(destinationDirectory, currentEntry);
 				if (uptodate(destinationFile, totalBytes))
 				{
 					fireNoDownloadNecessary(destinationFile.getName(), 0, totalBytes);
@@ -237,6 +253,22 @@ public class Downloader
 			logger.error("An exception was thrown during download!", ioe);
 			fireDownloadFailed(currentEntry, 0, totalBytes, ioe);
 			
+			return false;
+		}
+		catch (InterruptedException ie)
+		{
+			logger.warn("The download was interrupted!", ie);
+			fireDownloadFailed(currentEntry, 0, totalBytes, ie);
+			
+			// try to delete incomplete file
+			cleanup(zipInputStream, outputStream);
+			zipInputStream = null;
+			outputStream = null;
+			if (destinationFile != null)
+				destinationFile.delete();
+			
+			// restore interrupt and exit
+			Thread.currentThread().interrupt();
 			return false;
 		}
 		finally
@@ -539,7 +571,7 @@ public class Downloader
 		};
 	}
 	
-	protected void downloadUsingStreams(InputStream inputStream, OutputStream outputStream, String downloadName, long downloadTotalSize) throws IOException
+	protected void downloadUsingStreams(InputStream inputStream, OutputStream outputStream, String downloadName, long downloadTotalSize) throws IOException, InterruptedException
 	{
 		long totalBytesWritten = 0;
 		
@@ -549,8 +581,16 @@ public class Downloader
 		int bytesRead = 0;
 		while ((bytesRead = inputStream.read(downloadBuffer)) != -1)
 		{
+			// check for thread interruption
+			if (Thread.interrupted())
+				throw new InterruptedException("Thread was interrupted during stream reading");
+			
 			outputStream.write(downloadBuffer, 0, bytesRead);
 			totalBytesWritten += bytesRead;
+			
+			// check for thread interruption
+			if (Thread.interrupted())
+				throw new InterruptedException("Thread was interrupted during stream writing");
 			
 			fireProgressReport(downloadName, totalBytesWritten, downloadTotalSize);
 		}
