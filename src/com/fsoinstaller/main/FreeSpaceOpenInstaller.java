@@ -20,6 +20,10 @@
 package com.fsoinstaller.main;
 
 import java.awt.EventQueue;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -53,8 +57,62 @@ public class FreeSpaceOpenInstaller
 		"http://scp.indiegames.us/fsoinstaller/"
 	};
 	
+	/**
+	 * Use the Initialization On Demand Holder idiom for thread-safe
+	 * non-synchronized singletons.
+	 */
+	private static final class InstanceHolder
+	{
+		private static final FreeSpaceOpenInstaller INSTANCE = new FreeSpaceOpenInstaller();
+	}
+	
+	public static FreeSpaceOpenInstaller getInstance()
+	{
+		return InstanceHolder.INSTANCE;
+	}
+	
+	private final ExecutorService executorService;
+	
 	private FreeSpaceOpenInstaller()
 	{
+		// create thread pool to manage long-running tasks, such as file downloads
+		executorService = Executors.newFixedThreadPool(20);
+	}
+	
+	public ExecutorService getExecutorService()
+	{
+		return executorService;
+	}
+	
+	private void launchWizard()
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				logger.debug("Launching wizard...");
+				
+				// visual elements
+				InstallerGUI gui = new InstallerGUI();
+				gui.buildUI();
+				gui.pack();
+				
+				// window closing behavior
+				gui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				gui.addWindowListener(new WindowAdapter()
+				{
+					@Override
+					public void windowClosed(WindowEvent e)
+					{
+						executorService.shutdown();
+					}
+				});
+				
+				// display it
+				MiscUtils.centerWindowOnScreen(gui);
+				gui.setVisible(true);
+			}
+		});
 	}
 	
 	public static void main(String[] args)
@@ -88,20 +146,10 @@ public class FreeSpaceOpenInstaller
 			}
 		});
 		
+		FreeSpaceOpenInstaller installer = getInstance();
+		
 		// for now, we only have one possible operation: going through the wizard
-		EventQueue.invokeLater(new Runnable()
-		{
-			public void run()
-			{
-				logger.debug("Launching wizard...");
-				InstallerGUI gui = new InstallerGUI();
-				gui.buildUI();
-				gui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				gui.pack();
-				MiscUtils.centerWindowOnScreen(gui);
-				gui.setVisible(true);
-			}
-		});
+		installer.launchWizard();
 		
 		// later we'll evaluate the runtime args to launch the txtfile builder, etc.
 	}
