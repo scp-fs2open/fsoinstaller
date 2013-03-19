@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -75,11 +76,15 @@ public class Downloader
 	protected final URL sourceURL;
 	protected final File destination;
 	
+	protected final AtomicReference<Thread> downloadThread;
+	
 	public Downloader(Connector connector, URL sourceURL, File destination)
 	{
 		this.connector = connector;
 		this.sourceURL = sourceURL;
 		this.destination = destination;
+		
+		this.downloadThread = new AtomicReference<Thread>(null);
 		
 		// woot, CopyOnWriteArrayList is A-1 SUPAR as a listener list;
 		// see http://www.ibm.com/developerworks/java/library/j-jtp07265/index.html
@@ -88,6 +93,9 @@ public class Downloader
 	
 	public boolean download()
 	{
+		if (downloadThread.getAndSet(Thread.currentThread()) != null)
+			throw new IllegalStateException("Cannot download more than once with the same downloader!");
+		
 		// if downloading to a directory, put the source file inside it with the same name
 		// (or names, in the case of an archive)
 		if (destination.isDirectory())
@@ -116,6 +124,15 @@ public class Downloader
 		{
 			return downloadFile(sourceURL, destination);
 		}
+	}
+	
+	public void cancel()
+	{
+		Thread thread = downloadThread.get();
+		if (thread == null)
+			throw new IllegalStateException("Download hasn't started yet!");
+		
+		thread.interrupt();
 	}
 	
 	protected boolean downloadFile(URL sourceURL, File destinationFile)
