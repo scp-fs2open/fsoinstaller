@@ -20,6 +20,7 @@
 package com.fsoinstaller.main;
 
 import java.awt.EventQueue;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.ExecutorService;
@@ -118,6 +119,14 @@ public class FreeSpaceOpenInstaller
 	
 	public static void main(String[] args)
 	{
+		// this can sometimes happen with a borked Ubuntu configuration...
+		if (GraphicsEnvironment.isHeadless())
+		{
+			logger.error("Sorry, this application cannot be run in a headless environment!");
+			logger.error("(This means that either your system does not have a display, keyboard, and mouse installed, or your version of Java does not support one of these methods of user interaction.  For example, Ubuntu will sometimes install a version of Java without graphics libraries.  In this case, you will need to reinstall the full version.)");
+			return;
+		}
+		
 		// Swing code goes on the event-dispatching thread...
 		EventQueue.invokeLater(new Runnable()
 		{
