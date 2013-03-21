@@ -98,6 +98,8 @@ public class InstallPage extends WizardPage
 		
 		// if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
 		
+		
+		// iterate through the mod nodes so we keep the proper order
 		for (InstallerNode node: modNodes)
 		{
 			if (!selectedMods.contains(node.getName()))

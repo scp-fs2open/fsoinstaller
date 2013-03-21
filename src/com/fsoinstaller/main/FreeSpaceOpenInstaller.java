@@ -106,7 +106,8 @@ public class FreeSpaceOpenInstaller
 					@Override
 					public void windowClosed(WindowEvent e)
 					{
-						executorService.shutdown();
+						// shut down immediately because we're exiting
+						executorService.shutdownNow();
 					}
 				});
 				
