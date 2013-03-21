@@ -24,6 +24,10 @@ public final class GUIConstants
 	public static final int DEFAULT_MARGIN = 10;
 	public static final int SMALL_MARGIN = 5;
 	
+	public static final int BAR_MAXIMUM = 100000;
+	
 	// prevent instantiation
-	private GUIConstants() {}
+	private GUIConstants()
+	{
+	}
 }
