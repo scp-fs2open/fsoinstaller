@@ -31,5 +31,9 @@ L2FProd.com - Common Components (e.g. JDirectoryChooser)
 http://www.l2fprod.com/common/contribute.php
 "The library is free for commercial and non-commercial applications."
 
+Silk icon set 1.3 by Mark James
+http://www.famfamfam.com/lab/icons/silk/
+Creative Commons Attribution 2.5 License
+
 Non-FS2SCP-controlled components provide source code at their respective websites.  However, the
 text of all licenses can be found in the FSO Installer jar package.
