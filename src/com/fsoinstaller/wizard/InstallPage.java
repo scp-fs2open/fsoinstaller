@@ -31,9 +31,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
+import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.Logger;
 
 
@@ -42,6 +45,7 @@ public class InstallPage extends WizardPage
 	private static final Logger logger = Logger.getLogger(ModSelectPage.class);
 	
 	private final JPanel installPanel;
+	private int remainingMods;
 	
 	public InstallPage()
 	{
@@ -60,7 +64,12 @@ public class InstallPage extends WizardPage
 		labelPanel.add(new JLabel("Installing..."));
 		labelPanel.add(Box.createHorizontalGlue());
 		
-		JScrollPane installScrollPane = new JScrollPane(installPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		// this little trick prevents the install items from stretching if there aren't enough to fill the vertical space
+		JPanel scrollPanel = new JPanel(new BorderLayout());
+		scrollPanel.add(installPanel, BorderLayout.NORTH);
+		scrollPanel.add(Box.createGlue(), BorderLayout.CENTER);
+		
+		JScrollPane installScrollPane = new JScrollPane(scrollPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
 		JPanel panel = new JPanel(new BorderLayout(0, GUIConstants.DEFAULT_MARGIN));
 		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
@@ -74,7 +83,7 @@ public class InstallPage extends WizardPage
 	public void prepareForDisplay()
 	{
 		backButton.setVisible(false);
-		nextButton.setVisible(false);
+		nextButton.setEnabled(false);
 		
 		Map<String, Object> settings = configuration.getSettings();
 		@SuppressWarnings("unchecked")
@@ -87,17 +96,7 @@ public class InstallPage extends WizardPage
 		for (String mod: selectedMods)
 			logger.info(mod);
 		
-
-		// OK HERE'S HOW IT WORKS
-		
-		// submit an InstallItem for an individual node
-		// each InstallItem is basically its own task or thread
-		// if that node's future returns true (meaning success) then submit InstallItems for its child nodes		
-		
-		// OR
-		
-		// if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
-		
+		remainingMods = 0;
 		
 		// iterate through the mod nodes so we keep the proper order
 		for (InstallerNode node: modNodes)
@@ -105,21 +104,43 @@ public class InstallPage extends WizardPage
 			if (!selectedMods.contains(node.getName()))
 				continue;
 			
+			// add item's GUI to the panel
 			InstallItem item = new InstallItem(node);
 			installPanel.add(item);
-//			Future<InstallItem> f = exec.submit(item);
-			// TODO: do something with F
+			
+			// keep track of mods that have completed
+			remainingMods++;
+			item.addCompletionListener(new ChangeListener()
+			{
+				@Override
+				public void stateChanged(ChangeEvent e)
+				{
+					remainingMods--;
+					
+					// if ALL of the nodes have completed, do some more stuff
+					if (remainingMods == 0)
+						installCompleted();
+				}
+			});
+			
+			// let's go!
+			item.start();
 		}
 		installPanel.add(Box.createGlue());
+	}
+	
+	protected void installCompleted()
+	{
+		nextButton.setEnabled(true);
+		cancelButton.setEnabled(false);
 		
-		// TODO: note that the ExecutorService isn't going to terminate automatically, so we need to shut it down properly in success or failure
-		
+		// note that the ExecutorService isn't going to terminate automatically, so we need to shut it down properly in success or failure		
+		FreeSpaceOpenInstaller.getInstance().getExecutorService().shutdown();
 	}
 	
 	@Override
 	public void prepareToLeavePage(Runnable runWhenReady)
 	{
-		// TODO
-		//runWhenReady.run();
+		runWhenReady.run();
 	}
 }

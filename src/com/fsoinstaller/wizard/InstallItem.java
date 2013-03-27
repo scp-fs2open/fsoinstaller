@@ -20,7 +20,6 @@
 package com.fsoinstaller.wizard;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileReader;
@@ -29,13 +28,22 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.fsoinstaller.common.BaseURL;
 import com.fsoinstaller.common.InstallerNode;
@@ -48,54 +56,97 @@ import com.fsoinstaller.internet.DownloadEvent;
 import com.fsoinstaller.internet.DownloadListener;
 import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.main.Configuration;
+import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.utils.CollapsiblePanel;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.ProgressBarDialog;
 import com.fsoinstaller.utils.MiscUtils;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
 
 
-public class InstallItem extends JPanel implements Callable<InstallItem>
+public class InstallItem extends JPanel
 {
 	private static final Logger logger = Logger.getLogger(InstallItem.class);
 	
 	private final InstallerNode node;
-	private final JProgressBar bar;
+	private final List<ChangeListener> listenerList;
 	
-	private volatile boolean success = false;
+	private final JProgressBar overallBar;
+	private final JButton cancelButton;
+	private final StoplightPanel stoplightPanel;
 	
 	public InstallItem(InstallerNode node)
 	{
 		super();
 		this.node = node;
+		this.listenerList = new CopyOnWriteArrayList<ChangeListener>();
 		
 		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN));
-		setLayout(new BorderLayout(0, SMALL_MARGIN));
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
+		overallBar = new JProgressBar(0, GUIConstants.BAR_MAXIMUM);
+		overallBar.setIndeterminate(true);
+		overallBar.setString("Installing...");
+		overallBar.setStringPainted(true);
 		
+		cancelButton = new JButton("Cancel");
 		
+		stoplightPanel = new StoplightPanel((int) cancelButton.getPreferredSize().getHeight());
 		
+		JPanel progressPanel = new JPanel();
+		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
+		progressPanel.add(overallBar);
+		progressPanel.add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
+		progressPanel.add(cancelButton);
+		progressPanel.add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
+		progressPanel.add(stoplightPanel);
 		
-		bar = new JProgressBar(0, 100);
-		bar.setIndeterminate(true);
-		bar.setString(ProgressBarDialog.INDETERMINATE_STRING);
-		bar.setStringPainted(true);
-		bar.setPreferredSize(new Dimension((int) bar.getPreferredSize().getWidth(), (int) bar.getMinimumSize().getHeight()));
-		bar.setMaximumSize(new Dimension((int) bar.getMaximumSize().getWidth(), (int) bar.getMinimumSize().getHeight()));
+		JPanel headerPanel = new JPanel(new BorderLayout(0, GUIConstants.SMALL_MARGIN));
+		headerPanel.add(new JLabel(node.getName()), BorderLayout.NORTH);
+		headerPanel.add(progressPanel, BorderLayout.CENTER);
 		
-		add(new JLabel(node.getName()), BorderLayout.NORTH);
-		add(bar, BorderLayout.CENTER);
+		JPanel downloadsPanel = new JPanel();
+		downloadsPanel.setLayout(new BoxLayout(downloadsPanel, BoxLayout.Y_AXIS));
+		downloadsPanel.add(new DownloadPanel());
+		downloadsPanel.add(new DownloadPanel());
+		downloadsPanel.add(new DownloadPanel());
 		
-		setMaximumSize(new Dimension((int) getMaximumSize().getWidth(), (int) getPreferredSize().getHeight()));
+		CollapsiblePanel panel = new CollapsiblePanel(headerPanel, downloadsPanel);
+		panel.setCollapsed(true);
+		
+		add(panel);
+		add(Box.createGlue());
+		
+		// TODO if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
+		
 	}
 	
-	public boolean wasInstallSuccessful()
+	public void addCompletionListener(ChangeListener listener)
 	{
-		return success;
+		listenerList.add(listener);
 	}
 	
-	public void cancel()
+	public void removeCompletionListener(ChangeListener listener)
 	{
+		listenerList.remove(listener);
+	}
+	
+	protected void fireCompletion()
+	{
+		ChangeEvent event = null;
+		
+		for (ChangeListener listener: listenerList)
+		{
+			if (event == null)
+				event = new ChangeEvent(node);
+			
+			listener.stateChanged(event);
+		}
+	}
+	
+	public void start()
+	{
+		// TODO
 	}
 	
 	/**
@@ -210,7 +261,7 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 		}
 		
 		setText("Done!");
-		success = true;
+		fireCompletion();
 		return this;
 	}
 	
@@ -259,7 +310,7 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 		{
 			public void run()
 			{
-				bar.setIndeterminate(indeterminate);
+				overallBar.setIndeterminate(indeterminate);
 			}
 		});
 	}
@@ -276,7 +327,7 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 		{
 			public void run()
 			{
-				bar.setValue(_percent);
+				overallBar.setValue(_percent);
 			}
 		});
 	}
@@ -292,7 +343,7 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 		{
 			public void run()
 			{
-				bar.setString(text);
+				overallBar.setString(text);
 			}
 		});
 	}
@@ -352,18 +403,33 @@ public class InstallItem extends JPanel implements Callable<InstallItem>
 		}
 	}
 	
-	public static void main(String[] args) throws IOException, InstallerNodeParseException
+	public static void main(String[] args) throws IOException, InstallerNodeParseException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException
 	{
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		
 		Reader reader = new FileReader("fsport.txt");
 		InstallerNode fsport = InstallerNodeFactory.readNode(reader);
 		reader.close();
-
-		JPanel panel = new InstallItem(fsport);
+		
+		// this little trick prevents the install items from stretching if there aren't enough to fill the vertical space
+		JPanel scrollPanel = new JPanel(new BorderLayout());
+		scrollPanel.add(new InstallItem(fsport), BorderLayout.NORTH);
+		scrollPanel.add(Box.createGlue(), BorderLayout.CENTER);
+		
+		JScrollPane installScrollPane = new JScrollPane(scrollPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		JPanel panel = new JPanel(new BorderLayout(0, GUIConstants.DEFAULT_MARGIN));
+		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
+		panel.add(installScrollPane, BorderLayout.CENTER);
+		
 		JFrame frame = new JFrame("test");
 		frame.setContentPane(panel);
 		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		MiscUtils.centerWindowOnScreen(frame);
 		frame.setVisible(true);
+		
+		FreeSpaceOpenInstaller.getInstance().getExecutorService().shutdown();
 	}
 }
