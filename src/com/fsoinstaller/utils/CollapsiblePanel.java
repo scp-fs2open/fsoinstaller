@@ -48,7 +48,12 @@ public class CollapsiblePanel extends JPanel
 	private final JButton toggleButton;
 	private final JPanel disappearingPanel;
 	
-	public CollapsiblePanel(String headerText, JComponent component)
+	public CollapsiblePanel(String headerText, JComponent collapsingComponent)
+	{
+		this(new JLabel(headerText), collapsingComponent);
+	}
+	
+	public CollapsiblePanel(JComponent headerComponent, JComponent collapsingComponent)
 	{
 		toggleButton = new JButton(arrow_down);
 		toggleButton.setMargin(new Insets(0, 0, 0, 0));
@@ -61,18 +66,25 @@ public class CollapsiblePanel extends JPanel
 			}
 		});
 		
-		JLabel headerLabel = new JLabel(headerText);
+		// gotta set the alignments so that the components don't float around
+		toggleButton.setAlignmentY(TOP_ALIGNMENT);
+		Box.Filler filler1 = (Box.Filler) Box.createRigidArea(new Dimension(GUIConstants.SMALL_MARGIN, 0));
+		filler1.setAlignmentY(TOP_ALIGNMENT);
+		headerComponent.setAlignmentY(TOP_ALIGNMENT);
+		Box.Filler filler2 = (Box.Filler) Box.createHorizontalGlue();
+		filler2.setAlignmentY(TOP_ALIGNMENT);
 		
+		// now add them
 		JPanel headerPanel = new JPanel();
 		headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.X_AXIS));
 		headerPanel.add(toggleButton);
-		headerPanel.add(Box.createRigidArea(new Dimension(GUIConstants.SMALL_MARGIN, 0)));
-		headerPanel.add(headerLabel);
-		headerPanel.add(Box.createHorizontalGlue());
+		headerPanel.add(filler1);
+		headerPanel.add(headerComponent);
+		headerPanel.add(filler2);
 		
 		disappearingPanel = new JPanel(new BorderLayout());
-		disappearingPanel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN + arrow_right.getIconWidth() + 2, 0, 0));
-		disappearingPanel.add(component, BorderLayout.CENTER);
+		disappearingPanel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, arrow_right.getIconWidth() + GUIConstants.SMALL_MARGIN, 0, 0));
+		disappearingPanel.add(collapsingComponent, BorderLayout.CENTER);
 		
 		// and now put everything together
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
