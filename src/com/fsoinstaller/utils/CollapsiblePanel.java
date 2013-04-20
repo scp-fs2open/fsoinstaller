@@ -59,7 +59,6 @@ public class CollapsiblePanel extends JPanel
 		toggleButton.setMargin(new Insets(0, 0, 0, 0));
 		toggleButton.addActionListener(new ActionListener()
 		{
-			@Override
 			public void actionPerformed(ActionEvent e)
 			{
 				setCollapsed(!collapsed);

@@ -72,7 +72,6 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		stoplightPanel.setPending();
 	}
 	
-	@Override
 	public void downloadAboutToStart(DownloadEvent event)
 	{
 		progressBar.setString(event.getDownloadName() + ": 0 of " + event.getTotalBytes() + " bytes");
@@ -80,7 +79,6 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		progressBar.setValue(0);
 	}
 	
-	@Override
 	public void downloadProgressReport(DownloadEvent event)
 	{
 		progressBar.setString(event.getDownloadName() + ": " + event.getDownloadedBytes() + " of " + event.getTotalBytes() + " bytes");
@@ -88,7 +86,6 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		progressBar.setValue((int) ((double) event.getDownloadedBytes() / event.getTotalBytes() * GUIConstants.BAR_MAXIMUM));
 	}
 	
-	@Override
 	public void downloadNotNecessary(DownloadEvent event)
 	{
 		progressBar.setString(event.getDownloadName() + ": Up to date");
@@ -98,7 +95,6 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		stoplightPanel.setSuccess();
 	}
 	
-	@Override
 	public void downloadComplete(DownloadEvent event)
 	{
 		progressBar.setString(event.getDownloadName() + ": Complete");
@@ -108,7 +104,6 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		stoplightPanel.setSuccess();
 	}
 	
-	@Override
 	public void downloadFailed(DownloadEvent event)
 	{
 		progressBar.setString(event.getDownloadName() + ": Failed");

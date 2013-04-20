@@ -112,7 +112,6 @@ public class InstallPage extends WizardPage
 			remainingMods++;
 			item.addCompletionListener(new ChangeListener()
 			{
-				@Override
 				public void stateChanged(ChangeEvent e)
 				{
 					remainingMods--;
