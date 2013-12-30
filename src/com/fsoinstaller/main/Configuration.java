@@ -143,10 +143,10 @@ public class Configuration
 		return userProperties;
 	}
 	
-	public void saveUserProperties()
+	public boolean saveUserProperties()
 	{
 		String userPropertiesName = applicationProperties.getProperty("application.userproperties", "fsoinstaller.properties");
-		PropertiesUtils.saveProperties(userPropertiesName, userProperties);
+		return PropertiesUtils.saveProperties(userPropertiesName, userProperties);
 	}
 	
 	public String getProxyHost()

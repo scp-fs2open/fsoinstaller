@@ -73,11 +73,11 @@ public class PropertiesUtils
 		return null;
 	}
 	
-	public static void saveProperties(String resource, Properties properties)
+	public static boolean saveProperties(String resource, Properties properties)
 	{
 		// try file in home dir
 		File file = new File(System.getProperty("user.home"), resource);
-		savePropertiesToFile(file, properties);
+		return savePropertiesToFile(file, properties);
 	}
 	
 	public static Properties loadPropertiesFromFile(File file)
@@ -99,17 +99,18 @@ public class PropertiesUtils
 		return null;
 	}
 	
-	public static void savePropertiesToFile(File file, Properties properties)
+	public static boolean savePropertiesToFile(File file, Properties properties)
 	{
 		logger.info("Saving properties to '" + file.getName() + "'");
 		try
 		{
 			OutputStream os = new FileOutputStream(file);
-			savePropertiesToStream(os, properties);
+			return savePropertiesToStream(os, properties);
 		}
 		catch (FileNotFoundException fnfe)
 		{
 			logger.error("The properties file could not be opened for writing!", fnfe);
+			return false;
 		}
 	}
 	
@@ -137,7 +138,7 @@ public class PropertiesUtils
 		return null;
 	}
 	
-	public static void savePropertiesToStream(OutputStream os, Properties properties)
+	public static boolean savePropertiesToStream(OutputStream os, Properties properties)
 	{
 		logger.info("Saving properties to output stream");
 		try
@@ -150,10 +151,12 @@ public class PropertiesUtils
 			{
 				os.close();
 			}
+			return true;
 		}
 		catch (IOException ioe)
 		{
 			logger.error("There was a problem writing the properties object to the output stream!", ioe);
+			return false;
 		}
 	}
 }

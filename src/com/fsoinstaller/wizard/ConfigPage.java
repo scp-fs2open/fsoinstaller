@@ -61,9 +61,11 @@ import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.internet.InvalidProxyException;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.ProgressBarDialog;
+import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.l2fprod.common.swing.JDirectoryChooser;
 
@@ -217,28 +219,33 @@ public class ConfigPage extends WizardPage
 		{
 			public void run()
 			{
-				MiscUtils.getActiveFrame().dispose();
+				SwingUtils.getActiveFrame().dispose();
 			}
 		};
 		
 		// exception callback
-		final ProgressBarDialog.ExceptionCallback callback = new ProgressBarDialog.ExceptionCallback()
+		final ProgressBarDialog.AbnormalTerminationCallback callback = new ProgressBarDialog.AbnormalTerminationCallback()
 		{
+			public void handleCancellation()
+			{
+				ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "Validation was cancelled!", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+			}
+			
 			public void handleException(Exception exception)
 			{
 				if (exception instanceof SecurityException)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "The Java security manager is prohibiting the installer from making any changes to the file system.  You will need to change the permissions in the Java control panel before the installer will be able to run successfully.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The Java security manager is prohibiting the installer from making any changes to the file system.  You will need to change the permissions in the Java control panel before the installer will be able to run successfully.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
 				else if (exception instanceof InterruptedException)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "Validation was interrupted.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "Validation was interrupted.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 				else
 				{
-					ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "An unexpected runtime exception occurred.  Please visit Hard Light Productions for technical support.  Make sure you provide the log file.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "An unexpected runtime exception occurred.  Please visit Hard Light Productions for technical support.  Make sure you provide the log file.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
 			}
@@ -262,14 +269,14 @@ public class ConfigPage extends WizardPage
 			{
 				public void run()
 				{
-					Callable<Void> gog = new DirectoryTask((JFrame) MiscUtils.getActiveFrame(), directoryField.getText(), runWhenReady, exitRunnable);
+					Callable<Void> gog = new DirectoryTask((JFrame) SwingUtils.getActiveFrame(), directoryField.getText(), runWhenReady, exitRunnable);
 					ProgressBarDialog dialog = new ProgressBarDialog("Checking the installation directory...");
 					dialog.runTask(gog, callback);
 				}
 			};
 		}
 		
-		Callable<Void> validation = new SuperValidationTask((JFrame) MiscUtils.getActiveFrame(), directoryField.getText(), usingProxy, hostField.getText(), portField.getText(), toRunNext, exitRunnable);
+		Callable<Void> validation = new SuperValidationTask((JFrame) SwingUtils.getActiveFrame(), directoryField.getText(), usingProxy, hostField.getText(), portField.getText(), toRunNext, exitRunnable);
 		ProgressBarDialog dialog = new ProgressBarDialog("Setting up the installer...");
 		dialog.runTask(validation, callback);
 	}
@@ -293,7 +300,7 @@ public class ConfigPage extends WizardPage
 			chooser.setShowingCreateDirectory(false);
 			
 			// display it
-			int result = chooser.showDialog(MiscUtils.getActiveFrame(), "OK");
+			int result = chooser.showDialog(SwingUtils.getActiveFrame(), "OK");
 			if (result == JDirectoryChooser.APPROVE_OPTION)
 				directoryField.setText(chooser.getSelectedFile().getAbsolutePath());
 		}
@@ -341,6 +348,33 @@ public class ConfigPage extends WizardPage
 			// Configuration and its maps are thread-safe
 			this.configuration = Configuration.getInstance();
 			this.settings = configuration.getSettings();
+		}
+		
+		/**
+		 * Cleans up the validation task if there is an interrupt in the first
+		 * phase.
+		 */
+		private Void cleanupPhaseA()
+		{
+			logger.info("Rolling back Phase A validation");
+			
+			settings.remove(Configuration.MOD_URLS_KEY);
+			settings.remove(Configuration.REMOTE_VERSION_KEY);
+			
+			return null;
+		}
+		
+		/**
+		 * Cleans up the validation task if there is an interrupt in the second
+		 * phase.
+		 */
+		private Void cleanupPhaseB()
+		{
+			logger.info("Rolling back Phase B validation");
+			
+			settings.remove(Configuration.MOD_NODES_KEY);
+			
+			return null;
 		}
 		
 		public Void call()
@@ -467,7 +501,7 @@ public class ConfigPage extends WizardPage
 					Downloader tempVersionDownloader = new Downloader(connector, versionURL, tempVersion);
 					if (tempVersionDownloader.download())
 					{
-						List<String> versionLines = MiscUtils.readTextFile(tempVersion);
+						List<String> versionLines = IOUtils.readTextFile(tempVersion);
 						if (!versionLines.isEmpty())
 						{
 							double thisVersion;
@@ -489,7 +523,7 @@ public class ConfigPage extends WizardPage
 								Downloader tempFilenamesDownloader = new Downloader(connector, filenameURL, tempFilenames);
 								if (tempFilenamesDownloader.download())
 								{
-									List<String> filenameLines = MiscUtils.readTextFile(tempFilenames);
+									List<String> filenameLines = IOUtils.readTextFile(tempFilenames);
 									if (!filenameLines.isEmpty())
 									{
 										maxVersion = thisVersion;
@@ -499,7 +533,7 @@ public class ConfigPage extends WizardPage
 										Downloader tempBasicConfigDownloader = new Downloader(connector, basicURL, tempBasicConfig);
 										if (tempBasicConfigDownloader.download())
 										{
-											List<String> basicLines = MiscUtils.readTextFile(tempBasicConfig);
+											List<String> basicLines = IOUtils.readTextFile(tempBasicConfig);
 											
 											// strip empty/blank lines
 											Iterator<String> ii = basicLines.iterator();
@@ -510,15 +544,21 @@ public class ConfigPage extends WizardPage
 											if (!basicLines.isEmpty())
 												settings.put(Configuration.BASIC_CONFIG_MODS_KEY, basicLines);
 										}
+										else if (Thread.currentThread().isInterrupted())
+											return cleanupPhaseA();
 										
 										// save our settings... save REMOTE_VERSION_KEY last because it is tested in the if() blocks
 										settings.put(Configuration.MOD_URLS_KEY, filenameLines);
 										settings.put(Configuration.REMOTE_VERSION_KEY, thisVersion);
 									}
 								}
+								else if (Thread.currentThread().isInterrupted())
+									return cleanupPhaseA();
 							}
 						}
 					}
+					else if (Thread.currentThread().isInterrupted())
+						return cleanupPhaseA();
 				}
 				
 				// make sure we could access version information
@@ -553,6 +593,10 @@ public class ConfigPage extends WizardPage
 					}
 				}
 			}
+			
+			// check again if thread is interrupted
+			if (Thread.currentThread().isInterrupted())
+				return cleanupPhaseA();
 			
 			// only check for mod information if we haven't checked already
 			if (!settings.containsKey(Configuration.MOD_NODES_KEY))
@@ -602,6 +646,9 @@ public class ConfigPage extends WizardPage
 					Downloader tempModFileDownloader = new Downloader(connector, modURL, tempModFile);
 					if (!tempModFileDownloader.download())
 					{
+						if (Thread.currentThread().isInterrupted())
+							return cleanupPhaseB();
+						
 						logger.warn("Could not download mod information from '" + url + "'");
 						continue;
 					}
@@ -647,6 +694,10 @@ public class ConfigPage extends WizardPage
 				settings.put(Configuration.MOD_NODES_KEY, modNodes);
 			}
 			
+			// check again if thread is interrupted
+			if (Thread.currentThread().isInterrupted())
+				return cleanupPhaseB();
+			
 			// now that we have the mod list, check to see if there is any old version information left over from Turey's installer
 			logger.info("Checking for legacy version information...");
 			
@@ -659,7 +710,7 @@ public class ConfigPage extends WizardPage
 				if (installedversions.exists())
 				{
 					// read lines from the installedversions file
-					List<String> lines = MiscUtils.readTextFile(installedversions);
+					List<String> lines = IOUtils.readTextFile(installedversions);
 					
 					// load the version for each node
 					@SuppressWarnings("unchecked")
@@ -668,10 +719,11 @@ public class ConfigPage extends WizardPage
 						loadLegacyModVersions(node, lines, configuration.getUserProperties());
 					
 					// save our properties
-					configuration.saveUserProperties();
+					boolean success = configuration.saveUserProperties();
 					
 					// delete the file, since we don't need it any more
-					installedversions.delete();
+					if (success)
+						installedversions.delete();
 				}
 				
 				// delete other old files and the folder
@@ -685,6 +737,10 @@ public class ConfigPage extends WizardPage
 				if (filesLeft.length == 0)
 					oldInstallerInfoDir.delete();
 			}
+			
+			// final interruption check for this task
+			if (Thread.currentThread().isInterrupted())
+				return null;
 			
 			// validation completed!
 			logger.info("Done with SuperValidationTask!");
@@ -794,13 +850,13 @@ public class ConfigPage extends WizardPage
 			catch (IOException ioe)
 			{
 				logger.error("Creating a temporary file '" + unique + "' failed", ioe);
-				ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "The installer could not create a temporary file in the destination directory.  Please ensure that the directory is writable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The installer could not create a temporary file in the destination directory.  Please ensure that the directory is writable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			if (!writingTest.delete())
 			{
 				logger.error("Deleting a temporary file '" + unique + "' failed");
-				ThreadSafeJOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "The installer could not delete a temporary file in the destination directory.  Please ensure that the directory is not read-only, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The installer could not delete a temporary file in the destination directory.  Please ensure that the directory is not read-only, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			
@@ -842,6 +898,10 @@ public class ConfigPage extends WizardPage
 			
 			// TODO: if there are MVE files in data2 and data3 folders, offer to copy them to data/movies
 			// (this is where the GOG installer puts them)
+			
+			// final interruption check for this task
+			if (Thread.currentThread().isInterrupted())
+				return null;
 			
 			// directory is good to go
 			EventQueue.invokeLater(new Runnable()
