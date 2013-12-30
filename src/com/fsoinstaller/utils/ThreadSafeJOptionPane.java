@@ -1,6 +1,6 @@
 /*
  * This file is part of the FreeSpace Open Installer
- * Copyright (C) 2010 The FreeSpace 2 Source Code Project
+ * Copyright (C) 2013 The FreeSpace 2 Source Code Project
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -42,132 +42,132 @@ public final class ThreadSafeJOptionPane
 	
 	public static int showConfirmDialog(final Component parentComponent, final Object message)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showConfirmDialog(parentComponent, message));
+				result.set(JOptionPane.showConfirmDialog(parentComponent, message));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showConfirmDialog(final Component parentComponent, final Object message, final String title, final int optionType)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showConfirmDialog(parentComponent, message, title, optionType));
+				result.set(JOptionPane.showConfirmDialog(parentComponent, message, title, optionType));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showConfirmDialog(final Component parentComponent, final Object message, final String title, final int optionType, final int messageType)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showConfirmDialog(parentComponent, message, title, optionType, messageType));
+				result.set(JOptionPane.showConfirmDialog(parentComponent, message, title, optionType, messageType));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showConfirmDialog(final Component parentComponent, final Object message, final String title, final int optionType, final int messageType, final Icon icon)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showConfirmDialog(parentComponent, message, title, optionType, messageType, icon));
+				result.set(JOptionPane.showConfirmDialog(parentComponent, message, title, optionType, messageType, icon));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInputDialog(final Object message)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInputDialog(message));
+				result.set(JOptionPane.showInputDialog(message));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInputDialog(final Object message, final Object initialSelectionValue)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInputDialog(message, initialSelectionValue));
+				result.set(JOptionPane.showInputDialog(message, initialSelectionValue));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInputDialog(final Component parentComponent, final Object message)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInputDialog(parentComponent, message));
+				result.set(JOptionPane.showInputDialog(parentComponent, message));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInputDialog(final Component parentComponent, final Object message, final Object initialSelectionValue)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInputDialog(parentComponent, message, initialSelectionValue));
+				result.set(JOptionPane.showInputDialog(parentComponent, message, initialSelectionValue));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInputDialog(final Component parentComponent, final Object message, final String title, final int messageType)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInputDialog(parentComponent, message, title, messageType));
+				result.set(JOptionPane.showInputDialog(parentComponent, message, title, messageType));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static Object showInputDialog(final Component parentComponent, final Object message, final String title, final int messageType, final Icon icon, final Object[] selectionValues, final Object initialSelectionValue)
 	{
-		final AtomicReference<Object> value = new AtomicReference<Object>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<Object> result = new AtomicReference<Object>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInputDialog(parentComponent, message, title, messageType, icon, selectionValues, initialSelectionValue));
+				result.set(JOptionPane.showInputDialog(parentComponent, message, title, messageType, icon, selectionValues, initialSelectionValue));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static void showMessageDialog(final Component parentComponent, final Object message)
@@ -205,106 +205,106 @@ public final class ThreadSafeJOptionPane
 	
 	public static int showOptionDialog(final Component parentComponent, final Object message, final String title, final int optionType, final int messageType, final Icon icon, final Object[] options, final Object initialValue)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showOptionDialog(parentComponent, message, title, optionType, messageType, icon, options, initialValue));
+				result.set(JOptionPane.showOptionDialog(parentComponent, message, title, optionType, messageType, icon, options, initialValue));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showInternalConfirmDialog(final Component parentComponent, final Object message)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalConfirmDialog(parentComponent, message));
+				result.set(JOptionPane.showInternalConfirmDialog(parentComponent, message));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showInternalConfirmDialog(final Component parentComponent, final Object message, final String title, final int optionType)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalConfirmDialog(parentComponent, message, title, optionType));
+				result.set(JOptionPane.showInternalConfirmDialog(parentComponent, message, title, optionType));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showInternalConfirmDialog(final Component parentComponent, final Object message, final String title, final int optionType, final int messageType)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalConfirmDialog(parentComponent, message, title, optionType, messageType));
+				result.set(JOptionPane.showInternalConfirmDialog(parentComponent, message, title, optionType, messageType));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static int showInternalConfirmDialog(final Component parentComponent, final Object message, final String title, final int optionType, final int messageType, final Icon icon)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalConfirmDialog(parentComponent, message, title, optionType, messageType, icon));
+				result.set(JOptionPane.showInternalConfirmDialog(parentComponent, message, title, optionType, messageType, icon));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInternalInputDialog(final Component parentComponent, final Object message)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalInputDialog(parentComponent, message));
+				result.set(JOptionPane.showInternalInputDialog(parentComponent, message));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static String showInternalInputDialog(final Component parentComponent, final Object message, final String title, final int messageType)
 	{
-		final AtomicReference<String> value = new AtomicReference<String>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<String> result = new AtomicReference<String>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalInputDialog(parentComponent, message, title, messageType));
+				result.set(JOptionPane.showInternalInputDialog(parentComponent, message, title, messageType));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static Object showInternalInputDialog(final Component parentComponent, final Object message, final String title, final int messageType, final Icon icon, final Object[] selectionValues, final Object initialSelectionValue)
 	{
-		final AtomicReference<Object> value = new AtomicReference<Object>();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicReference<Object> result = new AtomicReference<Object>();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalInputDialog(parentComponent, message, title, messageType, icon, selectionValues, initialSelectionValue));
+				result.set(JOptionPane.showInternalInputDialog(parentComponent, message, title, messageType, icon, selectionValues, initialSelectionValue));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 	
 	public static void showInternalMessageDialog(final Component parentComponent, final Object message)
@@ -342,14 +342,14 @@ public final class ThreadSafeJOptionPane
 	
 	public static int showInternalOptionDialog(final Component parentComponent, final Object message, final String title, final int optionType, final int messageType, final Icon icon, final Object[] options, final Object initialValue)
 	{
-		final AtomicInteger value = new AtomicInteger();
-		MiscUtils.invokeAndWait(new Runnable()
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
 		{
 			public void run()
 			{
-				value.set(JOptionPane.showInternalOptionDialog(parentComponent, message, title, optionType, messageType, icon, options, initialValue));
+				result.set(JOptionPane.showInternalOptionDialog(parentComponent, message, title, optionType, messageType, icon, options, initialValue));
 			}
 		});
-		return value.get();
+		return result.get();
 	}
 }

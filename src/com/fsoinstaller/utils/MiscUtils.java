@@ -19,22 +19,9 @@
 
 package com.fsoinstaller.utils;
 
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.FontMetrics;
-import java.awt.Frame;
-import java.awt.Toolkit;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.text.BreakIterator;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.SwingUtilities;
 
@@ -46,139 +33,11 @@ import javax.swing.SwingUtilities;
  */
 public class MiscUtils
 {
-	private static Logger logger = Logger.getLogger(MiscUtils.class);
-	
 	/**
 	 * Prevent instantiation.
 	 */
 	private MiscUtils()
 	{
-	}
-	
-	public static void centerWindowOnScreen(Container window)
-	{
-		// find the coordinates to center the whole window
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		int x = (int) ((screenSize.getWidth() - window.getWidth()) / 2.0 + 0.5);
-		int y = (int) ((screenSize.getHeight() - window.getHeight()) / 2.0 + 0.5);
-		
-		// ensure the window isn't partially off the top left of the screen
-		if (x < 0)
-			x = 0;
-		if (y < 0)
-			y = 0;
-		
-		// center it
-		window.setLocation(x, y);
-	}
-	
-	public static void centerWindowOnParent(Container window, Container parent)
-	{
-		if (parent == null)
-		{
-			centerWindowOnScreen(window);
-			return;
-		}
-		
-		// find the coordinates to center the whole window
-		int x = (int) (parent.getX() + ((parent.getWidth() - window.getWidth()) / 2.0 + 0.5));
-		int y = (int) (parent.getY() + ((parent.getHeight() - window.getHeight()) / 2.0 + 0.5));
-		
-		// ensure the window isn't partially off the top left of the screen
-		if (x < 0)
-			x = 0;
-		if (y < 0)
-			y = 0;
-		
-		// center it
-		window.setLocation(x, y);
-	}
-	
-	public static Frame getActiveFrame()
-	{
-		Frame[] frames = Frame.getFrames();
-		for (Frame frame: frames)
-			if (frame.isVisible())
-				return frame;
-		return null;
-	}
-	
-	public static void invokeAndWait(Runnable runnable)
-	{
-		try
-		{
-			// be sure we don't block the event dispatch thread
-			if (EventQueue.isDispatchThread())
-				runnable.run();
-			else
-				EventQueue.invokeAndWait(runnable);
-		}
-		catch (InvocationTargetException ite)
-		{
-			logger.error("An InvocationTargetException occurred!", ite);
-			if (ite.getCause() instanceof Error)
-				throw (Error) ite.getCause();
-			else if (ite.getCause() instanceof RuntimeException)
-				throw (RuntimeException) ite.getCause();
-			else
-				throw new IllegalStateException("Illegal exception type?", ite.getCause());
-		}
-		catch (InterruptedException ie)
-		{
-			logger.error("Thread interrupted!", ie);
-			Thread.currentThread().interrupt();
-		}
-	}
-	
-	public static void sleep(long millis)
-	{
-		try
-		{
-			Thread.sleep(millis);
-		}
-		catch (InterruptedException ie)
-		{
-			logger.error("Thread interrupted!", ie);
-			Thread.currentThread().interrupt();
-		}
-	}
-	
-	public static InputStream getResourceStream(String resource)
-	{
-		InputStream is = ClassLoader.getSystemResourceAsStream("resources/" + resource);
-		if (is != null)
-		{
-			logger.info("Loading '" + resource + "' via system class loader");
-			return is;
-		}
-		
-		is = MiscUtils.class.getResourceAsStream("resources/" + resource);
-		if (is != null)
-		{
-			logger.info("Loading '" + resource + "' via MiscUtils class loader");
-			return is;
-		}
-		
-		return null;
-	}
-	
-	public static URL getResourceURL(String resource)
-	{
-		URL url = ClassLoader.getSystemResource("resources/" + resource);
-		if (url != null)
-		{
-			logger.info("Loading '" + resource + "' via system class loader");
-			return url;
-		}
-		
-		url = MiscUtils.class.getResource("resources/" + resource);
-		if (url != null)
-		{
-			logger.info("Loading '" + resource + "' via MiscUtils class loader");
-			return url;
-		}
-		
-		return null;
 	}
 	
 	public static File validateApplicationDir(String dirName)
@@ -197,36 +56,6 @@ public class MiscUtils
 	{
 		// should be valid
 		return true;
-	}
-	
-	public static List<String> readTextFile(File file)
-	{
-		List<String> lines = new ArrayList<String>();
-		try
-		{
-			BufferedReader reader = null;
-			try
-			{
-				// open file for buffered input
-				reader = new BufferedReader(new FileReader(file));
-				
-				// read lines
-				String line;
-				while ((line = reader.readLine()) != null)
-					lines.add(line);
-			}
-			finally
-			{
-				if (reader != null)
-					reader.close();
-			}
-		}
-		catch (IOException ioe)
-		{
-			logger.error("Error reading file '" + file.getName() + "'!", ioe);
-			lines.clear();
-		}
-		return lines;
 	}
 	
 	public enum OperatingSystem
@@ -281,25 +110,25 @@ public class MiscUtils
 		StringBuilder line = new StringBuilder();
 		StringBuilder paragraph = new StringBuilder();
 		
-		// build it with embedded newlines
+		// concatenate all words into a new paragraph, adding newlines where appropriate
 		for (int start = boundary.first(), end = boundary.next(); end != BreakIterator.DONE; start = end, end = boundary.next())
 		{
 			String word = text.substring(start, end);
 			
-			// if we have an actual line break, reset the line, otherwise build on it
+			// if we have an actual newline, start a new line, otherwise append the word to the running total
 			if (word.equals("\n"))
 				line = new StringBuilder();
 			else
 				line.append(word);
 			
-			// compute running total of the line width
+			// see if all the words have overrun the line width limit yet
 			int lineWidth = SwingUtilities.computeStringWidth(metrics, line.toString());
 			if (lineWidth > maxWidth)
 			{
-				// trim off whitespace at the beginning of the word
+				// get rid of any leading whitespace
 				word = word.replaceAll("^\\s+", "");
 				
-				// append a newline, and start a new line
+				// start a new line in both running strings
 				line = new StringBuilder(word);
 				paragraph.append("\n");
 			}
