@@ -5,5 +5,6 @@
 	<classpathentry kind="lib" path="lib/sevenzipjbinding-AllPlatforms.jar"/>
 	<classpathentry kind="lib" path="lib/sevenzipjbinding.jar"/>
 	<classpathentry kind="lib" path="lib/l2fprod-common-directorychooser.jar"/>
+	<classpathentry kind="lib" path="lib/swingworker_1_5.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
