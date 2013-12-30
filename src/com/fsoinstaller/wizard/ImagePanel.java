@@ -1,6 +1,6 @@
 /*
  * This file is part of the FreeSpace Open Installer
- * Copyright (C) 2010 The FreeSpace 2 Source Code Project
+ * Copyright (C) 2013 The FreeSpace 2 Source Code Project
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -19,14 +19,16 @@
 
 package com.fsoinstaller.wizard;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import com.fsoinstaller.utils.GraphicsUtils;
 
 
 /**
@@ -37,29 +39,39 @@ import com.fsoinstaller.utils.GraphicsUtils;
  */
 public class ImagePanel extends JPanel
 {
-	private final BufferedImage image;
+	private final Image image;
+	private final int width;
+	private final int height;
 	
-	public ImagePanel()
+	public ImagePanel(BufferedImage image)
 	{
-		this(null);
-	}
-	
-	public ImagePanel(Image image)
-	{
-		this.image = GraphicsUtils.getBufferedImage(image);
+		this.image = image;
 		
-		Dimension size = getImageSize();
+		int w, h;
+		if (image != null)
+		{
+			w = image.getWidth();
+			h = image.getHeight();
+		}
+		else
+		{
+			JLabel label = new JLabel("IMAGE NOT AVAILABLE");
+			label.setFont(label.getFont().deriveFont(Font.BOLD, label.getFont().getSize() + 2));
+			label.setForeground(Color.GRAY);
+			
+			setLayout(new BorderLayout());
+			add(label, BorderLayout.CENTER);
+			w = label.getWidth();
+			h = label.getHeight();
+		}
+		
+		this.width = w;
+		this.height = h;
+		
+		Dimension size = new Dimension(width, height);
 		setMinimumSize(size);
 		setMaximumSize(size);
 		setPreferredSize(size);
-	}
-	
-	public Dimension getImageSize()
-	{
-		if (image == null)
-			return new Dimension(0, 0);
-		
-		return new Dimension(image.getWidth(), image.getHeight());
 	}
 	
 	@Override
@@ -67,9 +79,20 @@ public class ImagePanel extends JPanel
 	{
 		super.paintComponent(g);
 		
-		if (image == null)
-			return;
-		
-		g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), this);
+		if (image != null)
+		{
+			g.drawImage(image, 0, 0, width, height, this);
+		}
+		else
+		{
+			Color savedColor = g.getColor();
+			
+			// red X indicates image not available
+			g.setColor(Color.RED);
+			g.drawLine(0, 0, width, height);
+			g.drawLine(0, height, width, 0);
+			
+			g.setColor(savedColor);
+		}
 	}
 }
