@@ -35,5 +35,9 @@ Silk icon set 1.3 by Mark James
 http://www.famfamfam.com/lab/icons/silk/
 Creative Commons Attribution 2.5 License
 
+SwingWorker for Java 1.5
+http://java.net/projects/swingworker
+GNU Lesser General Public License, version 2.1
+
 Non-FS2SCP-controlled components provide source code at their respective websites.  However, the
 text of all licenses can be found in the FSO Installer jar package.
