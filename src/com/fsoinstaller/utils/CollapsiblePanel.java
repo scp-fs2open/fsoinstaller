@@ -1,6 +1,6 @@
 /*
  * This file is part of the FreeSpace Open Installer
- * Copyright (C) 2010 The FreeSpace 2 Source Code Project
+ * Copyright (C) 2013 The FreeSpace 2 Source Code Project
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -39,6 +39,10 @@ import javax.swing.SwingUtilities;
 import com.fsoinstaller.wizard.GUIConstants;
 
 
+/**
+ * This class provides a way to show or hide a child panel by means of an arrow
+ * button that expands or collapses a panel header.
+ */
 public class CollapsiblePanel extends JPanel
 {
 	private static final ImageIcon arrow_right = new ImageIcon(GraphicsUtils.getResourceImage("arrow_right.png"));
