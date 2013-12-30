@@ -59,7 +59,7 @@ import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.CollapsiblePanel;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.SwingUtils;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
 
@@ -427,7 +427,7 @@ public class InstallItem extends JPanel
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
-		MiscUtils.centerWindowOnScreen(frame);
+		SwingUtils.centerWindowOnScreen(frame);
 		frame.setVisible(true);
 		
 		FreeSpaceOpenInstaller.getInstance().getExecutorService().shutdown();

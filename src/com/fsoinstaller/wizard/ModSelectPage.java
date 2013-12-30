@@ -50,6 +50,7 @@ import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.SwingUtils;
 
 
 public class ModSelectPage extends WizardPage
@@ -360,7 +361,7 @@ public class ModSelectPage extends WizardPage
 				
 				// manually wrap the description :-/
 				FontMetrics metrics = description.getFontMetrics(description.getFont());
-				int maxWidth = (int) (MiscUtils.getActiveFrame().getSize().getWidth() * 0.8);
+				int maxWidth = (int) (SwingUtils.getActiveFrame().getSize().getWidth() * 0.8);
 				description.setText(MiscUtils.wrapText(node.getDescription(), metrics, maxWidth));
 				
 				// put together the panel with the header plus the description
@@ -368,7 +369,7 @@ public class ModSelectPage extends WizardPage
 				message.add(header, BorderLayout.NORTH);
 				message.add(description, BorderLayout.CENTER);
 				
-				JOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), message, "FreeSpace Open Installer", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), message, "FreeSpace Open Installer", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		

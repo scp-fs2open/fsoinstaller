@@ -31,7 +31,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.wizard.InstallerGUI;
 
 
@@ -112,7 +112,7 @@ public class FreeSpaceOpenInstaller
 				});
 				
 				// display it
-				MiscUtils.centerWindowOnScreen(gui);
+				SwingUtils.centerWindowOnScreen(gui);
 				gui.setVisible(true);
 			}
 		});

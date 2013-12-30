@@ -64,7 +64,7 @@ public class PropertiesUtils
 			return properties;
 		
 		// try file in jar
-		InputStream is = MiscUtils.getResourceStream(resource);
+		InputStream is = IOUtils.getResourceStream(resource);
 		if (is != null)
 			properties = loadPropertiesFromStream(is);
 		if (properties != null)

@@ -37,7 +37,7 @@ import javax.swing.JSeparator;
 
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.GraphicsUtils;
-import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.SwingUtils;
 
 
 public abstract class WizardPage extends JPanel
@@ -226,7 +226,7 @@ public abstract class WizardPage extends JPanel
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			JFrame frame = (JFrame) MiscUtils.getActiveFrame();
+			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
 			frame.dispose();
 		}
 	}

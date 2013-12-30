@@ -43,7 +43,7 @@ import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.SwingUtils;
 
 
 public class ChoicePage extends WizardPage
@@ -191,7 +191,7 @@ public class ChoicePage extends WizardPage
 		if (basicMods == null || basicMods.isEmpty())
 		{
 			basic.setEnabled(false);
-			JOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "The Basic Installation configuration could not be retrieved from the installer website.  This option will not be available.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The Basic Installation configuration could not be retrieved from the installer website.  This option will not be available.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 		}
 		else
 		{
@@ -212,7 +212,7 @@ public class ChoicePage extends WizardPage
 				if (!found)
 				{
 					basic.setEnabled(false);
-					JOptionPane.showMessageDialog(MiscUtils.getActiveFrame(), "The Basic Installation configuration could not be validated against the current list of mods.  This option will not be available.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The Basic Installation configuration could not be validated against the current list of mods.  This option will not be available.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					break;
 				}
 			}
