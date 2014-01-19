@@ -21,10 +21,12 @@ package com.fsoinstaller.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,5 +99,34 @@ public class IOUtils
 		}
 		
 		return null;
+	}
+	
+	public static String computeHash(MessageDigest messageDigest, File file) throws FileNotFoundException, IOException
+	{
+		byte[] buffer = new byte[1024];
+		
+		FileInputStream fis = null;
+		try
+		{
+			fis = new FileInputStream(file);
+			
+			int len;
+			while ((len = fis.read(buffer)) != -1)
+				messageDigest.update(buffer, 0, len);
+		}
+		finally
+		{
+			if (fis != null)
+				fis.close();
+		}
+		
+		byte[] hashedBytes = messageDigest.digest();
+		
+		// put the hash into a string
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < hashedBytes.length; i++)
+			sb.append(Integer.toString((hashedBytes[i] & 0xff) + 0x100, 16).substring(1));
+		
+		return sb.toString();
 	}
 }

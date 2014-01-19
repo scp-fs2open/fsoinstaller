@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -47,6 +50,7 @@ import javax.swing.event.ChangeListener;
 
 import com.fsoinstaller.common.BaseURL;
 import com.fsoinstaller.common.InstallerNode;
+import com.fsoinstaller.common.InstallerNode.HashTriple;
 import com.fsoinstaller.common.InstallerNodeFactory;
 import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
@@ -58,6 +62,7 @@ import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.CollapsiblePanel;
+import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
 
@@ -116,9 +121,6 @@ public class InstallItem extends JPanel
 		
 		add(panel);
 		add(Box.createGlue());
-		
-		// TODO if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
-		
 	}
 	
 	public void addCompletionListener(ChangeListener listener)
@@ -133,19 +135,28 @@ public class InstallItem extends JPanel
 	
 	protected void fireCompletion()
 	{
-		ChangeEvent event = null;
-		
-		for (ChangeListener listener: listenerList)
+		EventQueue.invokeLater(new Runnable()
 		{
-			if (event == null)
-				event = new ChangeEvent(node);
-			
-			listener.stateChanged(event);
-		}
+			public void run()
+			{
+				ChangeEvent event = null;
+				
+				for (ChangeListener listener: listenerList)
+				{
+					if (event == null)
+						event = new ChangeEvent(node);
+					
+					listener.stateChanged(event);
+				}
+			}
+		});
 	}
 	
 	public void start()
 	{
+		
+		// TODO if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
+		
 		// TODO
 	}
 	
@@ -238,10 +249,13 @@ public class InstallItem extends JPanel
 			// these could be files to download, or they could later be files to extract
 			for (InstallUnit install: node.getInstallList())
 			{
-				// TODO
-				//todo();	// try mirrors in random order
-				
 				List<BaseURL> urls = install.getBaseURLList();
+				
+				// try mirrors in random order
+				if (urls.size() > 1)
+					Collections.shuffle(urls);
+				
+				// install all files for the unit
 				for (String file: install.getFileList())
 				{
 					// attempt to install this file
@@ -253,11 +267,58 @@ public class InstallItem extends JPanel
 			}
 		}
 		
-		// TODO: hash lists
 		if (!node.getHashList().isEmpty())
 		{
 			logger.info(nodeName + ": Processing HASH items");
 			setText("Computing hash values...");
+			
+			for (HashTriple hash: node.getHashList())
+			{
+				String algorithm = hash.getType().toUpperCase();
+				if (algorithm.equals("SHA1"))
+					algorithm = "SHA-1";
+				else if (algorithm.equals("SHA256"))
+					algorithm = "SHA-256";
+				
+				// get the hash processor, provided by Java
+				MessageDigest digest;
+				try
+				{
+					digest = MessageDigest.getInstance(algorithm);
+				}
+				catch (NoSuchAlgorithmException nsae)
+				{
+					logger.error(nodeName + ": Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
+					continue;
+				}
+				
+				// find the file to hash
+				File fileToHash = new File(installDir, hash.getFilename());
+				if (!fileToHash.exists())
+				{
+					logger.debug(nodeName + ": Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
+					continue;
+				}
+				
+				// hash it
+				String computedHash;
+				try
+				{
+					computedHash = IOUtils.computeHash(digest, fileToHash);
+				}
+				catch (IOException ioe)
+				{
+					logger.error(nodeName + ": There was a problem computing the hash...", ioe);
+					continue;
+				}
+				
+				// compare it
+				if (!hash.getHash().equals(computedHash))
+				{
+					logger.error(nodeName + ": Computed hash value of '" + computedHash + "' does not match required hash value of '" + hash.getHash() + "'!");
+					return this;
+				}
+			}
 		}
 		
 		setText("Done!");
