@@ -358,11 +358,11 @@ public class InstallerNodeFactory
 				writeNode(indent + 1, writer, child);
 		}
 		
-		if (node.getVersion() != null)
-			writeLine(indent, writer, InstallerNodeToken.VERSION, node.getVersion());
-		
 		if (node.getNote() != null)
 			writeLine(indent, writer, InstallerNodeToken.NOTE, node.getNote(), InstallerNodeToken.ENDNOTE);
+		
+		if (node.getVersion() != null)
+			writeLine(indent, writer, InstallerNodeToken.VERSION, node.getVersion());
 		
 		writeLine(indent, writer, InstallerNodeToken.END);
 		writeLine(indent, writer, "");

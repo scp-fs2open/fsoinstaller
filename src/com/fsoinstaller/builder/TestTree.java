@@ -29,31 +29,43 @@ public class TestTree extends JFrame
 	public TestTree() throws MalformedURLException, InvalidProxyException, IOException, InstallerNodeParseException
 	{
 		
-		Reader reader = new FileReader("fsport.txt");
-		Writer writer = new FileWriter("fsport-new.txt");
+		Reader reader = new FileReader("dist/scp_files.txt");
 		
 		InstallerNodeRoot root = new InstallerNodeRoot();
-		InstallerNode fsport = InstallerNodeFactory.readNode(reader);
-		root.addChild(fsport);
-
-		JTree tree = new JTree(new InstallerNodeTreeModel(root));
-		add(tree);
 		
+		while (true)
+		{
+			InstallerNode node = InstallerNodeFactory.readNode(reader);
+			if (node == null)
+				break;
+			root.addChild(node);
+		}
+
 		reader.close();
 		
-		InstallerNodeFactory.writeNode(writer, fsport);
+		
+		Writer writer = new FileWriter("dist/new.txt");
+		
+		for (InstallerNode node: root.getChildren())
+		{
+			InstallerNodeFactory.writeNode(writer, node);
+		}
 		
 		writer.close();
 
+		JTree tree = new JTree(new InstallerNodeTreeModel(root));
+		add(tree);		
 	}
 
 	public static void main(String[] args) throws IOException, InvalidProxyException, InstallerNodeParseException
 	{
+		/*
 		JFrame frame = new TestTree();
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setVisible(true);
-		
+		*/
+		new TestTree();
 		/*		
 		Connector connector = new Connector();
 		Downloader downloader = new Downloader(connector);
