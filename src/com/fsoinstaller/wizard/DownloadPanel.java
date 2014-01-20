@@ -82,6 +82,8 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		progressBar.setString(event.getDownloadName() + ": 0 of " + event.getTotalBytes() + " bytes");
 		progressBar.setIndeterminate(false);
 		progressBar.setValue(0);
+		
+		stoplightPanel.setPending();
 	}
 	
 	public void downloadProgressReport(DownloadEvent event)

@@ -88,7 +88,7 @@ public class InstallItem extends JPanel
 		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
-		overallBar = new JProgressBar(0, GUIConstants.BAR_MAXIMUM);
+		overallBar = new JProgressBar(0, 100);
 		overallBar.setIndeterminate(true);
 		overallBar.setString("Installing...");
 		overallBar.setStringPainted(true);
@@ -208,7 +208,7 @@ public class InstallItem extends JPanel
 					logger.error(node.getName() + "Encountered a security exception when processing setup tasks", se);
 					modFolder = null;
 				}
-								
+				
 				// if setup didn't work, can't continue
 				if (modFolder == null)
 				{
