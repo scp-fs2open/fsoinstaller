@@ -51,6 +51,7 @@ public class Configuration
 	public static final String INSTALL_CHOICE_KEY = "INSTALL-CHOICE";
 	public static final String MODS_TO_INSTALL_KEY = "MODS-TO-INSTALL";
 	public static final String CHECKED_DIRECTORIES_KEY = "CHECKED-DIRECTORIES";
+	public static final String INSTALL_RESULTS_KEY = "INSTALL-RESULTS";
 	
 	/**
 	 * Use the Initialization On Demand Holder idiom for thread-safe

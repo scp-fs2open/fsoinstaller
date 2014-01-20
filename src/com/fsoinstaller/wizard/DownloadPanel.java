@@ -55,6 +55,11 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		setDownloader(null);
 	}
 	
+	public Downloader getDownloader()
+	{
+		return downloader;
+	}
+	
 	public void setDownloader(Downloader downloader)
 	{
 		if (this.downloader != null)
