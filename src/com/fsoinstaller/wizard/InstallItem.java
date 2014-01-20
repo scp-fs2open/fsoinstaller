@@ -502,7 +502,7 @@ public class InstallItem extends JPanel
 				}
 				
 				// compare it
-				if (!hash.getHash().equals(computedHash))
+				if (!hash.getHash().equalsIgnoreCase(computedHash))
 				{
 					logger.error(nodeName + ": Computed hash value of '" + computedHash + "' does not match required hash value of '" + hash.getHash() + "'!");
 					return false;
