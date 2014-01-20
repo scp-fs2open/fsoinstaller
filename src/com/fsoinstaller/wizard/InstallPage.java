@@ -20,14 +20,19 @@
 package com.fsoinstaller.wizard;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -38,6 +43,7 @@ import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.Logger;
+import com.fsoinstaller.utils.SwingUtils;
 
 
 public class InstallPage extends WizardPage
@@ -45,11 +51,18 @@ public class InstallPage extends WizardPage
 	private static final Logger logger = Logger.getLogger(ModSelectPage.class);
 	
 	private final JPanel installPanel;
+	
+	private final List<InstallItem> installItems;
+	private final List<String> installResults;
 	private int remainingMods;
 	
 	public InstallPage()
 	{
 		super("install");
+		
+		installItems = new ArrayList<InstallItem>();
+		installResults = new ArrayList<String>();
+		remainingMods = 0;
 		
 		// create widgets
 		installPanel = new JPanel();
@@ -85,6 +98,10 @@ public class InstallPage extends WizardPage
 		backButton.setVisible(false);
 		nextButton.setEnabled(false);
 		
+		// change what the cancel button does
+		// (instead of closing the entire application, it will cancel all the downloads and clear the GUI to proceed to the next page)
+		cancelButton.setAction(new CancelAction());
+		
 		Map<String, Object> settings = configuration.getSettings();
 		@SuppressWarnings("unchecked")
 		List<InstallerNode> modNodes = (List<InstallerNode>) settings.get(Configuration.MOD_NODES_KEY);
@@ -96,8 +113,6 @@ public class InstallPage extends WizardPage
 		for (String mod: selectedMods)
 			logger.info(mod);
 		
-		remainingMods = 0;
-		
 		// iterate through the mod nodes so we keep the proper order
 		for (InstallerNode node: modNodes)
 		{
@@ -105,15 +120,18 @@ public class InstallPage extends WizardPage
 				continue;
 			
 			// add item's GUI to the panel
-			InstallItem item = new InstallItem(node);
+			final InstallItem item = new InstallItem(node);
 			installPanel.add(item);
 			
-			// keep track of mods that have completed
+			// keep track of mods that have completed (whether success or failure)
 			remainingMods++;
 			item.addCompletionListener(new ChangeListener()
 			{
 				public void stateChanged(ChangeEvent e)
 				{
+					// add any feedback to the output
+					installResults.addAll(item.getInstallResults());
+					
 					remainingMods--;
 					
 					// if ALL of the nodes have completed, do some more stuff
@@ -133,6 +151,9 @@ public class InstallPage extends WizardPage
 		nextButton.setEnabled(true);
 		cancelButton.setEnabled(false);
 		
+		Map<String, Object> settings = configuration.getSettings();
+		settings.put(Configuration.INSTALL_RESULTS_KEY, installResults);
+		
 		// note that the ExecutorService isn't going to terminate automatically, so we need to shut it down properly in success or failure		
 		FreeSpaceOpenInstaller.getInstance().getExecutorService().shutdown();
 	}
@@ -141,5 +162,24 @@ public class InstallPage extends WizardPage
 	public void prepareToLeavePage(Runnable runWhenReady)
 	{
 		runWhenReady.run();
+	}
+	
+	private final class CancelAction extends AbstractAction
+	{
+		public CancelAction()
+		{
+			putValue(Action.NAME, "Cancel");
+			putValue(Action.SHORT_DESCRIPTION, "Cancel installation");
+		}
+		
+		public void actionPerformed(ActionEvent e)
+		{
+			int response = JOptionPane.showConfirmDialog(SwingUtils.getActiveFrame(), "Cancelling now will interrupt all downloads that have not yet completed.  Are you sure?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (response != JOptionPane.YES_OPTION)
+				return;
+			
+			for (InstallItem item: installItems)
+				item.cancel();
+		}
 	}
 }

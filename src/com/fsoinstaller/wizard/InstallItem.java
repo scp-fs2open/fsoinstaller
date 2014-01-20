@@ -22,49 +22,45 @@ package com.fsoinstaller.wizard;
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.fsoinstaller.common.BaseURL;
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.common.InstallerNode.HashTriple;
-import com.fsoinstaller.common.InstallerNodeFactory;
-import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
 import com.fsoinstaller.common.InstallerNode.RenamePair;
 import com.fsoinstaller.internet.Connector;
-import com.fsoinstaller.internet.DownloadEvent;
-import com.fsoinstaller.internet.DownloadListener;
 import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.CollapsiblePanel;
 import com.fsoinstaller.utils.IOUtils;
+import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.SwingUtils;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
 
@@ -77,8 +73,11 @@ public class InstallItem extends JPanel
 	private final List<ChangeListener> listenerList;
 	
 	private final JProgressBar overallBar;
-	private final JButton cancelButton;
 	private final StoplightPanel stoplightPanel;
+	private final Map<KeyPair<InstallUnit, String>, DownloadPanel> downloadPanelMap;
+	
+	private Future<Void> overallInstallTask;
+	private List<String> installResults;
 	
 	public InstallItem(InstallerNode node)
 	{
@@ -94,32 +93,64 @@ public class InstallItem extends JPanel
 		overallBar.setString("Installing...");
 		overallBar.setStringPainted(true);
 		
-		cancelButton = new JButton("Cancel");
+		stoplightPanel = new StoplightPanel((int) overallBar.getPreferredSize().getHeight());
 		
-		stoplightPanel = new StoplightPanel((int) cancelButton.getPreferredSize().getHeight());
+		// these variables will only ever be accessed from the event thread, so they are thread safe
+		overallInstallTask = null;
+		installResults = new ArrayList<String>();
 		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
 		progressPanel.add(overallBar);
 		progressPanel.add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
-		progressPanel.add(cancelButton);
-		progressPanel.add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
+		//progressPanel.add(cancelButton);
+		//progressPanel.add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
 		progressPanel.add(stoplightPanel);
 		
 		JPanel headerPanel = new JPanel(new BorderLayout(0, GUIConstants.SMALL_MARGIN));
 		headerPanel.add(new JLabel(node.getName()), BorderLayout.NORTH);
 		headerPanel.add(progressPanel, BorderLayout.CENTER);
 		
-		JPanel downloadsPanel = new JPanel();
-		downloadsPanel.setLayout(new BoxLayout(downloadsPanel, BoxLayout.Y_AXIS));
-		downloadsPanel.add(new DownloadPanel());
-		downloadsPanel.add(new DownloadPanel());
-		downloadsPanel.add(new DownloadPanel());
+		JPanel contentsPanel;
+		Map<KeyPair<InstallUnit, String>, DownloadPanel> tempMap = new HashMap<KeyPair<InstallUnit, String>, DownloadPanel>();
 		
-		CollapsiblePanel panel = new CollapsiblePanel(headerPanel, downloadsPanel);
-		panel.setCollapsed(true);
+		// we probably have some install units...
+		if (!node.getInstallList().isEmpty())
+		{
+			JPanel downloadsPanel = new JPanel();
+			downloadsPanel.setLayout(new BoxLayout(downloadsPanel, BoxLayout.Y_AXIS));
+			
+			// add as many panels as we have download items for
+			for (InstallUnit install: node.getInstallList())
+			{
+				for (String file: install.getFileList())
+				{
+					KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
+					if (tempMap.containsKey(key))
+					{
+						logger.error("Duplicate key found for mod '" + node.getName() + "', file '" + file + "'!");
+						continue;
+					}
+					
+					DownloadPanel panel = new DownloadPanel();
+					downloadsPanel.add(panel);
+					tempMap.put(key, panel);
+				}
+			}
+			
+			// put them as children under the main progress bar
+			contentsPanel = new CollapsiblePanel(headerPanel, downloadsPanel);
+			((CollapsiblePanel) contentsPanel).setCollapsed(true);
+		}
+		// no install units, so just add the panel without any children
+		else
+		{
+			contentsPanel = headerPanel;
+		}
 		
-		add(panel);
+		downloadPanelMap = Collections.unmodifiableMap(tempMap);
+		
+		add(contentsPanel);
 		add(Box.createGlue());
 	}
 	
@@ -135,6 +166,9 @@ public class InstallItem extends JPanel
 	
 	protected void fireCompletion()
 	{
+		setIndeterminate(false);
+		setPercentComplete(100);
+		
 		EventQueue.invokeLater(new Runnable()
 		{
 			public void run()
@@ -154,19 +188,101 @@ public class InstallItem extends JPanel
 	
 	public void start()
 	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
-		// TODO if an item is dependent on things, then queue the dependencies FIRST, then unqueue and re-queue the current task
+		// and now we queue up our big task that handles this whole node
+		overallInstallTask = FreeSpaceOpenInstaller.getInstance().getExecutorService().submit(new Callable<Void>()
+		{
+			public Void call()
+			{
+				File modFolder;
+				
+				// handle create, delete, and rename
+				try
+				{
+					modFolder = performSetupTasks();
+				}
+				catch (SecurityException se)
+				{
+					logger.error(node.getName() + "Encountered a security exception when processing setup tasks", se);
+					modFolder = null;
+				}
+								
+				// if setup didn't work, can't continue
+				if (modFolder == null)
+				{
+					logResult(node.getName() + ": Mod setup failed.");
+					
+					setSuccess(false);
+					fireCompletion();
+					return null;
+				}
+				
+				// prepare progress bar for tracking installation units
+				setPercentComplete(0);
+				setIndeterminate(false);
+				
+				// now we are about to download stuff
+				boolean success = performInstallTasks(modFolder);
+				if (!success || Thread.currentThread().isInterrupted())
+				{
+					logResult(node.getName() + ": Installation failed.");
+					
+					setSuccess(false);
+					fireCompletion();
+					return null;
+				}
+				
+				// maybe change the progress bar look agaain
+				if (!node.getHashList().isEmpty())
+					setIndeterminate(true);
+				
+				// now hash the files we installed
+				success = performHashTasks(modFolder);
+				if (!success || Thread.currentThread().isInterrupted())
+				{
+					logResult(node.getName() + ": Hash verification failed.");
+					
+					setSuccess(false);
+					fireCompletion();
+					return null;
+				}
+				
+				setText("Done!");
+				
+				setSuccess(true);
+				fireCompletion();
+				return null;
+			}
+		});
+	}
+	
+	public void cancel()
+	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
-		// TODO
+		// cancel all downloads
+		for (DownloadPanel panel: downloadPanelMap.values())
+		{
+			Downloader d = panel.getDownloader();
+			if (d != null)
+				d.cancel();
+		}
+		
+		// cancel the current task
+		overallInstallTask.cancel(true);
 	}
 	
 	/**
-	 * Perform the installation tasks for this node.
+	 * Perform the preliminary installation tasks for this node (create, delete,
+	 * rename).
 	 * 
 	 * @throws SecurityException if e.g. we are not allowed to create a folder
 	 *         or download files to it
 	 */
-	public InstallItem call() throws SecurityException
+	private File performSetupTasks() throws SecurityException
 	{
 		File installDir = Configuration.getInstance().getApplicationDir();
 		String nodeName = node.getName();
@@ -189,7 +305,7 @@ public class InstallItem extends JPanel
 			if (!folder.exists() && !folder.mkdir())
 			{
 				logger.error(nodeName + ": Unable to create the '" + folderName + "' folder!");
-				return this;
+				return null;
 			}
 		}
 		
@@ -210,7 +326,7 @@ public class InstallItem extends JPanel
 					else if (!file.delete())
 					{
 						logger.error(nodeName + ": Unable to delete '" + delete + "'!");
-						return this;
+						return null;
 					}
 				}
 			}
@@ -234,38 +350,111 @@ public class InstallItem extends JPanel
 				else if (!from.renameTo(to))
 				{
 					logger.error(nodeName + ": Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
-					return this;
+					return null;
 				}
 			}
 		}
+		
+		return folder;
+	}
+	
+	/**
+	 * Perform the main installation tasks for this node.
+	 */
+	private boolean performInstallTasks(final File modFolder)
+	{
+		final String nodeName = node.getName();
 		
 		if (!node.getInstallList().isEmpty())
 		{
 			logger.info(nodeName + ": Processing INSTALL items");
 			setText("Installing files...");
 			
-			Connector connector = (Connector) Configuration.getInstance().getSettings().get(Configuration.CONNECTOR_KEY);
+			final Connector connector = (Connector) Configuration.getInstance().getSettings().get(Configuration.CONNECTOR_KEY);
+			ExecutorService service = FreeSpaceOpenInstaller.getInstance().getExecutorService();
+			
+			final int totalTasks = downloadPanelMap.keySet().size();
+			final AtomicInteger successes = new AtomicInteger(0);
+			final AtomicInteger completions = new AtomicInteger(0);
+			final CountDownLatch latch = new CountDownLatch(totalTasks);
 			
 			// these could be files to download, or they could later be files to extract
 			for (InstallUnit install: node.getInstallList())
 			{
-				List<BaseURL> urls = install.getBaseURLList();
-				
 				// try mirrors in random order
-				if (urls.size() > 1)
-					Collections.shuffle(urls);
+				List<BaseURL> tempURLs = install.getBaseURLList();
+				if (tempURLs.size() > 1)
+				{
+					tempURLs = new ArrayList<BaseURL>(tempURLs);
+					Collections.shuffle(tempURLs);
+				}
+				final List<BaseURL> urls = tempURLs;
 				
 				// install all files for the unit
-				for (String file: install.getFileList())
+				for (final String file: install.getFileList())
 				{
-					// attempt to install this file
-					boolean succeeded = installOne(nodeName, connector, folder, urls, file);
-					if (!succeeded)
-						return this;
-					logger.info(nodeName + ": Downloaded '" + file + "'");
+					final DownloadPanel downloadPanel = downloadPanelMap.get(new KeyPair<InstallUnit, String>(install, file));
+					
+					// submit a task for this file
+					service.submit(new Callable<Void>()
+					{
+						public Void call()
+						{
+							// this technique will attempt to perform the installation, record whether it is successful,
+							// and then signal its completion via the countdown latch
+							try
+							{
+								// first do the installation
+								boolean success = installOne(nodeName, connector, modFolder, urls, file, downloadPanel);
+								
+								// next update the progress bar
+								setRatioComplete(completions.incrementAndGet() / ((double) totalTasks));
+								
+								// record whether this one worked
+								if (success)
+								{
+									successes.incrementAndGet();
+									logger.info(nodeName + ": Downloaded '" + file + "'");
+								}
+							}
+							finally
+							{
+								latch.countDown();
+							}
+							return null;
+						}
+					});
 				}
 			}
+			
+			// wait until all tasks have finished
+			try
+			{
+				latch.await();
+			}
+			catch (InterruptedException ie)
+			{
+				logger.error("Thread was interrupted while waiting for downloads to complete!", ie);
+				Thread.currentThread().interrupt();
+				return false;
+			}
+			
+			// check success or failure
+			return (successes.get() == totalTasks);
 		}
+		// nothing to install, so obviously we were successful
+		else
+		{
+			return true;
+		}
+	}
+	
+	/**
+	 * Perform hash validation for this node.
+	 */
+	private boolean performHashTasks(File modFolder)
+	{
+		String nodeName = node.getName();
 		
 		if (!node.getHashList().isEmpty())
 		{
@@ -293,7 +482,7 @@ public class InstallItem extends JPanel
 				}
 				
 				// find the file to hash
-				File fileToHash = new File(installDir, hash.getFilename());
+				File fileToHash = new File(modFolder, hash.getFilename());
 				if (!fileToHash.exists())
 				{
 					logger.debug(nodeName + ": Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
@@ -316,22 +505,17 @@ public class InstallItem extends JPanel
 				if (!hash.getHash().equals(computedHash))
 				{
 					logger.error(nodeName + ": Computed hash value of '" + computedHash + "' does not match required hash value of '" + hash.getHash() + "'!");
-					return this;
+					return false;
 				}
 			}
 		}
 		
-		setText("Done!");
-		fireCompletion();
-		return this;
+		return true;
 	}
 	
-	private boolean installOne(String nodeName, Connector connector, File modFolder, List<BaseURL> baseURLList, String file)
+	private boolean installOne(String nodeName, Connector connector, File modFolder, List<BaseURL> baseURLList, String file, DownloadPanel downloadPanel)
 	{
 		logger.info(nodeName + ": installing '" + file + "'");
-		
-		// this will listen and update the bar until we have a download that succeeds
-		BarUpdater updater = new BarUpdater(this, file);
 		
 		// try all URLs supplied
 		for (BaseURL baseURL: baseURLList)
@@ -350,11 +534,11 @@ public class InstallItem extends JPanel
 			
 			logger.debug(nodeName + ": Beginning download of '" + file + "'");
 			Downloader downloader = new Downloader(connector, url, modFolder);
-			downloader.addDownloadListener(updater);
-			downloader.download();
+			downloadPanel.setDownloader(downloader);
+			boolean success = downloader.download();
 			
 			// did it work?
-			if (updater.succeeded())
+			if (success)
 			{
 				logger.debug(nodeName + ": Completed download of '" + file + "'");
 				return true;
@@ -365,6 +549,25 @@ public class InstallItem extends JPanel
 		return false;
 	}
 	
+	private void logResult(final String message)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				installResults.add(message);
+			}
+		});
+	}
+	
+	public List<String> getInstallResults()
+	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
+		return installResults;
+	}
+	
 	public void setIndeterminate(final boolean indeterminate)
 	{
 		EventQueue.invokeLater(new Runnable()
@@ -372,6 +575,20 @@ public class InstallItem extends JPanel
 			public void run()
 			{
 				overallBar.setIndeterminate(indeterminate);
+			}
+		});
+	}
+	
+	public void setSuccess(final boolean success)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				if (success)
+					stoplightPanel.setSuccess();
+				else
+					stoplightPanel.setFailure();
 			}
 		});
 	}
@@ -407,90 +624,5 @@ public class InstallItem extends JPanel
 				overallBar.setString(text);
 			}
 		});
-	}
-	
-	private static class BarUpdater implements DownloadListener
-	{
-		private final InstallItem item;
-		private final String file;
-		private volatile boolean succeeded;
-		
-		public BarUpdater(InstallItem item, String file)
-		{
-			this.item = item;
-			this.file = file;
-			this.succeeded = false;
-		}
-		
-		public boolean succeeded()
-		{
-			return succeeded;
-		}
-		
-		public void downloadAboutToStart(DownloadEvent event)
-		{
-			item.setIndeterminate(false);
-			item.setPercentComplete(0);
-			item.setText("Downloading '" + file + "'...");
-		}
-		
-		public void downloadComplete(DownloadEvent event)
-		{
-			item.setPercentComplete(100);
-			item.setText("Downloading '" + file + "'...complete!");
-			succeeded = true;
-		}
-		
-		public void downloadFailed(DownloadEvent event)
-		{
-			item.setText("Downloading '" + file + "'...failed!");
-			Exception e = event.getException();
-			if (e != null)
-				logger.error("Download of '" + event.getDownloadName() + "' failed!", e);
-			succeeded = false;
-		}
-		
-		public void downloadNotNecessary(DownloadEvent event)
-		{
-			item.setPercentComplete(100);
-			item.setText("Downloading '" + file + "'...complete!");
-			succeeded = true;
-		}
-		
-		public void downloadProgressReport(DownloadEvent event)
-		{
-			item.setRatioComplete(((double) event.getDownloadedBytes()) / event.getTotalBytes());
-			item.setText("Downloading '" + file + "'..." + event.getDownloadedBytes() + " of " + event.getTotalBytes() + " bytes");
-		}
-	}
-	
-	public static void main(String[] args) throws IOException, InstallerNodeParseException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException
-	{
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		
-		Reader reader = new FileReader("fsport.txt");
-		InstallerNode fsport = InstallerNodeFactory.readNode(reader);
-		reader.close();
-		
-		// this little trick prevents the install items from stretching if there aren't enough to fill the vertical space
-		JPanel scrollPanel = new JPanel(new BorderLayout());
-		scrollPanel.add(new InstallItem(fsport), BorderLayout.NORTH);
-		scrollPanel.add(Box.createGlue(), BorderLayout.CENTER);
-		
-		JScrollPane installScrollPane = new JScrollPane(scrollPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		
-		JPanel panel = new JPanel(new BorderLayout(0, GUIConstants.DEFAULT_MARGIN));
-		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
-		panel.add(installScrollPane, BorderLayout.CENTER);
-		
-		JFrame frame = new JFrame("test");
-		frame.setContentPane(panel);
-		frame.pack();
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
-		SwingUtils.centerWindowOnScreen(frame);
-		frame.setVisible(true);
-		
-		FreeSpaceOpenInstaller.getInstance().getExecutorService().shutdown();
 	}
 }
