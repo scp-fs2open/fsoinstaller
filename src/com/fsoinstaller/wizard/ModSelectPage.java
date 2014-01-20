@@ -369,7 +369,7 @@ public class ModSelectPage extends WizardPage
 				message.add(header, BorderLayout.NORTH);
 				message.add(description, BorderLayout.CENTER);
 				
-				JOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), message, "FreeSpace Open Installer", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), message, Configuration.getInstance().getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		
