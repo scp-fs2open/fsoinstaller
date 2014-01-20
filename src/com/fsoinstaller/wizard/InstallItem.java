@@ -140,7 +140,7 @@ public class InstallItem extends JPanel
 			
 			// put them as children under the main progress bar
 			contentsPanel = new CollapsiblePanel(headerPanel, downloadsPanel);
-			((CollapsiblePanel) contentsPanel).setCollapsed(true);
+			((CollapsiblePanel) contentsPanel).setCollapsed(false);
 		}
 		// no install units, so just add the panel without any children
 		else

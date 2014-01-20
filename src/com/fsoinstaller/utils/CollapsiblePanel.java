@@ -68,6 +68,7 @@ public class CollapsiblePanel extends JPanel
 				setCollapsed(!collapsed);
 			}
 		});
+		toggleButton.setToolTipText("Collapse/Expand");
 		
 		// gotta set the alignments so that the components don't float around
 		toggleButton.setAlignmentY(TOP_ALIGNMENT);
