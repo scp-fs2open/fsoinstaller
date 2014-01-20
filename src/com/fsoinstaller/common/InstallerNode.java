@@ -414,7 +414,9 @@ public class InstallerNode
 			if (baseURL == null)
 				throw new NullPointerException("Cannot add a null base URL!");
 			
-			baseURLList.add(baseURL);
+			// ensure no duplicates
+			if (!baseURLList.contains(baseURL))
+				baseURLList.add(baseURL);
 		}
 		
 		public void removeBaseURL(BaseURL baseURL)
@@ -427,7 +429,9 @@ public class InstallerNode
 			if (file == null)
 				throw new NullPointerException("Cannot add a null file!");
 			
-			fileList.add(file);
+			// ensure no duplicates
+			if (!fileList.contains(file))
+				fileList.add(file);
 		}
 		
 		public void removeFile(String file)
