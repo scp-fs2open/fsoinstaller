@@ -21,31 +21,30 @@ package com.fsoinstaller.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
-import java.util.logging.StreamHandler;
 
 
 /**
  * This is a wrapper over the Java logging API that provides an API similar to
- * log4j.
+ * log4j. It's no longer a 1-1 wrapper though; it provides separate logging
+ * files for separate mods.
  * 
  * @author Goober5000
  */
 public final class Logger
 {
-	private static final Object mapMutex = new Object();
-	private static final Map<Class<?>, Logger> map = new HashMap<Class<?>, Logger>();
+	private static final String standardFile = "fsoinstaller.log";
 	
-	private static final List<StreamHandler> handlers;
-	private static final Formatter formatter = new Log4JFormatter();
+	private static final Map<String, FileHandler> fileHandlerMap = new HashMap<String, FileHandler>();
+	private static final Map<KeyPair<Class<?>, String>, Logger> loggerMap = new HashMap<KeyPair<Class<?>, String>, Logger>();
+	
+	private static final Formatter formatter;
+	private static final ConsoleHandler consoleHandler;
 	
 	// do logging setup
 	static
@@ -53,13 +52,23 @@ public final class Logger
 		// set level of root logger
 		java.util.logging.Logger.getLogger("").setLevel(Level.ALL);
 		
-		// create logs folder if possible
-		String logfile = "fsoinstaller.log";
+		// create standard formatter
+		formatter = new Log4JFormatter();
+		
+		// create console handler
+		consoleHandler = new ConsoleHandler();
+		consoleHandler.setFormatter(formatter);
+	}
+	
+	private static FileHandler createFileHandler(String fileName)
+	{
+		String logfile = fileName;
+		
 		File file = new File("logs");
 		if (file.exists())
 		{
 			// already exists, yay
-			logfile = "logs/" + logfile;
+			logfile = "logs" + File.separator + fileName;
 		}
 		else
 		{
@@ -67,7 +76,7 @@ public final class Logger
 			try
 			{
 				if (file.mkdir())
-					logfile = "logs/" + logfile;
+					logfile = "logs" + File.separator + fileName;
 			}
 			catch (SecurityException se)
 			{
@@ -75,16 +84,10 @@ public final class Logger
 			}
 		}
 		
-		// add all our handlers
-		StreamHandler consoleHandler = new ConsoleHandler();
-		consoleHandler.setFormatter(formatter);
-		List<StreamHandler> temp = new ArrayList<StreamHandler>();
-		temp.add(consoleHandler);
+		FileHandler handler = null;
 		try
 		{
-			FileHandler fileHandler = new FileHandler(logfile, true);
-			fileHandler.setFormatter(formatter);
-			temp.add(fileHandler);
+			handler = new FileHandler(logfile, true);
 		}
 		catch (SecurityException se)
 		{
@@ -95,30 +98,50 @@ public final class Logger
 			java.util.logging.Logger.getLogger("global").log(Level.SEVERE, "Could not create FileHandler for " + logfile + "!", ioe);
 		}
 		
-		// assign to list
-		handlers = Collections.unmodifiableList(temp);
-	}
-	
-	// per-logger logging setup
-	private static java.util.logging.Logger createWrappedLogger(Class<?> clazz)
-	{
-		java.util.logging.Logger wrapped_logger = java.util.logging.Logger.getLogger(clazz.getName());
-		for (StreamHandler handler: handlers)
-			wrapped_logger.addHandler(handler);
-		return wrapped_logger;
+		if (handler != null)
+			handler.setFormatter(formatter);
+		return handler;
 	}
 	
 	public static Logger getLogger(Class<?> clazz)
 	{
-		synchronized (mapMutex)
+		return getLogger(clazz, null);
+	}
+	
+	public static Logger getLogger(Class<?> clazz, String modName)
+	{
+		String fileName;
+		if (modName == null)
+			fileName = standardFile;
+		else
+			fileName = MiscUtils.createValidFileName(modName);
+		KeyPair<Class<?>, String> key = new KeyPair<Class<?>, String>(clazz, fileName);
+		
+		synchronized (loggerMap)
 		{
 			// return logger if map already contains it
-			if (map.containsKey(clazz))
-				return map.get(clazz);
+			if (loggerMap.containsKey(key))
+				return loggerMap.get(key);
 			
-			// create logger if not
-			Logger logger = new Logger(clazz, createWrappedLogger(clazz));
-			map.put(clazz, logger);
+			// okay, so we need to retrieve the appropriate file handler, and create *that* if it doesn't exist
+			FileHandler fileHandler;
+			if (fileHandlerMap.containsKey(fileName))
+				fileHandler = fileHandlerMap.get(fileName);
+			else
+			{
+				fileHandler = createFileHandler(fileName);
+				fileHandlerMap.put(fileName, fileHandler);
+			}
+			
+			// create the Java logger
+			java.util.logging.Logger wrapped_logger = java.util.logging.Logger.getLogger(clazz.getName());
+			wrapped_logger.addHandler(consoleHandler);
+			if (fileHandler != null)
+				wrapped_logger.addHandler(fileHandler);
+			
+			// wrap it, store it, and return it			
+			Logger logger = new Logger(clazz, wrapped_logger);
+			loggerMap.put(key, logger);
 			return logger;
 		}
 	}

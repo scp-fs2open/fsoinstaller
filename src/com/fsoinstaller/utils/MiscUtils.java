@@ -148,4 +148,13 @@ public class MiscUtils
 		
 		return paragraph.toString();
 	}
+	
+	public static String createValidFileName(String fileName)
+	{
+		if (fileName == null)
+			throw new IllegalArgumentException("File name cannot be null!");
+		
+		// remove any invalid character from the filename.
+		return fileName.trim().replaceAll("[^a-zA-Z0-9._]+", "_");
+	}
 }
