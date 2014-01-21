@@ -30,7 +30,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
-import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
 
 
@@ -46,7 +45,7 @@ public final class Logger
 	private static final Map<Class<?>, Logger> map = new HashMap<Class<?>, Logger>();
 	
 	private static final List<StreamHandler> handlers;
-	private static final Formatter formatter = new SimpleFormatter();
+	private static final Formatter formatter = new Log4JFormatter();
 	
 	// do logging setup
 	static
