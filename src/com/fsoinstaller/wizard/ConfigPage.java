@@ -827,9 +827,24 @@ public class ConfigPage extends WizardPage
 			// if we need FS2 installed, make sure that it is (or that user has been warned)
 			if (configuration.requiresFS2())
 			{
+				boolean exists = false;
+				
 				// the best way to do this is probably to check for the presence of root_fs2
-				File root_fs2 = new File(destinationDir, "root_fs2.vp");
-				if (!root_fs2.exists())
+				File[] contents = destinationDir.listFiles();
+				for (File file: contents)
+				{
+					if (file.isDirectory())
+						continue;
+					
+					String name = file.getName();
+					if (name.equalsIgnoreCase("root_fs2.vp"))
+					{
+						exists = true;
+						break;
+					}
+				}
+				
+				if (!exists)
 				{
 					// prompt to continue
 					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not appear to contain a retail installation of FreeSpace 2.  FreeSpace 2 is required to run FreeSpace Open as well as any mods you download.\n\nDo you want to continue anyway?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
