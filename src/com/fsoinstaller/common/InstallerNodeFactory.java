@@ -19,12 +19,14 @@
 
 package com.fsoinstaller.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fsoinstaller.utils.Logger;
@@ -142,6 +144,7 @@ public class InstallerNodeFactory
 			
 			case FOLDER:
 				String folder = readString(reader);
+				folder = folder.replaceAll("[/\\\\]", Matcher.quoteReplacement(File.separator));
 				node.setFolder(folder);
 				break;
 			
