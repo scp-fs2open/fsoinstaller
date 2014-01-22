@@ -33,6 +33,8 @@ import javax.swing.SwingUtilities;
  */
 public class MiscUtils
 {
+	private static final Logger logger = Logger.getLogger(MiscUtils.class);
+	
 	/**
 	 * Prevent instantiation.
 	 */
@@ -156,5 +158,48 @@ public class MiscUtils
 		
 		// remove any invalid character from the filename.
 		return fileName.trim().replaceAll("[^a-zA-Z0-9._]+", "_");
+	}
+	
+	public static int compareVersions(String version1, String version2)
+	{
+		String[] num1 = version1.trim().split("\\.");
+		String[] num2 = version2.trim().split("\\.");
+		
+		int maxLen = num1.length > num2.length ? num1.length : num2.length;
+		
+		for (int i = 0; i < maxLen; i++)
+		{
+			int ver1 = 0;
+			if (i < num1.length)
+			{
+				try
+				{
+					ver1 = Integer.valueOf(num1[i]);
+				}
+				catch (NumberFormatException nfe)
+				{
+					logger.warn("Could not parse version string '" + version1 + "'!", nfe);
+				}
+			}
+			int ver2 = 0;
+			if (i < num2.length)
+			{
+				try
+				{
+					ver2 = Integer.valueOf(num2[i]);
+				}
+				catch (NumberFormatException nfe)
+				{
+					logger.warn("Could not parse version string '" + version2 + "'!", nfe);
+				}
+			}
+			
+			if (ver1 > ver2)
+				return 1;
+			else if (ver1 < ver2)
+				return -1;
+		}
+		
+		return 0;
 	}
 }

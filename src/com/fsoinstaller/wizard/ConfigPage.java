@@ -453,6 +453,7 @@ public class ConfigPage extends WizardPage
 			if (!settings.containsKey(Configuration.REMOTE_VERSION_KEY))
 			{
 				logger.info("Checking installer version...");
+				logger.info("This version is " + FreeSpaceOpenInstaller.INSTALLER_VERSION);
 				
 				File tempVersion;
 				File tempFilenames;
@@ -473,7 +474,7 @@ public class ConfigPage extends WizardPage
 				tempFilenames.deleteOnExit();
 				tempBasicConfig.deleteOnExit();
 				
-				double maxVersion = -1.0;
+				String maxVersion = "0.0.0.0";
 				String maxVersionURL = null;
 				
 				// check all URLs for version and filename info
@@ -504,20 +505,11 @@ public class ConfigPage extends WizardPage
 						List<String> versionLines = IOUtils.readTextFile(tempVersion);
 						if (!versionLines.isEmpty())
 						{
-							double thisVersion;
-							try
-							{
-								thisVersion = Double.valueOf(versionLines.get(0));
-							}
-							catch (NumberFormatException nfe)
-							{
-								thisVersion = 0.0;
-							}
-							
+							String thisVersion = versionLines.get(0);
 							logger.info("Version at this URL is " + thisVersion);
 							
 							// get the information from the highest version available
-							if (thisVersion > maxVersion)
+							if (MiscUtils.compareVersions(thisVersion, maxVersion) > 0)
 							{
 								// get file names
 								Downloader tempFilenamesDownloader = new Downloader(connector, filenameURL, tempFilenames);
@@ -570,8 +562,9 @@ public class ConfigPage extends WizardPage
 				
 				// we have a version; check if it is more recent than what we're running
 				// (this prompt should only ever come up once, because once the version is known, future visits to this page will take the early exit above)
-				if (maxVersion > FreeSpaceOpenInstaller.INSTALLER_VERSION)
+				if (MiscUtils.compareVersions(maxVersion, FreeSpaceOpenInstaller.INSTALLER_VERSION) > 0)
 				{
+					logger.info("Installer is out-of-date; prompting user to download new version...");
 					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "This version of the installer is out-of-date.  Would you like to bring up the download page for the most recent version?\n\n(If you click Yes, the program will exit.)", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.YES_OPTION)
 					{
