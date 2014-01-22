@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 
 
@@ -49,15 +50,17 @@ public final class Logger
 	// do logging setup
 	static
 	{
-		// set level of root logger
-		java.util.logging.Logger.getLogger("").setLevel(Level.ALL);
-		
 		// create standard formatter
 		formatter = new Log4JFormatter();
 		
 		// create console handler
 		consoleHandler = new ConsoleHandler();
 		consoleHandler.setFormatter(formatter);
+		
+		// configure root logger
+		java.util.logging.Logger.getLogger("").setLevel(Level.ALL);
+		for (Handler handler: java.util.logging.Logger.getLogger("").getHandlers())
+			handler.setFormatter(formatter);
 	}
 	
 	private static FileHandler createFileHandler(String fileName)
