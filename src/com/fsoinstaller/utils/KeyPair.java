@@ -68,4 +68,15 @@ public class KeyPair<T1, T2>
 		KeyPair<?, ?> other = (KeyPair<?, ?>) object;
 		return MiscUtils.nullSafeEquals(object1, other.object1) && MiscUtils.nullSafeEquals(object2, other.object2);
 	}
+	
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder("[");
+		sb.append(object1 == null ? "null" : object1.toString());
+		sb.append(",");
+		sb.append(object2 == null ? "null" : object2.toString());
+		sb.append("]");
+		return sb.toString();
+	}
 }
