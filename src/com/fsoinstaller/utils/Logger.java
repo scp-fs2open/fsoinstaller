@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -44,19 +43,11 @@ public final class Logger
 	private static final Map<String, FileHandler> fileHandlerMap = new HashMap<String, FileHandler>();
 	private static final Map<KeyPair<Class<?>, String>, Logger> loggerMap = new HashMap<KeyPair<Class<?>, String>, Logger>();
 	
-	private static final Formatter formatter;
-	private static final ConsoleHandler consoleHandler;
+	private static final Formatter formatter = new Log4JFormatter();
 	
 	// do logging setup
 	static
 	{
-		// create standard formatter
-		formatter = new Log4JFormatter();
-		
-		// create console handler
-		consoleHandler = new ConsoleHandler();
-		consoleHandler.setFormatter(formatter);
-		
 		// configure root logger
 		java.util.logging.Logger.getLogger("").setLevel(Level.ALL);
 		for (Handler handler: java.util.logging.Logger.getLogger("").getHandlers())
@@ -118,6 +109,8 @@ public final class Logger
 			fileName = standardFile;
 		else
 			fileName = MiscUtils.createValidFileName(modName);
+		if (!fileName.toLowerCase().endsWith(".log"))
+			fileName += ".log";
 		KeyPair<Class<?>, String> key = new KeyPair<Class<?>, String>(clazz, fileName);
 		
 		synchronized (loggerMap)
@@ -137,8 +130,7 @@ public final class Logger
 			}
 			
 			// create the Java logger
-			java.util.logging.Logger wrapped_logger = java.util.logging.Logger.getLogger(clazz.getName());
-			wrapped_logger.addHandler(consoleHandler);
+			java.util.logging.Logger wrapped_logger = java.util.logging.Logger.getLogger(key.toString());
 			if (fileHandler != null)
 				wrapped_logger.addHandler(fileHandler);
 			
