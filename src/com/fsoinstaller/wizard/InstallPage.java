@@ -119,8 +119,8 @@ public class InstallPage extends WizardPage
 			if (!selectedMods.contains(node.getName()))
 				continue;
 			
-			// add item's GUI to the panel
-			final InstallItem item = new InstallItem(node);
+			// add item's GUI (and all its children) to the panel
+			final InstallItem item = new InstallItem(node, selectedMods);
 			installPanel.add(item);
 			
 			// keep track of mods that have completed (whether success or failure)

@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -76,10 +77,13 @@ public class InstallItem extends JPanel
 	private final StoplightPanel stoplightPanel;
 	private final Map<KeyPair<InstallUnit, String>, DownloadPanel> downloadPanelMap;
 	
+	private final List<InstallItem> childItems;
+	private int remainingChildren;
+	
 	private Future<Void> overallInstallTask;
 	private List<String> installResults;
 	
-	public InstallItem(InstallerNode node)
+	public InstallItem(InstallerNode node, Set<String> selectedMods)
 	{
 		super();
 		this.node = node;
@@ -90,7 +94,7 @@ public class InstallItem extends JPanel
 		
 		overallBar = new JProgressBar(0, 100);
 		overallBar.setIndeterminate(true);
-		overallBar.setString("Installing...");
+		overallBar.setString("Waiting to begin...");
 		overallBar.setStringPainted(true);
 		
 		stoplightPanel = new StoplightPanel((int) overallBar.getPreferredSize().getHeight());
@@ -98,6 +102,8 @@ public class InstallItem extends JPanel
 		// these variables will only ever be accessed from the event thread, so they are thread safe
 		overallInstallTask = null;
 		installResults = new ArrayList<String>();
+		childItems = new ArrayList<InstallItem>();
+		remainingChildren = 0;
 		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
@@ -111,44 +117,73 @@ public class InstallItem extends JPanel
 		headerPanel.add(new JLabel(node.getName()), BorderLayout.NORTH);
 		headerPanel.add(progressPanel, BorderLayout.CENTER);
 		
-		JPanel contentsPanel;
-		Map<KeyPair<InstallUnit, String>, DownloadPanel> tempMap = new HashMap<KeyPair<InstallUnit, String>, DownloadPanel>();
+		// we probably have some install units or children...
+		JPanel installPanel = new JPanel();
+		installPanel.setLayout(new BoxLayout(installPanel, BoxLayout.Y_AXIS));
 		
-		// we probably have some install units...
-		if (!node.getInstallList().isEmpty())
+		// add as many panels as we have download items for
+		Map<KeyPair<InstallUnit, String>, DownloadPanel> tempMap = new HashMap<KeyPair<InstallUnit, String>, DownloadPanel>();
+		for (InstallUnit install: node.getInstallList())
 		{
-			JPanel downloadsPanel = new JPanel();
-			downloadsPanel.setLayout(new BoxLayout(downloadsPanel, BoxLayout.Y_AXIS));
-			
-			// add as many panels as we have download items for
-			for (InstallUnit install: node.getInstallList())
+			for (String file: install.getFileList())
 			{
-				for (String file: install.getFileList())
+				KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
+				if (tempMap.containsKey(key))
 				{
-					KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
-					if (tempMap.containsKey(key))
-					{
-						logger.error("Duplicate key found for mod '" + node.getName() + "', file '" + file + "'!");
-						continue;
-					}
-					
-					DownloadPanel panel = new DownloadPanel();
-					downloadsPanel.add(panel);
-					tempMap.put(key, panel);
+					logger.error("Duplicate key found for mod '" + node.getName() + "', file '" + file + "'!");
+					continue;
 				}
+				
+				DownloadPanel panel = new DownloadPanel();
+				installPanel.add(panel);
+				tempMap.put(key, panel);
 			}
+		}
+		downloadPanelMap = Collections.unmodifiableMap(tempMap);
+		
+		// add as many children as we have
+		for (InstallerNode childNode: node.getChildren())
+		{
+			// only add a node if it was selected
+			if (!selectedMods.contains(childNode.getName()))
+				continue;
 			
-			// put them as children under the main progress bar
-			contentsPanel = new CollapsiblePanel(headerPanel, downloadsPanel);
+			// add item's GUI (and all its children) to the panel
+			final InstallItem childItem = new InstallItem(childNode, selectedMods);
+			installPanel.add(childItem);
+			
+			// keep track of children that have completed (whether success or failure)
+			remainingChildren++;
+			childItem.addCompletionListener(new ChangeListener()
+			{
+				public void stateChanged(ChangeEvent e)
+				{
+					// add any feedback to the output
+					installResults.addAll(childItem.getInstallResults());
+					
+					remainingChildren--;
+					
+					// if ALL of the children have completed, this whole item is complete
+					if (remainingChildren == 0)
+						fireCompletion();
+				}
+			});
+			
+			childItems.add(childItem);
+		}
+		
+		JPanel contentsPanel;
+		if (installPanel.getComponentCount() > 0)
+		{
+			// put children under the main progress bar
+			contentsPanel = new CollapsiblePanel(headerPanel, installPanel);
 			((CollapsiblePanel) contentsPanel).setCollapsed(false);
 		}
-		// no install units, so just add the panel without any children
+		// really?  then just add the progress bar by itself
 		else
 		{
 			contentsPanel = headerPanel;
 		}
-		
-		downloadPanelMap = Collections.unmodifiableMap(tempMap);
 		
 		add(contentsPanel);
 		add(Box.createGlue());
@@ -234,7 +269,7 @@ public class InstallItem extends JPanel
 					return null;
 				}
 				
-				// maybe change the progress bar look agaain
+				// maybe change the progress bar look again
 				if (!node.getHashList().isEmpty())
 					setIndeterminate(true);
 				
@@ -250,9 +285,18 @@ public class InstallItem extends JPanel
 				}
 				
 				setText("Done!");
-				
 				setSuccess(true);
-				fireCompletion();
+				
+				// and now we get to kick off all the children!
+				EventQueue.invokeLater(new Runnable()
+				{
+					public void run()
+					{
+						for (InstallItem child: childItems)
+							child.start();
+					}
+				});
+				
 				return null;
 			}
 		});

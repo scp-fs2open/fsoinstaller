@@ -45,7 +45,7 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		
 		this.stoplightPanel = new StoplightPanel((int) progressBar.getPreferredSize().getHeight());
 		
-		setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN));
+		setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, 0));
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 		add(progressBar);
 		add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
