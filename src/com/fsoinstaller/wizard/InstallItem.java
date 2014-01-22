@@ -365,6 +365,9 @@ public class InstallItem extends JPanel
 			{
 				for (InstallItem child: childItems)
 				{
+					Logger.getLogger(InstallItem.class, child.getName()).info("Parent mod could not be installed; this mod will be skipped!");
+					logResult(child.getName() + ": Skipped due to failure of parent mod.");
+					
 					// since children haven't actually started yet, they can't be cancelled,
 					// so just indicate status
 					child.setSuccess(false);
@@ -522,7 +525,7 @@ public class InstallItem extends JPanel
 								setRatioComplete(complete / ((double) totalTasks));
 								
 								modLogger.info("File '" + file + "' was " + (success ? "successful" : "unsuccessful"));
-								modLogger.info("This marks " + complete + " files out of " + totalTasks);
+								modLogger.info("This marks " + complete + ((complete == 1) ? " file out of " : " files out of ") + totalTasks);
 							}
 							catch (RuntimeException re)
 							{
