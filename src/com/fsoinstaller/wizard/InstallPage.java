@@ -48,7 +48,7 @@ import com.fsoinstaller.utils.SwingUtils;
 
 public class InstallPage extends WizardPage
 {
-	private static final Logger logger = Logger.getLogger(ModSelectPage.class);
+	private static final Logger logger = Logger.getLogger(InstallPage.class);
 	
 	private final JPanel installPanel;
 	
@@ -148,13 +148,16 @@ public class InstallPage extends WizardPage
 	
 	protected void installCompleted()
 	{
+		logger.info("Install completed!  Ready to move to next page.");
+		
 		nextButton.setEnabled(true);
 		cancelButton.setEnabled(false);
 		
 		Map<String, Object> settings = configuration.getSettings();
 		settings.put(Configuration.INSTALL_RESULTS_KEY, installResults);
 		
-		// note that the ExecutorService isn't going to terminate automatically, so we need to shut it down properly in success or failure		
+		// note that the ExecutorService isn't going to terminate automatically, so we need to shut it down properly in success or failure
+		logger.debug("Asking the executor service to shut down...");
 		FreeSpaceOpenInstaller.getInstance().getExecutorService().shutdown();
 	}
 	

@@ -82,12 +82,17 @@ public class InstallItem extends JPanel
 	
 	private Future<Void> overallInstallTask;
 	private List<String> installResults;
+	private boolean cancelled;
+	
+	private final Logger modLogger;
 	
 	public InstallItem(InstallerNode node, Set<String> selectedMods)
 	{
 		super();
 		this.node = node;
 		this.listenerList = new CopyOnWriteArrayList<ChangeListener>();
+		
+		modLogger = Logger.getLogger(InstallItem.class, node.getName());
 		
 		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -100,10 +105,11 @@ public class InstallItem extends JPanel
 		stoplightPanel = new StoplightPanel((int) overallBar.getPreferredSize().getHeight());
 		
 		// these variables will only ever be accessed from the event thread, so they are thread safe
-		overallInstallTask = null;
-		installResults = new ArrayList<String>();
 		childItems = new ArrayList<InstallItem>();
 		remainingChildren = 0;
+		overallInstallTask = null;
+		installResults = new ArrayList<String>();
+		cancelled = false;
 		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
@@ -158,9 +164,6 @@ public class InstallItem extends JPanel
 			{
 				public void stateChanged(ChangeEvent e)
 				{
-					// add any feedback to the output
-					installResults.addAll(childItem.getInstallResults());
-					
 					remainingChildren--;
 					
 					// if ALL of the children have completed, this whole item is complete
@@ -201,6 +204,8 @@ public class InstallItem extends JPanel
 	
 	protected void fireCompletion()
 	{
+		modLogger.info("Processing is complete; alerting listeners...");
+		
 		setIndeterminate(false);
 		setPercentComplete(100);
 		
@@ -226,77 +231,83 @@ public class InstallItem extends JPanel
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
+		if (cancelled)
+		{
+			modLogger.info("Task was cancelled before it could start!");
+			return;
+		}
+		modLogger.info("Starting task!");
+		
 		// and now we queue up our big task that handles this whole node
 		overallInstallTask = FreeSpaceOpenInstaller.getInstance().getExecutorService().submit(new Callable<Void>()
 		{
 			public Void call()
 			{
-				File modFolder;
-				
-				// handle create, delete, and rename
 				try
 				{
-					modFolder = performSetupTasks();
-				}
-				catch (SecurityException se)
-				{
-					logger.error(node.getName() + "Encountered a security exception when processing setup tasks", se);
-					modFolder = null;
-				}
-				
-				// if setup didn't work, can't continue
-				if (modFolder == null)
-				{
-					logResult(node.getName() + ": Mod setup failed.");
+					File modFolder;
 					
-					setSuccess(false);
-					fireCompletion();
-					return null;
-				}
-				
-				// prepare progress bar for tracking installation units
-				setPercentComplete(0);
-				setIndeterminate(false);
-				
-				// now we are about to download stuff
-				boolean success = performInstallTasks(modFolder);
-				if (!success || Thread.currentThread().isInterrupted())
-				{
-					logResult(node.getName() + ": Installation failed.");
-					
-					setSuccess(false);
-					fireCompletion();
-					return null;
-				}
-				
-				// maybe change the progress bar look again
-				if (!node.getHashList().isEmpty())
-					setIndeterminate(true);
-				
-				// now hash the files we installed
-				success = performHashTasks(modFolder);
-				if (!success || Thread.currentThread().isInterrupted())
-				{
-					logResult(node.getName() + ": Hash verification failed.");
-					
-					setSuccess(false);
-					fireCompletion();
-					return null;
-				}
-				
-				setText("Done!");
-				setSuccess(true);
-				
-				// and now we get to kick off all the children!
-				EventQueue.invokeLater(new Runnable()
-				{
-					public void run()
+					// handle create, delete, and rename
+					try
 					{
-						for (InstallItem child: childItems)
-							child.start();
+						modFolder = performSetupTasks();
 					}
-				});
-				
+					catch (SecurityException se)
+					{
+						modLogger.error("Encountered a security exception when processing setup tasks", se);
+						logResult(node.getName() + ": A Java security exception prevented setup from running.  Check the log file for more details.");
+						modFolder = null;
+					}
+					
+					// if setup didn't work, can't continue
+					if (modFolder == null)
+					{
+						setSuccess(false);
+						cancelChildren();
+						fireCompletion();
+						return null;
+					}
+					modLogger.info("Installing to path: " + modFolder.getAbsolutePath());
+					
+					// prepare progress bar for tracking installation units
+					setPercentComplete(0);
+					setIndeterminate(false);
+					
+					// now we are about to download stuff
+					boolean success = performInstallTasks(modFolder);
+					if (!success || Thread.currentThread().isInterrupted())
+					{
+						setSuccess(false);
+						cancelChildren();
+						fireCompletion();
+						return null;
+					}
+					
+					// maybe change the progress bar look again
+					if (!node.getHashList().isEmpty())
+						setIndeterminate(true);
+					
+					// now hash the files we installed
+					success = performHashTasks(modFolder);
+					if (!success || Thread.currentThread().isInterrupted())
+					{
+						setSuccess(false);
+						cancelChildren();
+						fireCompletion();
+						return null;
+					}
+					
+					setText("Done!");
+					
+					setSuccess(true);
+					startChildren();
+					// don't fire completion because that's done after children
+				}
+				catch (RuntimeException re)
+				{
+					modLogger.error("Unhandled runtime exception!", re);
+					logResult("An unexpected error occurred.  Please check the log file for more details.");
+				}
 				return null;
 			}
 		});
@@ -307,6 +318,13 @@ public class InstallItem extends JPanel
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
+		modLogger.info("User requested cancellation!");
+		
+		// cancel the current task
+		cancelled = true;
+		if (overallInstallTask != null)
+			overallInstallTask.cancel(true);
+		
 		// cancel all downloads
 		for (DownloadPanel panel: downloadPanelMap.values())
 		{
@@ -315,8 +333,50 @@ public class InstallItem extends JPanel
 				d.cancel();
 		}
 		
-		// cancel the current task
-		overallInstallTask.cancel(true);
+		// cancel children
+		for (InstallItem child: childItems)
+			child.cancel();
+	}
+	
+	/**
+	 * This should only be called from the main install processing task.
+	 */
+	private void startChildren()
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				for (InstallItem child: childItems)
+					child.start();
+			}
+		});
+	}
+	
+	/**
+	 * This should only be called from the main install processing task. It's a
+	 * program-initiated cancellation rather than a user-initiated cancellation.
+	 */
+	private void cancelChildren()
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				for (InstallItem child: childItems)
+				{
+					// since children haven't actually started yet, they can't be cancelled,
+					// so just indicate status
+					child.setSuccess(false);
+					child.setText("Parent installation failed");
+					child.setIndeterminate(false);
+					child.setPercentComplete(0);
+					
+					// cancel *their* children as well
+					child.cancelChildren();
+				}
+			}
+		});
 	}
 	
 	/**
@@ -329,9 +389,8 @@ public class InstallItem extends JPanel
 	private File performSetupTasks() throws SecurityException
 	{
 		File installDir = Configuration.getInstance().getApplicationDir();
-		String nodeName = node.getName();
 		
-		logger.info(nodeName + ": Starting processing");
+		modLogger.info("Starting processing");
 		setText("Setting up the mod...");
 		
 		// create the folder for this mod, if it has one
@@ -339,37 +398,39 @@ public class InstallItem extends JPanel
 		String folderName = node.getFolder();
 		if (folderName == null || folderName.length() == 0 || folderName.equals("/") || folderName.equals("\\"))
 		{
-			logger.debug(nodeName + ": This node has no folder; using application folder instead");
+			modLogger.debug("This node has no folder; using application folder instead");
 			folder = installDir;
 		}
 		else
 		{
-			logger.info(nodeName + ": Creating folder '" + folderName + "'");
+			modLogger.info("Creating folder '" + folderName + "'");
 			folder = new File(installDir, folderName);
 			if (!folder.exists() && !folder.mkdir())
 			{
-				logger.error(nodeName + ": Unable to create the '" + folderName + "' folder!");
+				modLogger.error("Unable to create the folder '" + folderName + "'!");
+				logResult(node.getName() + ": The folder '" + folderName + "' could not be created.");
 				return null;
 			}
 		}
 		
 		if (!node.getDeleteList().isEmpty())
 		{
-			logger.info(nodeName + ": Processing DELETE items");
+			modLogger.info("Processing DELETE items");
 			setText("Deleting old files...");
 			
 			// delete what we need to
 			for (String delete: node.getDeleteList())
 			{
-				logger.debug(nodeName + ": Deleting '" + delete + "'");
+				modLogger.debug("Deleting '" + delete + "'");
 				File file = new File(installDir, delete);
 				if (file.exists())
 				{
 					if (file.isDirectory())
-						logger.debug(nodeName + ": Cannot delete '" + delete + "'; deleting directories is not supported at this time");
+						modLogger.debug("Cannot delete '" + delete + "'; deleting directories is not supported at this time");
 					else if (!file.delete())
 					{
-						logger.error(nodeName + ": Unable to delete '" + delete + "'!");
+						modLogger.error("Unable to delete the file '" + delete + "'!");
+						logResult(node.getName() + ": The file '" + delete + "' could not be deleted.");
 						return null;
 					}
 				}
@@ -378,22 +439,23 @@ public class InstallItem extends JPanel
 		
 		if (!node.getRenameList().isEmpty())
 		{
-			logger.info(nodeName + ": Processing RENAME items");
+			modLogger.info("Processing RENAME items");
 			setText("Renaming files...");
 			
 			// rename what we need to
 			for (RenamePair rename: node.getRenameList())
 			{
-				logger.debug(nodeName + ": Renaming '" + rename.getFrom() + "' to '" + rename.getTo() + "'");
+				modLogger.debug("Renaming '" + rename.getFrom() + "' to '" + rename.getTo() + "'");
 				File from = new File(installDir, rename.getFrom());
 				File to = new File(installDir, rename.getTo());
 				if (!from.exists())
-					logger.debug(nodeName + ": Cannot rename '" + rename.getFrom() + "'; it does not exist");
+					modLogger.debug("Cannot rename '" + rename.getFrom() + "'; it does not exist");
 				else if (to.exists())
-					logger.debug(nodeName + ": Cannot rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'; the latter already exists");
+					modLogger.debug("Cannot rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'; the latter already exists");
 				else if (!from.renameTo(to))
 				{
-					logger.error(nodeName + ": Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
+					modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
+					logResult(node.getName() + ": The file '" + rename.getFrom() + "' could not be renamed to '" + rename.getTo() + "'.");
 					return null;
 				}
 			}
@@ -407,11 +469,9 @@ public class InstallItem extends JPanel
 	 */
 	private boolean performInstallTasks(final File modFolder)
 	{
-		final String nodeName = node.getName();
-		
 		if (!node.getInstallList().isEmpty())
 		{
-			logger.info(nodeName + ": Processing INSTALL items");
+			modLogger.info("Processing INSTALL items");
 			setText("Installing files...");
 			
 			final Connector connector = (Connector) Configuration.getInstance().getSettings().get(Configuration.CONNECTOR_KEY);
@@ -437,6 +497,8 @@ public class InstallItem extends JPanel
 				// install all files for the unit
 				for (final String file: install.getFileList())
 				{
+					modLogger.debug("Submitting download task for '" + file + "'");
+					
 					final DownloadPanel downloadPanel = downloadPanelMap.get(new KeyPair<InstallUnit, String>(install, file));
 					
 					// submit a task for this file
@@ -449,17 +511,22 @@ public class InstallItem extends JPanel
 							try
 							{
 								// first do the installation
-								boolean success = installOne(nodeName, connector, modFolder, urls, file, downloadPanel);
+								boolean success = installOne(connector, modFolder, urls, file, downloadPanel);
+								if (success)
+									successes.incrementAndGet();
+								else
+									logResult(node.getName() + ": The file '" + file + "' could not be downloaded.");
+								int complete = completions.incrementAndGet();
 								
 								// next update the progress bar
-								setRatioComplete(completions.incrementAndGet() / ((double) totalTasks));
+								setRatioComplete(complete / ((double) totalTasks));
 								
-								// record whether this one worked
-								if (success)
-								{
-									successes.incrementAndGet();
-									logger.info(nodeName + ": Downloaded '" + file + "'");
-								}
+								modLogger.info("File '" + file + "' was " + (success ? "successful" : "unsuccessful"));
+								modLogger.info("This marks " + complete + " files out of " + totalTasks);
+							}
+							catch (RuntimeException re)
+							{
+								modLogger.error("Unhandled runtime exception!", re);
 							}
 							finally
 							{
@@ -472,16 +539,19 @@ public class InstallItem extends JPanel
 			}
 			
 			// wait until all tasks have finished
+			modLogger.debug("Waiting for all files to complete...");
 			try
 			{
 				latch.await();
 			}
 			catch (InterruptedException ie)
 			{
-				logger.error("Thread was interrupted while waiting for downloads to complete!", ie);
+				modLogger.error("Thread was interrupted while waiting for files to complete!", ie);
 				Thread.currentThread().interrupt();
 				return false;
 			}
+			modLogger.info("All files have completed!");
+			modLogger.info("This marks " + successes.get() + " successful out of " + totalTasks);
 			
 			// check success or failure
 			return (successes.get() == totalTasks);
@@ -489,6 +559,7 @@ public class InstallItem extends JPanel
 		// nothing to install, so obviously we were successful
 		else
 		{
+			modLogger.info("There was nothing to install!");
 			return true;
 		}
 	}
@@ -498,11 +569,9 @@ public class InstallItem extends JPanel
 	 */
 	private boolean performHashTasks(File modFolder)
 	{
-		String nodeName = node.getName();
-		
 		if (!node.getHashList().isEmpty())
 		{
-			logger.info(nodeName + ": Processing HASH items");
+			modLogger.info("Processing HASH items");
 			setText("Computing hash values...");
 			
 			for (HashTriple hash: node.getHashList())
@@ -521,7 +590,8 @@ public class InstallItem extends JPanel
 				}
 				catch (NoSuchAlgorithmException nsae)
 				{
-					logger.error(nodeName + ": Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
+					modLogger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
+					logResult(node.getName() + ": The installer cannot compute a hash using the '" + algorithm + "' algorithm.");
 					continue;
 				}
 				
@@ -529,11 +599,12 @@ public class InstallItem extends JPanel
 				File fileToHash = new File(modFolder, hash.getFilename());
 				if (!fileToHash.exists())
 				{
-					logger.debug(nodeName + ": Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
+					modLogger.debug("Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
 					continue;
 				}
 				
 				// hash it
+				modLogger.info("Computing a " + algorithm + " hash for '" + hash.getFilename() + "'");
 				String computedHash;
 				try
 				{
@@ -541,30 +612,53 @@ public class InstallItem extends JPanel
 				}
 				catch (IOException ioe)
 				{
-					logger.error(nodeName + ": There was a problem computing the hash...", ioe);
+					modLogger.error("There was a problem computing the hash...", ioe);
 					continue;
 				}
 				
 				// compare it
 				if (!hash.getHash().equalsIgnoreCase(computedHash))
 				{
-					logger.error(nodeName + ": Computed hash value of '" + computedHash + "' does not match required hash value of '" + hash.getHash() + "'!");
+					modLogger.error("Computed hash value of '" + computedHash + "' does not match required hash value of '" + hash.getHash() + "'!");
+					
+					// we can't keep a bad file
+					boolean baleeted = false;
+					try
+					{
+						baleeted = fileToHash.delete();
+					}
+					catch (SecurityException se)
+					{
+						modLogger.error("Encountered a SecurityException when trying to delete '" + hash.getFilename() + "'!", se);
+					}
+					
+					// notify the user
+					String result = "The hash value for '" + hash.getFilename() + "' did not agree with the expected value.  This could indicate a corrupted download.  ";
+					if (baleeted)
+						result += "The file has been deleted.";
+					else
+						result += "Additionally, the installer was unable to delete the file.  Please delete the file yourself and do not open it.";
+					logResult(result);
+					
+					// fail
 					return false;
 				}
 			}
+			
+			modLogger.info("All hash items were validated.");
 		}
 		
 		return true;
 	}
 	
-	private boolean installOne(String nodeName, Connector connector, File modFolder, List<BaseURL> baseURLList, String file, DownloadPanel downloadPanel)
+	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, DownloadPanel downloadPanel)
 	{
-		logger.info(nodeName + ": installing '" + file + "'");
+		modLogger.info("Installing '" + file + "'");
 		
 		// try all URLs supplied
 		for (BaseURL baseURL: baseURLList)
 		{
-			logger.debug(nodeName + ": Obtaining URL");
+			modLogger.debug("Obtaining URL");
 			URL url;
 			try
 			{
@@ -572,24 +666,20 @@ public class InstallItem extends JPanel
 			}
 			catch (MalformedURLException murle)
 			{
-				logger.error(nodeName + ": Bad URL '" + baseURL.toString() + file + "'", murle);
+				modLogger.error("Bad URL '" + baseURL.toString() + file + "'", murle);
 				continue;
 			}
 			
-			logger.debug(nodeName + ": Beginning download of '" + file + "'");
+			modLogger.debug("Beginning download from '" + baseURL.toString() + file + "'");
 			Downloader downloader = new Downloader(connector, url, modFolder);
 			downloadPanel.setDownloader(downloader);
 			boolean success = downloader.download();
 			
 			// did it work?
 			if (success)
-			{
-				logger.debug(nodeName + ": Completed download of '" + file + "'");
 				return true;
-			}
 		}
 		
-		logger.debug(nodeName + ": All mirror sites for '" + file + "' failed!");
 		return false;
 	}
 	

@@ -77,6 +77,7 @@ public class Downloader
 	protected final File destination;
 	
 	protected final AtomicReference<Thread> downloadThread;
+	protected volatile boolean cancelled;
 	
 	public Downloader(Connector connector, URL sourceURL, File destination)
 	{
@@ -85,6 +86,7 @@ public class Downloader
 		this.destination = destination;
 		
 		this.downloadThread = new AtomicReference<Thread>(null);
+		this.cancelled = false;
 		
 		// woot, CopyOnWriteArrayList is A-1 SUPAR as a listener list;
 		// see http://www.ibm.com/developerworks/java/library/j-jtp07265/index.html
@@ -95,6 +97,11 @@ public class Downloader
 	{
 		if (downloadThread.getAndSet(Thread.currentThread()) != null)
 			throw new IllegalStateException("Cannot download more than once with the same downloader!");
+		if (cancelled)
+		{
+			logger.error("Download was cancelled before it could start!");
+			return false;
+		}
 		
 		// if downloading to a directory, put the source file inside it with the same name
 		// (or names, in the case of an archive)
@@ -128,11 +135,16 @@ public class Downloader
 	
 	public void cancel()
 	{
-		Thread thread = downloadThread.get();
-		if (thread == null)
-			throw new IllegalStateException("Download hasn't started yet!");
+		logger.warn("Cancelling download!");
 		
-		thread.interrupt();
+		cancelled = true;
+		Thread threadToInterrupt = downloadThread.get();
+		
+		if (threadToInterrupt != null)
+		{
+			logger.debug("Interrupting thread '" + threadToInterrupt.getName() + "'");
+			threadToInterrupt.interrupt();
+		}
 	}
 	
 	protected boolean downloadFile(URL sourceURL, File destinationFile)
