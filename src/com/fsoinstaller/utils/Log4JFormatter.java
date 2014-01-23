@@ -102,7 +102,7 @@ public class Log4JFormatter extends Formatter
 		line.append(" - ");
 		line.append(message);
 		line.append(throwable);
-		line.append(System.lineSeparator());
+		line.append(IOUtils.ENDL);
 		return line.toString();
 	}
 }

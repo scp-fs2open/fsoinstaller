@@ -35,6 +35,8 @@ public class IOUtils
 {
 	private static final Logger logger = Logger.getLogger(IOUtils.class);
 	
+	public static final String ENDL = System.getProperty("line.separator");
+	
 	/**
 	 * Prevent instantiation.
 	 */
