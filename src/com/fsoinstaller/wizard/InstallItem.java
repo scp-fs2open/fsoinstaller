@@ -164,6 +164,9 @@ public class InstallItem extends JPanel
 			{
 				public void stateChanged(ChangeEvent e)
 				{
+					// add any feedback to the output
+					installResults.addAll(childItem.getInstallResults());
+					
 					remainingChildren--;
 					
 					// if ALL of the children have completed, this whole item is complete
@@ -264,7 +267,6 @@ public class InstallItem extends JPanel
 					{
 						setSuccess(false);
 						cancelChildren();
-						fireCompletion();
 						return null;
 					}
 					modLogger.info("Installing to path: " + modFolder.getAbsolutePath());
@@ -279,7 +281,6 @@ public class InstallItem extends JPanel
 					{
 						setSuccess(false);
 						cancelChildren();
-						fireCompletion();
 						return null;
 					}
 					
@@ -293,7 +294,6 @@ public class InstallItem extends JPanel
 					{
 						setSuccess(false);
 						cancelChildren();
-						fireCompletion();
 						return null;
 					}
 					
@@ -301,14 +301,14 @@ public class InstallItem extends JPanel
 					
 					setSuccess(true);
 					startChildren();
-					// don't fire completion because that's done after children
+					return null;
 				}
 				catch (RuntimeException re)
 				{
 					modLogger.error("Unhandled runtime exception!", re);
 					logResult("An unexpected error occurred.  Please check the log file for more details.");
+					return null;
 				}
-				return null;
 			}
 		});
 	}
@@ -336,6 +336,10 @@ public class InstallItem extends JPanel
 		// cancel children
 		for (InstallItem child: childItems)
 			child.cancel();
+		
+		// if no children, we are done
+		if (childItems.isEmpty())
+			fireCompletion();
 	}
 	
 	/**
@@ -349,6 +353,10 @@ public class InstallItem extends JPanel
 			{
 				for (InstallItem child: childItems)
 					child.start();
+				
+				// if no children, we are done
+				if (childItems.isEmpty())
+					fireCompletion();
 			}
 		});
 	}
@@ -372,12 +380,14 @@ public class InstallItem extends JPanel
 					// so just indicate status
 					child.setSuccess(false);
 					child.setText("Parent installation failed");
-					child.setIndeterminate(false);
-					child.setPercentComplete(0);
 					
 					// cancel *their* children as well
 					child.cancelChildren();
 				}
+				
+				// if no children, we are done
+				if (childItems.isEmpty())
+					fireCompletion();
 			}
 		});
 	}
