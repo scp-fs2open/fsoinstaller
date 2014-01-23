@@ -23,6 +23,9 @@ import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -52,11 +55,11 @@ public class FreeSpaceOpenInstaller
 	/**
 	 * URL of the directories where version.txt and filenames.txt reside.
 	 */
-	public static final String[] INSTALLER_HOME_URLs = new String[]
+	public static final List<String> INSTALLER_HOME_URLs = Collections.unmodifiableList(Arrays.asList(new String[]
 	{
 		"http://www.fsoinstaller.com/files/installer/java/",
 		"http://scp.indiegames.us/fsoinstaller/"
-	};
+	}));
 	
 	/**
 	 * Use the Initialization On Demand Holder idiom for thread-safe
