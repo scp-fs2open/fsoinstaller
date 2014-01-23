@@ -632,7 +632,7 @@ public class InstallItem extends JPanel
 				// compare it
 				if (!hash.getHash().equalsIgnoreCase(computedHash))
 				{
-					modLogger.error("Computed hash value of '" + computedHash + "' does not match required hash value of '" + hash.getHash() + "'!");
+					modLogger.error("Computed hash value of " + computedHash + " does not match required hash value of " + hash.getHash() + " for file '" + hash.getFilename() + "'!");
 					
 					// we can't keep a bad file
 					boolean baleeted = false;
@@ -648,9 +648,15 @@ public class InstallItem extends JPanel
 					// notify the user
 					String result = "The hash value for '" + hash.getFilename() + "' did not agree with the expected value.  This could indicate a corrupted download.  ";
 					if (baleeted)
+					{
 						result += "The file has been deleted.";
+						modLogger.error("File deleted!");
+					}
 					else
+					{
 						result += "Additionally, the installer was unable to delete the file.  Please delete the file yourself and do not open it.";
+						modLogger.error("Unable to delete the file!");
+					}
 					logResult(result);
 					
 					// fail
