@@ -25,7 +25,7 @@ import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -197,7 +197,7 @@ public class ModSelectPage extends WizardPage
 	public void prepareToLeavePage(Runnable runWhenReady)
 	{
 		// store the mod names we selected
-		Set<String> selectedMods = new HashSet<String>();
+		Set<String> selectedMods = new LinkedHashSet<String>();
 		for (InstallerNode node: treeWalk)
 			if (((SingleModPanel) node.getUserObject()).isSelected())
 				selectedMods.add(node.getName());
