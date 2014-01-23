@@ -79,7 +79,7 @@ public class InstallerGUI extends JFrame
 		// final frame tweaks
 		setIconImage(app_icon);
 		setResizable(false);
-		setTitle(FreeSpaceOpenInstaller.INSTALLER_TITLE);
+		setTitle(FreeSpaceOpenInstaller.INSTALLER_TITLE + " v" + FreeSpaceOpenInstaller.INSTALLER_VERSION);
 	}
 	
 	@Override
