@@ -61,8 +61,10 @@ public class ModSelectPage extends WizardPage
 	private final JRadioButton completeButton;
 	private final JRadioButton customButton;
 	private final JPanel modPanel;
+	private final JScrollPane modScrollPane;
 	
 	private final List<InstallerNode> treeWalk;
+	
 	private boolean inited;
 	private SharedCounter counter;
 	
@@ -76,6 +78,7 @@ public class ModSelectPage extends WizardPage
 		customButton = new JRadioButton("Custom - Choose the mods to install");
 		modPanel = new JPanel();
 		modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
+		modScrollPane = new JScrollPane(modPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
 		// group them
 		ButtonGroup group = new ButtonGroup();
@@ -95,8 +98,6 @@ public class ModSelectPage extends WizardPage
 		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.X_AXIS));
 		labelPanel.add(new JLabel("You can modify your installation here or continue with your current selection."));
 		labelPanel.add(Box.createHorizontalGlue());
-		
-		JScrollPane modScrollPane = new JScrollPane(modPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
 		JPanel panel = new JPanel(new BorderLayout(0, GUIConstants.DEFAULT_MARGIN));
 		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
@@ -135,6 +136,13 @@ public class ModSelectPage extends WizardPage
 			for (InstallerNode node: modNodes)
 				addTreeNode(node, 0);
 			modPanel.add(Box.createVerticalGlue());
+			
+			// adjust mod scroll speed to be one item per tick (based on an idea by jg18)
+			if (!treeWalk.isEmpty())
+			{
+				double height = ((SingleModPanel) treeWalk.get(0).getUserObject()).getPreferredSize().getHeight();
+				modScrollPane.getVerticalScrollBar().setUnitIncrement((int) height);
+			}
 			
 			inited = true;
 		}
