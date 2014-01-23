@@ -416,13 +416,18 @@ public class InstallItem extends JPanel
 		}
 		else
 		{
-			modLogger.info("Creating folder '" + folderName + "'");
 			folder = new File(installDir, folderName);
-			if (!folder.exists() && !folder.mkdir())
+			if (folder.exists())
+				modLogger.info("Using folder '" + folderName + "'");
+			else
 			{
-				modLogger.error("Unable to create the folder '" + folderName + "'!");
-				logResult(node.getName() + ": The folder '" + folderName + "' could not be created.");
-				return null;
+				modLogger.info("Creating folder '" + folderName + "'");
+				if (!folder.mkdir())
+				{
+					modLogger.error("Unable to create the folder '" + folderName + "'!");
+					logResult(node.getName() + ": The folder '" + folderName + "' could not be created.");
+					return null;
+				}
 			}
 		}
 		
@@ -435,17 +440,16 @@ public class InstallItem extends JPanel
 			for (String delete: node.getDeleteList())
 			{
 				modLogger.debug("Deleting '" + delete + "'");
-				File file = new File(installDir, delete);
-				if (file.exists())
+				File file = new File(folder, delete);
+				if (!file.exists())
+					modLogger.debug("Cannot delete '" + delete + "'; it does not exist");
+				else if (file.isDirectory())
+					modLogger.debug("Cannot delete '" + delete + "'; deleting directories is not supported at this time");
+				else if (!file.delete())
 				{
-					if (file.isDirectory())
-						modLogger.debug("Cannot delete '" + delete + "'; deleting directories is not supported at this time");
-					else if (!file.delete())
-					{
-						modLogger.error("Unable to delete the file '" + delete + "'!");
-						logResult(node.getName() + ": The file '" + delete + "' could not be deleted.");
-						return null;
-					}
+					modLogger.error("Unable to delete the file '" + delete + "'!");
+					logResult(node.getName() + ": The file '" + delete + "' could not be deleted.");
+					return null;
 				}
 			}
 		}
@@ -459,8 +463,8 @@ public class InstallItem extends JPanel
 			for (RenamePair rename: node.getRenameList())
 			{
 				modLogger.debug("Renaming '" + rename.getFrom() + "' to '" + rename.getTo() + "'");
-				File from = new File(installDir, rename.getFrom());
-				File to = new File(installDir, rename.getTo());
+				File from = new File(folder, rename.getFrom());
+				File to = new File(folder, rename.getTo());
 				if (!from.exists())
 					modLogger.debug("Cannot rename '" + rename.getFrom() + "'; it does not exist");
 				else if (to.exists())
