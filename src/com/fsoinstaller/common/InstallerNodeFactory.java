@@ -19,17 +19,16 @@
 
 package com.fsoinstaller.common;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fsoinstaller.utils.Logger;
+import com.fsoinstaller.utils.MiscUtils;
 
 
 /**
@@ -143,19 +142,18 @@ public class InstallerNodeFactory
 				break;
 			
 			case FOLDER:
-				String folder = readString(reader);
-				folder = folder.replaceAll("[/\\\\]", Matcher.quoteReplacement(File.separator));
+				String folder = MiscUtils.standardizeSlashes(readString(reader));
 				node.setFolder(folder);
 				break;
 			
 			case DELETE:
-				String delete = readString(reader);
+				String delete = MiscUtils.standardizeSlashes(readString(reader));
 				node.addDelete(delete);
 				break;
 			
 			case RENAME:
-				String renameFrom = readString(reader);
-				String renameTo = readString(reader);
+				String renameFrom = MiscUtils.standardizeSlashes(readString(reader));
+				String renameTo = MiscUtils.standardizeSlashes(readString(reader));
 				node.addRenamePair(new InstallerNode.RenamePair(renameFrom, renameTo));
 				break;
 			
@@ -194,13 +192,13 @@ public class InstallerNodeFactory
 				if (parts.length == 3)
 				{
 					type = parts[0];
-					filename = parts[1];
+					filename = MiscUtils.standardizeSlashes(parts[1]);
 					hash = parts[2];
 				}
 				else
 				{
 					type = line;
-					filename = readString(reader);
+					filename = MiscUtils.standardizeSlashes(readString(reader));
 					hash = readString(reader);
 				}
 				

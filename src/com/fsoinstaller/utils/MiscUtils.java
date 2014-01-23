@@ -22,6 +22,8 @@ package com.fsoinstaller.utils;
 import java.awt.FontMetrics;
 import java.io.File;
 import java.text.BreakIterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.SwingUtilities;
 
@@ -34,6 +36,10 @@ import javax.swing.SwingUtilities;
 public class MiscUtils
 {
 	private static final Logger logger = Logger.getLogger(MiscUtils.class);
+	
+	private static final Pattern SLASH_PATTERN = Pattern.compile("[/\\\\]");
+	private static final Pattern LEADING_WHITESPACE_PATTERN = Pattern.compile("^\\s+");
+	private static final Pattern INVALID_FILENAME_CHARACTER_PATTERN = Pattern.compile("[^a-zA-Z0-9._]+");
 	
 	/**
 	 * Prevent instantiation.
@@ -138,7 +144,7 @@ public class MiscUtils
 			if (lineWidth > maxWidth)
 			{
 				// get rid of any leading whitespace
-				word = word.replaceAll("^\\s+", "");
+				word = LEADING_WHITESPACE_PATTERN.matcher(word).replaceFirst("");
 				
 				// start a new line in both running strings
 				line = new StringBuilder(word);
@@ -157,7 +163,7 @@ public class MiscUtils
 			throw new IllegalArgumentException("File name cannot be null!");
 		
 		// remove any invalid character from the filename.
-		return fileName.trim().replaceAll("[^a-zA-Z0-9._]+", "_");
+		return INVALID_FILENAME_CHARACTER_PATTERN.matcher(fileName.trim()).replaceAll("_");
 	}
 	
 	public static int compareVersions(String version1, String version2)
@@ -201,5 +207,10 @@ public class MiscUtils
 		}
 		
 		return 0;
+	}
+	
+	public static String standardizeSlashes(String fileName)
+	{
+		return SLASH_PATTERN.matcher(fileName).replaceAll(Matcher.quoteReplacement(File.separator));
 	}
 }
