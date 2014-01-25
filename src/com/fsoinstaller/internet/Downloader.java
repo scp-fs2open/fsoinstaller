@@ -145,6 +145,8 @@ public class Downloader
 			logger.debug("Interrupting thread '" + threadToInterrupt.getName() + "'");
 			threadToInterrupt.interrupt();
 		}
+		
+		fireDownloadCancelled(sourceURL.getFile(), -1, -1, null);
 	}
 	
 	protected boolean downloadFile(URL sourceURL, File destinationFile)
@@ -197,7 +199,7 @@ public class Downloader
 		catch (InterruptedException ie)
 		{
 			logger.warn("The download was interrupted!", ie);
-			fireDownloadFailed(destinationFile.getName(), 0, totalBytes, ie);
+			fireDownloadCancelled(destinationFile.getName(), 0, totalBytes, ie);
 			
 			// try to delete incomplete file
 			cleanup(inputStream, outputStream);
@@ -287,7 +289,7 @@ public class Downloader
 		catch (InterruptedException ie)
 		{
 			logger.warn("The download was interrupted!", ie);
-			fireDownloadFailed(currentEntry, 0, totalBytes, ie);
+			fireDownloadCancelled(currentEntry, 0, totalBytes, ie);
 			
 			// try to delete incomplete file
 			cleanup(zipInputStream, outputStream);
@@ -792,6 +794,26 @@ public class Downloader
 					
 					// fire it
 					listener.downloadFailed(event);
+				}
+			}
+		});
+	}
+	
+	protected void fireDownloadCancelled(final String downloadName, final long downloadedBytes, final long totalBytes, final Exception exception)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				DownloadEvent event = null;
+				for (DownloadListener listener: downloadListeners)
+				{
+					// lazy instantiation of the event
+					if (event == null)
+						event = new DownloadEvent(this, downloadName, downloadedBytes, totalBytes);
+					
+					// fire it
+					listener.downloadCancelled(event);
 				}
 			}
 		});

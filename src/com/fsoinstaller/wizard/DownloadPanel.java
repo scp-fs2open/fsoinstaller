@@ -119,4 +119,13 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		
 		stoplightPanel.setFailure();
 	}
+	
+	public void downloadCancelled(DownloadEvent event)
+	{
+		progressBar.setString(event.getDownloadName() + ": Cancelled");
+		progressBar.setIndeterminate(false);
+		progressBar.setValue(0);
+		
+		stoplightPanel.setFailure();
+	}
 }
