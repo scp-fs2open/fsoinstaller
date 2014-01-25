@@ -374,12 +374,12 @@ public class InstallItem extends JPanel
 				for (InstallItem child: childItems)
 				{
 					Logger.getLogger(InstallItem.class, child.node.getName()).info("Parent mod could not be installed; this mod will be skipped!");
-					logResult(child.getName() + ": Skipped because parent mod was not installed.");
+					logResult(child.node.getName() + ": Skipped because parent mod was not installed.");
 					
 					// since children haven't actually started yet, they can't be cancelled,
 					// so just indicate status
 					child.setSuccess(false);
-					child.setText("Parent installation failed");
+					child.setText("Parent not installed");
 					
 					// cancel *their* children as well
 					child.cancelChildren();
