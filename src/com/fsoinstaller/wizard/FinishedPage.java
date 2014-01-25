@@ -125,6 +125,23 @@ public class FinishedPage extends WizardPage
 		
 		public void actionPerformed(ActionEvent e)
 		{
+			// ---------- TEMPORARY CODE ----------
+			// get root thread group
+			ThreadGroup rootGroup = Thread.currentThread().getThreadGroup();
+			ThreadGroup parentGroup;
+			while ((parentGroup = rootGroup.getParent()) != null)
+				rootGroup = parentGroup;
+			
+			// enumerate all threads
+			Thread[] threads = new Thread[rootGroup.activeCount()];
+			while (rootGroup.enumerate(threads, true) == threads.length)
+				threads = new Thread[threads.length * 2];
+			
+			// log them
+			for (Thread thread: threads)
+				com.fsoinstaller.utils.Logger.getLogger(FinishedPage.class).warn(thread.getName());
+			// ---------- TEMPORARY CODE ----------
+			
 			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
 			frame.dispose();
 		}
