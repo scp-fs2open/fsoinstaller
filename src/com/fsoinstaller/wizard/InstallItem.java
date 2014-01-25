@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -242,7 +241,7 @@ public class InstallItem extends JPanel
 		modLogger.info("Starting task!");
 		
 		// and now we queue up our big task that handles this whole node
-		overallInstallTask = FreeSpaceOpenInstaller.getInstance().getExecutorService().submit(new Callable<Void>()
+		FreeSpaceOpenInstaller.getInstance().submitTask("Install " + node.getName(), new Callable<Void>()
 		{
 			public Void call()
 			{
@@ -492,7 +491,6 @@ public class InstallItem extends JPanel
 			setText("Installing files...");
 			
 			final Connector connector = (Connector) Configuration.getInstance().getSettings().get(Configuration.CONNECTOR_KEY);
-			ExecutorService service = FreeSpaceOpenInstaller.getInstance().getExecutorService();
 			
 			final int totalTasks = downloadPanelMap.keySet().size();
 			final AtomicInteger successes = new AtomicInteger(0);
@@ -519,7 +517,7 @@ public class InstallItem extends JPanel
 					final DownloadPanel downloadPanel = downloadPanelMap.get(new KeyPair<InstallUnit, String>(install, file));
 					
 					// submit a task for this file
-					service.submit(new Callable<Void>()
+					FreeSpaceOpenInstaller.getInstance().submitTask("Download " + file, new Callable<Void>()
 					{
 						public Void call()
 						{

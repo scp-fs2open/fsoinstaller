@@ -23,16 +23,22 @@ import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.wizard.InstallerGUI;
@@ -76,17 +82,60 @@ public class FreeSpaceOpenInstaller
 	}
 	
 	private final ExecutorService executorService;
+	private final List<KeyPair<String, Future<Void>>> submittedTasks;
 	
 	private FreeSpaceOpenInstaller()
 	{
 		// create thread pool to manage long-running tasks, such as file downloads
 		// IMPLEMENTATION DETAIL: since tasks are queued from the event thread, we need to use an implementation that never blocks on adding a task
 		executorService = Executors.newFixedThreadPool(20);
+		
+		// keep track of all tasks that have been submitted
+		submittedTasks = Collections.synchronizedList(new ArrayList<KeyPair<String, Future<Void>>>());
 	}
 	
-	public ExecutorService getExecutorService()
+	public void submitTask(String taskName, Callable<Void> task)
 	{
-		return executorService;
+		try
+		{
+			Future<Void> future = executorService.submit(task);
+			submittedTasks.add(new KeyPair<String, Future<Void>>(taskName, future));
+		}
+		catch (RejectedExecutionException ree)
+		{
+			logger.error("Could not schedule '" + taskName + "' for execution!", ree);
+		}
+	}
+	
+	public void shutDownTasks()
+	{
+		// note that the ExecutorService isn't going to terminate automatically, so we need to shut it down properly in success or failure
+		if (!executorService.isShutdown())
+		{
+			logger.debug("Asking the executor service to shut down...");
+			executorService.shutdown();
+		}
+		
+		// cancel all incomplete submitted tasks (but there shouldn't be any at this point, if everything worked right, unless we hit Cancel)
+		synchronized (submittedTasks)
+		{
+			Iterator<KeyPair<String, Future<Void>>> ii = submittedTasks.iterator();
+			while (ii.hasNext())
+			{
+				KeyPair<String, Future<Void>> pair = ii.next();
+				String name = pair.getObject1();
+				Future<Void> future = pair.getObject2();
+				
+				logger.debug("Task '" + name + "': " + (future.isCancelled() ? "cancelled" : (future.isDone() ? "complete" : "running")));
+				if (future.isDone())
+					ii.remove();
+				else
+				{
+					logger.warn("Cancelling '" + name + "'");
+					future.cancel(true);
+				}
+			}
+		}
 	}
 	
 	private void launchWizard()
@@ -109,8 +158,7 @@ public class FreeSpaceOpenInstaller
 					@Override
 					public void windowClosed(WindowEvent e)
 					{
-						// shut down immediately because we're exiting
-						executorService.shutdownNow();
+						shutDownTasks();
 					}
 				});
 				
