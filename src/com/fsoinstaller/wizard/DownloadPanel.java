@@ -19,6 +19,8 @@
 
 package com.fsoinstaller.wizard;
 
+import java.awt.EventQueue;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -62,6 +64,9 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void setDownloader(Downloader downloader)
 	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
 		if (this.downloader != null)
 			this.downloader.removeDownloadListener(this);
 		

@@ -674,7 +674,7 @@ public class InstallItem extends JPanel
 		return true;
 	}
 	
-	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, DownloadPanel downloadPanel)
+	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)
 	{
 		modLogger.info("Installing '" + file + "'");
 		
@@ -693,9 +693,18 @@ public class InstallItem extends JPanel
 				continue;
 			}
 			
+			// make a downloader for our panel
+			final Downloader downloader = new Downloader(connector, url, modFolder);
+			EventQueue.invokeLater(new Runnable()
+			{
+				public void run()
+				{
+					downloadPanel.setDownloader(downloader);
+				}
+			});
+			
+			// perform the download
 			modLogger.debug("Beginning download from '" + baseURL.toString() + file + "'");
-			Downloader downloader = new Downloader(connector, url, modFolder);
-			downloadPanel.setDownloader(downloader);
 			boolean success = downloader.download();
 			
 			// did it work?
