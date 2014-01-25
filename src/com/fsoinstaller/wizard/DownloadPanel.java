@@ -100,7 +100,7 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void downloadNotNecessary(DownloadEvent event)
 	{
-		progressBar.setString(event.getDownloadName() + ": Up to date");
+		progressBar.setString((event == null) ? "Up to date" : (event.getDownloadName() + ": Up to date"));
 		progressBar.setIndeterminate(false);
 		progressBar.setValue(GUIConstants.BAR_MAXIMUM);
 		
@@ -109,7 +109,7 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void downloadComplete(DownloadEvent event)
 	{
-		progressBar.setString(event.getDownloadName() + ": Complete");
+		progressBar.setString((event == null) ? "Complete" : (event.getDownloadName() + ": Complete"));
 		progressBar.setIndeterminate(false);
 		progressBar.setValue(GUIConstants.BAR_MAXIMUM);
 		
@@ -118,7 +118,7 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void downloadFailed(DownloadEvent event)
 	{
-		progressBar.setString(event.getDownloadName() + ": Failed");
+		progressBar.setString((event == null) ? "Failed" : (event.getDownloadName() + ": Failed"));
 		progressBar.setIndeterminate(false);
 		progressBar.setValue(0);
 		
@@ -127,7 +127,7 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void downloadCancelled(DownloadEvent event)
 	{
-		progressBar.setString(event.getDownloadName() + ": Cancelled");
+		progressBar.setString((event == null) ? "Cancelled" : (event.getDownloadName() + ": Cancelled"));
 		progressBar.setIndeterminate(false);
 		progressBar.setValue(0);
 		

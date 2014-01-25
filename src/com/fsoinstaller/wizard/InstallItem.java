@@ -380,6 +380,10 @@ public class InstallItem extends JPanel
 					child.setSuccess(false);
 					child.setText("Parent not installed");
 					
+					// ditto with their download panels
+					for (DownloadPanel panel: child.downloadPanelMap.values())
+						panel.downloadCancelled(null);
+					
 					// cancel *their* children as well
 					child.cancelChildren();
 				}
