@@ -156,8 +156,13 @@ public class ModSelectPage extends WizardPage
 			
 			for (InstallerNode node: treeWalk)
 			{
-				logger.debug("Selecting '" + node.getName() + "' as a BASIC mod");
-				((SingleModPanel) node.getUserObject()).setSelected(basicMods.contains(node.getName()) && MiscUtils.validForOS(node.getName()));
+				if (basicMods.contains(node.getName()) && MiscUtils.validForOS(node.getName()))
+				{
+					logger.debug("Selecting '" + node.getName() + "' as a BASIC mod");
+					((SingleModPanel) node.getUserObject()).setSelected(true);
+				}
+				else
+					((SingleModPanel) node.getUserObject()).setSelected(false);
 			}
 		}
 		else if (choice == InstallChoice.COMPLETE)
