@@ -27,6 +27,7 @@ import java.awt.event.WindowEvent;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import javax.swing.BorderFactory;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -36,6 +37,7 @@ import javax.swing.WindowConstants;
 import org.jdesktop.swingworker.SwingWorker;
 
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.wizard.GUIConstants;
 
 
 /**
@@ -114,6 +116,7 @@ public class ProgressBarDialog
 				
 				// populate dialog
 				JPanel contentPane = (JPanel) dialog.getContentPane();
+				contentPane.setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN));
 				contentPane.setLayout(new BorderLayout());
 				if (text != null)
 					contentPane.add(new JLabel(text), BorderLayout.NORTH);
