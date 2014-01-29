@@ -27,6 +27,9 @@ import java.util.regex.Pattern;
 
 import javax.swing.SwingUtilities;
 
+import net.sf.sevenzipjbinding.SevenZip;
+import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
+
 
 /**
  * Miscellaneous useful methods.
@@ -212,5 +215,32 @@ public class MiscUtils
 	public static String standardizeSlashes(String fileName)
 	{
 		return SLASH_PATTERN.matcher(fileName).replaceAll(Matcher.quoteReplacement(File.separator));
+	}
+	
+	private static final ObjectHolder<Boolean> isSevenZipInitialized = new ObjectHolder<Boolean>(false);
+	
+	/**
+	 * Needed because it looks like 7zip should be initialized in a thread-safe
+	 * manner.
+	 */
+	public static void initSevenZip()
+	{
+		synchronized (isSevenZipInitialized)
+		{
+			boolean inited = isSevenZipInitialized.get();
+			if (inited)
+				return;
+			isSevenZipInitialized.set(true);
+			
+			try
+			{
+				SevenZip.initSevenZipFromPlatformJAR();
+				logger.info("7zip initialized successfully!");
+			}
+			catch (SevenZipNativeInitializationException sznie)
+			{
+				logger.error("Unable to initialize 7zip!", sznie);
+			}
+		}
 	}
 }

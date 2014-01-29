@@ -50,6 +50,7 @@ import com.fsoinstaller.common.InputStreamInStream;
 import com.fsoinstaller.common.InputStreamSource;
 import com.fsoinstaller.common.OutputStreamSequentialOutStream;
 import com.fsoinstaller.utils.Logger;
+import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.ObjectHolder;
 
 
@@ -134,6 +135,9 @@ public class Downloader
 			// not a zip...
 			else
 			{
+				// make sure 7zip is ready to go
+				MiscUtils.initSevenZip();
+				
 				// download another supported archive
 				for (ArchiveFormat format: ArchiveFormat.values())
 				{
