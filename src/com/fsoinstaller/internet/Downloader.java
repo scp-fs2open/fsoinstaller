@@ -69,12 +69,12 @@ public class Downloader
 	private static final Logger logger = Logger.getLogger(Downloader.class);
 	
 	protected static final int BUFFER_SIZE = 2048;
-	protected static final byte[] downloadBuffer = new byte[BUFFER_SIZE];
 	
 	protected final List<DownloadListener> downloadListeners;
 	protected final Connector connector;
 	protected final URL sourceURL;
 	protected final File destination;
+	protected final byte[] downloadBuffer;
 	
 	protected final AtomicReference<Thread> downloadThread;
 	protected volatile boolean cancelled;
@@ -84,6 +84,7 @@ public class Downloader
 		this.connector = connector;
 		this.sourceURL = sourceURL;
 		this.destination = destination;
+		this.downloadBuffer = new byte[BUFFER_SIZE];
 		
 		this.downloadThread = new AtomicReference<Thread>(null);
 		this.cancelled = false;
