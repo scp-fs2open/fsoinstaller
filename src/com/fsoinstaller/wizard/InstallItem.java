@@ -554,6 +554,7 @@ public class InstallItem extends JPanel
 							catch (RuntimeException re)
 							{
 								modLogger.error("Unhandled runtime exception!", re);
+								logResult("An unexpected error occurred.  Please check the log file for more details.");
 							}
 							finally
 							{
