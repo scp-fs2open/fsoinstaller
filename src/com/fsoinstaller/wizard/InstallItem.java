@@ -425,7 +425,7 @@ public class InstallItem extends JPanel
 			else
 			{
 				modLogger.info("Creating folder '" + folderName + "'");
-				if (!folder.mkdir())
+				if (!folder.mkdirs())
 				{
 					modLogger.error("Unable to create the folder '" + folderName + "'!");
 					logResult(node.getName() + ": The folder '" + folderName + "' could not be created.");
