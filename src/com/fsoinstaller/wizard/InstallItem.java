@@ -714,13 +714,20 @@ public class InstallItem extends JPanel
 				}
 			});
 			
-			// perform the download
-			modLogger.debug("Beginning download from '" + baseURL.toString() + file + "'");
-			boolean success = downloader.download();
-			
-			// did it work?
-			if (success)
-				return true;
+			try
+			{
+				// perform the download
+				modLogger.debug("Beginning download from '" + baseURL.toString() + file + "'");
+				boolean success = downloader.download();
+				
+				// did it work?
+				if (success)
+					return true;
+			}
+			catch (RuntimeException re)
+			{
+				logger.error("Unexpected runtime exception while downloading!", re);
+			}
 		}
 		
 		return false;
