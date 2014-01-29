@@ -36,14 +36,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 import com.fsoinstaller.main.Configuration;
-import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
 
 
 public class FinishedPage extends WizardPage
 {
-	private static final Logger logger = Logger.getLogger(FinishedPage.class);
-	
 	private final JTextPane textPane;
 	
 	public FinishedPage()
@@ -128,23 +125,6 @@ public class FinishedPage extends WizardPage
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			// ---------- TEMPORARY CODE ----------
-			// get root thread group
-			ThreadGroup rootGroup = Thread.currentThread().getThreadGroup();
-			ThreadGroup parentGroup;
-			while ((parentGroup = rootGroup.getParent()) != null)
-				rootGroup = parentGroup;
-			
-			// enumerate all threads
-			Thread[] threads = new Thread[rootGroup.activeCount()];
-			while (rootGroup.enumerate(threads, true) == threads.length)
-				threads = new Thread[threads.length * 2];
-			
-			// log them
-			for (Thread thread: threads)
-				logger.warn(thread.getName());
-			// ---------- TEMPORARY CODE ----------
-			
 			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
 			frame.dispose();
 		}
