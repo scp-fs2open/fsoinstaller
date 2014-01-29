@@ -36,11 +36,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 import com.fsoinstaller.main.Configuration;
+import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
 
 
 public class FinishedPage extends WizardPage
 {
+	private static final Logger logger = Logger.getLogger(FinishedPage.class);
+	
 	private final JTextPane textPane;
 	
 	public FinishedPage()
@@ -139,7 +142,7 @@ public class FinishedPage extends WizardPage
 			
 			// log them
 			for (Thread thread: threads)
-				com.fsoinstaller.utils.Logger.getLogger(FinishedPage.class).warn(thread.getName());
+				logger.warn(thread.getName());
 			// ---------- TEMPORARY CODE ----------
 			
 			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
