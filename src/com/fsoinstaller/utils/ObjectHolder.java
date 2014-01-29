@@ -1,6 +1,6 @@
 /*
  * This file is part of the FreeSpace Open Installer
- * Copyright (C) 2010 The FreeSpace 2 Source Code Project
+ * Copyright (C) 2014 The FreeSpace 2 Source Code Project
  * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
