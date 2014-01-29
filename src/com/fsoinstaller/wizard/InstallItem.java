@@ -603,6 +603,8 @@ public class InstallItem extends JPanel
 			modLogger.info("Processing HASH items");
 			setText("Computing hash values...");
 			
+			int badHashes = 0;
+			
 			for (HashTriple hash: node.getHashList())
 			{
 				String algorithm = hash.getType().toUpperCase();
@@ -676,14 +678,27 @@ public class InstallItem extends JPanel
 					logResult(result);
 					
 					// fail
-					return false;
+					badHashes++;
 				}
 			}
 			
-			modLogger.info("All hash items were validated.");
+			if (badHashes == 0)
+			{
+				modLogger.info("There were no invalid hashes.");
+				return true;
+			}
+			else
+			{
+				modLogger.info("There were " + badHashes + " invalid hashes.");
+				return false;
+			}
 		}
-		
-		return true;
+		// nothing to hash, so obviously we were successful
+		else
+		{
+			modLogger.info("There was nothing to hash!");
+			return true;
+		}
 	}
 	
 	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)
