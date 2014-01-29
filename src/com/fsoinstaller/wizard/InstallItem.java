@@ -541,7 +541,8 @@ public class InstallItem extends JPanel
 								boolean success = installOne(connector, modFolder, urls, file, downloadPanel);
 								if (success)
 									successes.incrementAndGet();
-								else
+								// don't mislead the user if we cancelled the file
+								else if (!Thread.currentThread().isInterrupted())
 									logResult(node.getName() + ": The file '" + file + "' could not be downloaded.");
 								int complete = completions.incrementAndGet();
 								
