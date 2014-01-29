@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -51,6 +50,7 @@ import com.fsoinstaller.common.InputStreamInStream;
 import com.fsoinstaller.common.InputStreamSource;
 import com.fsoinstaller.common.OutputStreamSequentialOutStream;
 import com.fsoinstaller.utils.Logger;
+import com.fsoinstaller.utils.ObjectHolder;
 
 
 /**
@@ -58,8 +58,7 @@ import com.fsoinstaller.utils.Logger;
  * directly or from within a compressed archive. Rewritten from a similar class
  * originally created by Turey.
  * <p>
- * This class should be thread-safe. For the most part (i.e. except for the
- * listeners), it is also immutable.
+ * This class should be thread-safe.
  * 
  * @author Turey
  * @author Goober5000
@@ -76,8 +75,8 @@ public class Downloader
 	protected final File destination;
 	protected final byte[] downloadBuffer;
 	
-	protected final AtomicReference<Thread> downloadThread;
-	protected volatile boolean cancelled;
+	protected final ObjectHolder<DownloadState> stateHolder;
+	protected Thread downloadThread;
 	
 	public Downloader(Connector connector, URL sourceURL, File destination)
 	{
@@ -86,8 +85,8 @@ public class Downloader
 		this.destination = destination;
 		this.downloadBuffer = new byte[BUFFER_SIZE];
 		
-		this.downloadThread = new AtomicReference<Thread>(null);
-		this.cancelled = false;
+		this.stateHolder = new ObjectHolder<DownloadState>(DownloadState.INITIALIZED);
+		this.downloadThread = null;
 		
 		// woot, CopyOnWriteArrayList is A-1 SUPAR as a listener list;
 		// see http://www.ibm.com/developerworks/java/library/j-jtp07265/index.html
@@ -96,13 +95,27 @@ public class Downloader
 	
 	public boolean download()
 	{
-		if (downloadThread.getAndSet(Thread.currentThread()) != null)
-			throw new IllegalStateException("Cannot download more than once with the same downloader!");
-		if (cancelled)
+		synchronized (stateHolder)
 		{
-			logger.error("Download was cancelled before it could start!");
-			return false;
+			DownloadState state = stateHolder.get();
+			if (state == DownloadState.INITIALIZED)
+			{
+				downloadThread = Thread.currentThread();
+				stateHolder.set(DownloadState.RUNNING);
+			}
+			else if (state == DownloadState.CANCELLED)
+			{
+				logger.info("Not starting download due to prior cancellation!");
+				return false;
+			}
+			else
+			{
+				logger.error("Cannot download; downloader's current state is " + state);
+				return false;
+			}
 		}
+		
+		Boolean result = null;
 		
 		// if downloading to a directory, put the source file inside it with the same name
 		// (or names, in the case of an archive)
@@ -115,39 +128,69 @@ public class Downloader
 			
 			// download a zip
 			if (extension.equalsIgnoreCase("zip"))
-				return downloadFromZip(sourceURL, destinationDirectory);
-			
-			// download another supported archive
-			for (ArchiveFormat format: ArchiveFormat.values())
 			{
-				if (format.getMethodName().equalsIgnoreCase(extension))
-					return downloadFromArchive(sourceURL, destinationDirectory, format);
+				result = downloadFromZip(sourceURL, destinationDirectory);
 			}
-			
-			// download as a standard file
-			return downloadFile(sourceURL, new File(destinationDirectory, fileName));
+			// not a zip...
+			else
+			{
+				// download another supported archive
+				for (ArchiveFormat format: ArchiveFormat.values())
+				{
+					if (format.getMethodName().equalsIgnoreCase(extension))
+					{
+						result = downloadFromArchive(sourceURL, destinationDirectory, format);
+						break;
+					}
+				}
+				
+				// download as a standard file
+				if (result == null)
+					result = downloadFile(sourceURL, new File(destinationDirectory, fileName));
+			}
 		}
 		// if downloading to a file, copy the source file and use the destination name
 		else
 		{
-			return downloadFile(sourceURL, destination);
+			result = downloadFile(sourceURL, destination);
 		}
+		
+		// we are done, so set the state
+		synchronized (stateHolder)
+		{
+			// it's possible that we were cancelled in the middle of all this
+			if (stateHolder.get() != DownloadState.CANCELLED)
+				stateHolder.set(DownloadState.COMPLETED);
+		}
+		
+		return result;
 	}
 	
 	public void cancel()
 	{
-		logger.warn("Cancelling download!");
-		
-		cancelled = true;
-		Thread threadToInterrupt = downloadThread.get();
-		
-		if (threadToInterrupt != null)
+		synchronized (stateHolder)
 		{
-			logger.debug("Interrupting thread '" + threadToInterrupt.getName() + "'");
-			threadToInterrupt.interrupt();
+			DownloadState state = stateHolder.get();
+			if (state == DownloadState.CANCELLED || state == DownloadState.COMPLETED)
+			{
+				// don't re-do a cancellation, and don't fail something that's already complete
+				return;
+			}
+			else
+			{
+				logger.warn("Cancelling download!");
+				stateHolder.set(DownloadState.CANCELLED);
+				
+				// maybe interrupt the thread				
+				if (downloadThread != null)
+				{
+					logger.debug("Interrupting thread '" + downloadThread.getName() + "'");
+					downloadThread.interrupt();
+				}
+				
+				fireDownloadCancelled(sourceURL.getFile(), -1, -1, null);
+			}
 		}
-		
-		fireDownloadCancelled(sourceURL.getFile(), -1, -1, null);
 	}
 	
 	protected boolean downloadFile(URL sourceURL, File destinationFile)
@@ -818,5 +861,13 @@ public class Downloader
 				}
 			}
 		});
+	}
+	
+	protected static enum DownloadState
+	{
+		INITIALIZED,
+		RUNNING,
+		COMPLETED,
+		CANCELLED
 	}
 }
