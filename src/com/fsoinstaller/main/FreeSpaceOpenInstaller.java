@@ -94,16 +94,18 @@ public class FreeSpaceOpenInstaller
 		submittedTasks = Collections.synchronizedList(new ArrayList<KeyPair<String, Future<Void>>>());
 	}
 	
-	public void submitTask(String taskName, Callable<Void> task)
+	public Future<Void> submitTask(String taskName, Callable<Void> task)
 	{
 		try
 		{
 			Future<Void> future = executorService.submit(task);
 			submittedTasks.add(new KeyPair<String, Future<Void>>(taskName, future));
+			return future;
 		}
 		catch (RejectedExecutionException ree)
 		{
 			logger.error("Could not schedule '" + taskName + "' for execution!", ree);
+			return null;
 		}
 	}
 	
