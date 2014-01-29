@@ -78,9 +78,8 @@ public class InstallItem extends JPanel
 	
 	private final List<InstallItem> childItems;
 	private int remainingChildren;
-	
-	private Future<Void> overallInstallTask;
 	private List<String> installResults;
+	private Future<Void> overallInstallTask;
 	private boolean cancelled;
 	
 	private final Logger modLogger;
@@ -106,8 +105,8 @@ public class InstallItem extends JPanel
 		// these variables will only ever be accessed from the event thread, so they are thread safe
 		childItems = new ArrayList<InstallItem>();
 		remainingChildren = 0;
-		overallInstallTask = null;
 		installResults = new ArrayList<String>();
+		overallInstallTask = null;
 		cancelled = false;
 		
 		JPanel progressPanel = new JPanel();
@@ -233,15 +232,17 @@ public class InstallItem extends JPanel
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
+		// this is here just in case we sneaked in a cancellation when the parent task was complete but the child task was queued to start
 		if (cancelled)
 		{
-			modLogger.info("Task was cancelled before it could start!");
+			modLogger.info("Not starting task that was cancelled...");
 			return;
 		}
+		
 		modLogger.info("Starting task!");
 		
 		// and now we queue up our big task that handles this whole node
-		FreeSpaceOpenInstaller.getInstance().submitTask("Install " + node.getName(), new Callable<Void>()
+		overallInstallTask = FreeSpaceOpenInstaller.getInstance().submitTask("Install " + node.getName(), new Callable<Void>()
 		{
 			public Void call()
 			{
@@ -262,7 +263,7 @@ public class InstallItem extends JPanel
 					}
 					
 					// if setup didn't work, can't continue
-					if (modFolder == null)
+					if (modFolder == null || Thread.currentThread().isInterrupted())
 					{
 						setSuccess(false);
 						cancelChildren();
@@ -317,12 +318,19 @@ public class InstallItem extends JPanel
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
+		// cancel only once
+		if (cancelled)
+			return;
 		modLogger.info("User requested cancellation!");
 		
-		// cancel the current task
-		cancelled = true;
+		// cancel the currently running task (if it is running; if not, it will run into the cancelled flag when the event comes up later)
 		if (overallInstallTask != null)
 			overallInstallTask.cancel(true);
+		
+		// set state
+		setSuccess(false);
+		setText("Cancelled");
+		cancelled = true;
 		
 		// cancel all downloads
 		for (DownloadPanel panel: downloadPanelMap.values())
