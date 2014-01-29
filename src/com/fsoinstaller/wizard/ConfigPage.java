@@ -123,7 +123,7 @@ public class ConfigPage extends WizardPage
 		JLabel dummy = new JLabel();
 		
 		// bleh, for multiline we need a JTextArea, but we want it to look like a JLabel
-		JTextArea text = new JTextArea("Choose the directory where you would like to install FreeSpace 2 Open and associated mods.  If your network requires the use of a proxy, you can also specify that here.");
+		JTextArea text = new JTextArea("Choose the directory where you would like to install FreeSpace Open and associated mods.  If your network requires the use of a proxy, you can also specify that here.");
 		text.setEditable(false);
 		text.setRows(4);
 		text.setOpaque(false);

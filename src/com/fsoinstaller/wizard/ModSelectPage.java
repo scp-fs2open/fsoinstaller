@@ -73,7 +73,7 @@ public class ModSelectPage extends WizardPage
 		super("mod-select");
 		
 		// create widgets
-		basicButton = new JRadioButton("Basic - FreeSpace 2 Open and MediaVPs, but no mods");
+		basicButton = new JRadioButton("Basic - FreeSpace Open and MediaVPs, but no mods");
 		completeButton = new JRadioButton("Complete - Everything, including all mods");
 		customButton = new JRadioButton("Custom - Choose the mods to install");
 		modPanel = new JPanel();
