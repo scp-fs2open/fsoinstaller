@@ -88,7 +88,7 @@ public class FreeSpaceOpenInstaller
 	{
 		// create thread pool to manage long-running tasks, such as file downloads
 		// IMPLEMENTATION DETAIL: since tasks are queued from the event thread, we need to use an implementation that never blocks on adding a task
-		executorService = Executors.newFixedThreadPool(20);
+		executorService = Executors.newCachedThreadPool();
 		
 		// keep track of all tasks that have been submitted
 		submittedTasks = Collections.synchronizedList(new ArrayList<KeyPair<String, Future<Void>>>());
