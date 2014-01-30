@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Semaphore;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -70,6 +71,36 @@ public class Downloader
 	
 	protected static final int BUFFER_SIZE = 2048;
 	
+	// the user can configure the number of download slots
+	protected static final Semaphore downloadPermits;
+	static
+	{
+		int num = 4;
+		
+		// maybe parse the user option
+		try
+		{
+			String val = System.getProperty("maxParallelDownloads");
+			if (val != null)
+				num = Integer.valueOf(val);
+		}
+		catch (NumberFormatException nfe)
+		{
+			logger.error("Couldn't parse maxParallelDownloads!", nfe);
+		}
+		
+		// sanity
+		if (num < 1)
+		{
+			logger.warn("maxParallelDownloads must be at least 1!");
+			num = 1;
+		}
+		
+		// allocate that many permits
+		logger.info("Setting maxParallelDownloads to " + num);
+		downloadPermits = new Semaphore(num, true);
+	}
+	
 	protected final List<DownloadListener> downloadListeners;
 	protected final Connector connector;
 	protected final URL sourceURL;
@@ -95,6 +126,32 @@ public class Downloader
 	}
 	
 	public boolean download()
+	{
+		// wait for a download slot
+		try
+		{
+			downloadPermits.acquire();
+		}
+		catch (InterruptedException ie)
+		{
+			logger.error("Thread was interrupted while waiting for a download slot!", ie);
+			Thread.currentThread().interrupt();
+			return false;
+		}
+		
+		// perform the download
+		try
+		{
+			return download0();
+		}
+		// release the slot when we are done, whatever happens
+		finally
+		{
+			downloadPermits.release();
+		}
+	}
+	
+	protected boolean download0()
 	{
 		synchronized (stateHolder)
 		{
