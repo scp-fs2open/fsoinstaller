@@ -30,6 +30,10 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fsoinstaller.common.InstallerNode;
+import com.fsoinstaller.common.InstallerNodeFactory;
+import com.fsoinstaller.common.InstallerNodeParseException;
+
 
 public class IOUtils
 {
@@ -87,6 +91,28 @@ public class IOUtils
 		}
 		
 		return lines;
+	}
+	
+	public static List<InstallerNode> readInstallFile(File inputFile) throws FileNotFoundException, IOException, InstallerNodeParseException
+	{
+		List<InstallerNode> nodes = new ArrayList<InstallerNode>();
+		
+		FileReader reader = null;
+		try
+		{
+			reader = new FileReader(inputFile);
+			
+			InstallerNode node;
+			while ((node = InstallerNodeFactory.readNode(reader)) != null)
+				nodes.add(node);
+		}
+		finally
+		{
+			if (reader != null)
+				reader.close();
+		}
+		
+		return nodes;
 	}
 	
 	public static InputStream getResourceStream(String resource)

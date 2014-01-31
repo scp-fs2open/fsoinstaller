@@ -24,7 +24,6 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Proxy;
@@ -54,7 +53,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import com.fsoinstaller.common.InstallerNode;
-import com.fsoinstaller.common.InstallerNodeFactory;
 import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.internet.Connector;
 import com.fsoinstaller.internet.Downloader;
@@ -647,16 +645,11 @@ public class ConfigPage extends WizardPage
 					}
 					
 					// parse it into one or more nodes
-					InstallerNode node;
 					try
 					{
-						FileReader reader = new FileReader(tempModFile);
-						while (true)
+						List<InstallerNode> nodes = IOUtils.readInstallFile(tempModFile);
+						for (InstallerNode node: nodes)
 						{
-							node = InstallerNodeFactory.readNode(reader);
-							if (node == null)
-								break;
-							
 							modNodes.add(node);
 							logger.info("Successfully added " + node.getName());
 						}
