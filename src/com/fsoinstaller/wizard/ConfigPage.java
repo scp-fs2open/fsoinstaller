@@ -502,7 +502,7 @@ public class ConfigPage extends WizardPage
 					Downloader tempVersionDownloader = new Downloader(connector, versionURL, tempVersion);
 					if (tempVersionDownloader.download())
 					{
-						List<String> versionLines = IOUtils.readTextFile(tempVersion);
+						List<String> versionLines = IOUtils.readTextFileCleanly(tempVersion);
 						if (!versionLines.isEmpty())
 						{
 							String thisVersion = versionLines.get(0);
@@ -515,7 +515,7 @@ public class ConfigPage extends WizardPage
 								Downloader tempFilenamesDownloader = new Downloader(connector, filenameURL, tempFilenames);
 								if (tempFilenamesDownloader.download())
 								{
-									List<String> filenameLines = IOUtils.readTextFile(tempFilenames);
+									List<String> filenameLines = IOUtils.readTextFileCleanly(tempFilenames);
 									if (!filenameLines.isEmpty())
 									{
 										maxVersion = thisVersion;
@@ -525,7 +525,7 @@ public class ConfigPage extends WizardPage
 										Downloader tempBasicConfigDownloader = new Downloader(connector, basicURL, tempBasicConfig);
 										if (tempBasicConfigDownloader.download())
 										{
-											List<String> basicLines = IOUtils.readTextFile(tempBasicConfig);
+											List<String> basicLines = IOUtils.readTextFileCleanly(tempBasicConfig);
 											
 											// strip empty/blank lines
 											Iterator<String> ii = basicLines.iterator();
@@ -703,7 +703,7 @@ public class ConfigPage extends WizardPage
 				if (installedversions.exists())
 				{
 					// read lines from the installedversions file
-					List<String> lines = IOUtils.readTextFile(installedversions);
+					List<String> lines = IOUtils.readTextFileCleanly(installedversions);
 					
 					// load the version for each node
 					@SuppressWarnings("unchecked")

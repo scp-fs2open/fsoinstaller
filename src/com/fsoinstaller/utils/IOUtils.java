@@ -44,41 +44,46 @@ public class IOUtils
 	{
 	}
 	
-	public static List<String> readTextFile(File inputFile)
+	public static List<String> readTextFileCleanly(File inputFile)
 	{
-		List<String> lines = new ArrayList<String>();
-		
 		try
 		{
-			BufferedReader br = null;
-			FileReader fr = null;
-			try
-			{
-				fr = new FileReader(inputFile);
-				br = new BufferedReader(fr);
-				
-				String line;
-				while ((line = br.readLine()) != null)
-					lines.add(line);
-			}
-			finally
-			{
-				if (br != null)
-					br.close();
-				
-				if (fr != null)
-					fr.close();
-			}
+			return readTextFile(inputFile);
 		}
 		catch (FileNotFoundException fnfe)
 		{
 			logger.error("The file '" + inputFile.getAbsolutePath() + "' was not found!", fnfe);
-			lines.clear();
+			return new ArrayList<String>();
 		}
 		catch (IOException ioe)
 		{
 			logger.error("There was a problem reading the file '" + inputFile.getAbsolutePath() + "'!", ioe);
-			lines.clear();
+			return new ArrayList<String>();
+		}
+	}
+	
+	public static List<String> readTextFile(File inputFile) throws FileNotFoundException, IOException
+	{
+		List<String> lines = new ArrayList<String>();
+		
+		BufferedReader br = null;
+		FileReader fr = null;
+		try
+		{
+			fr = new FileReader(inputFile);
+			br = new BufferedReader(fr);
+			
+			String line;
+			while ((line = br.readLine()) != null)
+				lines.add(line);
+		}
+		finally
+		{
+			if (br != null)
+				br.close();
+			
+			if (fr != null)
+				fr.close();
 		}
 		
 		return lines;
