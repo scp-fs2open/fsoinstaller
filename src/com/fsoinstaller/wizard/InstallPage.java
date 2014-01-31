@@ -53,7 +53,8 @@ public class InstallPage extends WizardPage
 	private final JPanel installPanel;
 	
 	private final List<InstallItem> installItems;
-	private final List<String> installResults;
+	private final List<String> installNotes;
+	private final List<String> installErrors;
 	private int remainingMods;
 	
 	public InstallPage()
@@ -61,7 +62,8 @@ public class InstallPage extends WizardPage
 		super("install");
 		
 		installItems = new ArrayList<InstallItem>();
-		installResults = new ArrayList<String>();
+		installNotes = new ArrayList<String>();
+		installErrors = new ArrayList<String>();
 		remainingMods = 0;
 		
 		// create widgets
@@ -131,7 +133,8 @@ public class InstallPage extends WizardPage
 				public void stateChanged(ChangeEvent e)
 				{
 					// add any feedback to the output
-					installResults.addAll(item.getInstallResults());
+					installNotes.addAll(item.getInstallNotes());
+					installErrors.addAll(item.getInstallErrors());
 					
 					remainingMods--;
 					
@@ -155,7 +158,8 @@ public class InstallPage extends WizardPage
 		cancelButton.setEnabled(false);
 		
 		Map<String, Object> settings = configuration.getSettings();
-		settings.put(Configuration.INSTALL_RESULTS_KEY, installResults);
+		settings.put(Configuration.INSTALL_NOTES_KEY, installNotes);
+		settings.put(Configuration.INSTALL_ERRORS_KEY, installErrors);
 		
 		// done managing tasks
 		FreeSpaceOpenInstaller.getInstance().shutDownTasks();

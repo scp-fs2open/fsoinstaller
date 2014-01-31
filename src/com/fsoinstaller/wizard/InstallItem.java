@@ -78,7 +78,8 @@ public class InstallItem extends JPanel
 	
 	private final List<InstallItem> childItems;
 	private int remainingChildren;
-	private List<String> installResults;
+	private List<String> installNotes;
+	private List<String> installErrors;
 	private Future<Void> overallInstallTask;
 	private boolean cancelled;
 	
@@ -105,7 +106,8 @@ public class InstallItem extends JPanel
 		// these variables will only ever be accessed from the event thread, so they are thread safe
 		childItems = new ArrayList<InstallItem>();
 		remainingChildren = 0;
-		installResults = new ArrayList<String>();
+		installNotes = new ArrayList<String>();
+		installErrors = new ArrayList<String>();
 		overallInstallTask = null;
 		cancelled = false;
 		
@@ -163,7 +165,8 @@ public class InstallItem extends JPanel
 				public void stateChanged(ChangeEvent e)
 				{
 					// add any feedback to the output
-					installResults.addAll(childItem.getInstallResults());
+					installNotes.addAll(childItem.getInstallNotes());
+					installErrors.addAll(childItem.getInstallErrors());
 					
 					remainingChildren--;
 					
@@ -258,7 +261,7 @@ public class InstallItem extends JPanel
 					catch (SecurityException se)
 					{
 						modLogger.error("Encountered a security exception when processing setup tasks", se);
-						logResult(node.getName() + ": A Java security exception prevented setup from running.  Check the log file for more details.");
+						logInstallError(node.getName() + ": A Java security exception prevented setup from running.  Check the log file for more details.");
 						modFolder = null;
 					}
 					
@@ -298,6 +301,8 @@ public class InstallItem extends JPanel
 					}
 					
 					setText("Done!");
+					if (node.getNote() != null)
+						logInstallNote(node.getName() + ": " + node.getNote());
 					
 					setSuccess(true);
 					startChildren();
@@ -306,7 +311,7 @@ public class InstallItem extends JPanel
 				catch (RuntimeException re)
 				{
 					modLogger.error("Unhandled runtime exception!", re);
-					logResult("An unexpected error occurred.  Please check the log file for more details.");
+					logInstallError(node.getName() + ": An unexpected error occurred.  Please check the log file for more details.");
 					return null;
 				}
 			}
@@ -381,7 +386,7 @@ public class InstallItem extends JPanel
 				for (InstallItem child: childItems)
 				{
 					Logger.getLogger(InstallItem.class, child.node.getName()).info("Parent mod could not be installed; this mod will be skipped!");
-					logResult(child.node.getName() + ": Skipped because parent mod was not installed.");
+					logInstallError(child.node.getName() + ": Skipped because parent mod was not installed.");
 					
 					// since children haven't actually started yet, they can't be cancelled,
 					// so just indicate status
@@ -436,7 +441,7 @@ public class InstallItem extends JPanel
 				if (!folder.mkdirs())
 				{
 					modLogger.error("Unable to create the folder '" + folderName + "'!");
-					logResult(node.getName() + ": The folder '" + folderName + "' could not be created.");
+					logInstallError(node.getName() + ": The folder '" + folderName + "' could not be created.");
 					return null;
 				}
 			}
@@ -459,7 +464,7 @@ public class InstallItem extends JPanel
 				else if (!file.delete())
 				{
 					modLogger.error("Unable to delete the file '" + delete + "'!");
-					logResult(node.getName() + ": The file '" + delete + "' could not be deleted.");
+					logInstallError(node.getName() + ": The file '" + delete + "' could not be deleted.");
 					return null;
 				}
 			}
@@ -483,7 +488,7 @@ public class InstallItem extends JPanel
 				else if (!from.renameTo(to))
 				{
 					modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
-					logResult(node.getName() + ": The file '" + rename.getFrom() + "' could not be renamed to '" + rename.getTo() + "'.");
+					logInstallError(node.getName() + ": The file '" + rename.getFrom() + "' could not be renamed to '" + rename.getTo() + "'.");
 					return null;
 				}
 			}
@@ -543,7 +548,7 @@ public class InstallItem extends JPanel
 									successes.incrementAndGet();
 								// don't mislead the user if we cancelled the file
 								else if (!Thread.currentThread().isInterrupted())
-									logResult(node.getName() + ": The file '" + file + "' could not be downloaded.");
+									logInstallError(node.getName() + ": The file '" + file + "' could not be downloaded.");
 								int complete = completions.incrementAndGet();
 								
 								// next update the progress bar
@@ -555,7 +560,7 @@ public class InstallItem extends JPanel
 							catch (RuntimeException re)
 							{
 								modLogger.error("Unhandled runtime exception!", re);
-								logResult("An unexpected error occurred.  Please check the log file for more details.");
+								logInstallError(node.getName() + ": An unexpected error occurred.  Please check the log file for more details.");
 							}
 							finally
 							{
@@ -622,7 +627,7 @@ public class InstallItem extends JPanel
 				catch (NoSuchAlgorithmException nsae)
 				{
 					modLogger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
-					logResult(node.getName() + ": The installer cannot compute a hash using the '" + algorithm + "' algorithm.");
+					logInstallError(node.getName() + ": The installer cannot compute a hash using the '" + algorithm + "' algorithm.");
 					continue;
 				}
 				
@@ -664,7 +669,7 @@ public class InstallItem extends JPanel
 					}
 					
 					// notify the user
-					String result = "The hash value for '" + hash.getFilename() + "' did not agree with the expected value.  This could indicate a corrupted download.  ";
+					String result = node.getName() + ": The hash value for '" + hash.getFilename() + "' did not agree with the expected value.  This could indicate a corrupted download.  ";
 					if (baleeted)
 					{
 						result += "The file has been deleted.";
@@ -675,7 +680,7 @@ public class InstallItem extends JPanel
 						result += "Additionally, the installer was unable to delete the file.  Please delete the file yourself and do not open it.";
 						modLogger.error("Unable to delete the file!");
 					}
-					logResult(result);
+					logInstallError(result);
 					
 					// fail
 					badHashes++;
@@ -749,23 +754,42 @@ public class InstallItem extends JPanel
 		return false;
 	}
 	
-	private void logResult(final String message)
+	private void logInstallNote(final String message)
 	{
 		EventQueue.invokeLater(new Runnable()
 		{
 			public void run()
 			{
-				installResults.add(message);
+				installNotes.add(message);
 			}
 		});
 	}
 	
-	public List<String> getInstallResults()
+	private void logInstallError(final String message)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				installErrors.add(message);
+			}
+		});
+	}
+	
+	public List<String> getInstallNotes()
 	{
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
-		return installResults;
+		return installNotes;
+	}
+	
+	public List<String> getInstallErrors()
+	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
+		return installErrors;
 	}
 	
 	public void setIndeterminate(final boolean indeterminate)

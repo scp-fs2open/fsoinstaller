@@ -53,7 +53,7 @@ public class FinishedPage extends WizardPage
 	@Override
 	public JPanel createCenterPanel()
 	{
-		JLabel header = new JLabel("Installation complete.  Check below for any errors.");
+		JLabel header = new JLabel("Installation complete!  Check below for any additional information regarding your installation.");
 		header.setAlignmentX(LEFT_ALIGNMENT);
 		
 		JScrollPane scroll = new JScrollPane(textPane);
@@ -86,28 +86,54 @@ public class FinishedPage extends WizardPage
 		
 		Map<String, Object> settings = configuration.getSettings();
 		@SuppressWarnings("unchecked")
-		List<String> installResults = (List<String>) settings.get(Configuration.INSTALL_RESULTS_KEY);
+		List<String> installNotes = (List<String>) settings.get(Configuration.INSTALL_NOTES_KEY);
+		@SuppressWarnings("unchecked")
+		List<String> installErrors = (List<String>) settings.get(Configuration.INSTALL_ERRORS_KEY);
 		
-		if (installResults.isEmpty())
+		StringBuilder text = new StringBuilder();
+		if (installErrors.isEmpty())
+			text.append("All mods installed successfully!");
+		
+		// add any notes
+		if (!installNotes.isEmpty())
 		{
-			textPane.setText("All mods installed successfully!");
+			if (installErrors.isEmpty())
+				text.append("\n\n");
+			
+			if (installNotes.size() == 1)
+				text.append("Read the following note carefully:");
+			else
+				text.append("Read the following notes carefully:");
+			text.append("\n\n");
+			
+			for (String note: installNotes)
+			{
+				text.append(note);
+				text.append("\n");
+			}
 		}
-		else
+		
+		// add any errors
+		if (!installErrors.isEmpty())
 		{
-			StringBuilder text = new StringBuilder();
-			if (installResults.size() == 1)
+			if (!installNotes.isEmpty())
+				text.append("\n\n");
+			
+			if (installErrors.size() == 1)
 				text.append("The following error was encountered:");
 			else
 				text.append("The following errors were encountered:");
 			text.append("\n\n");
 			
-			for (String line: installResults)
+			for (String error: installErrors)
 			{
-				text.append(line);
+				text.append(error);
 				text.append("\n");
 			}
-			textPane.setText(text.toString());
 		}
+		
+		// populate the text pane
+		textPane.setText(text.toString());
 	}
 	
 	@Override
