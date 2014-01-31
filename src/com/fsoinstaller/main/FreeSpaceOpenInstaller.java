@@ -23,6 +23,10 @@ import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,14 +37,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
+import javax.swing.filechooser.FileFilter;
 
+import com.fsoinstaller.common.InstallerNode;
+import com.fsoinstaller.common.InstallerNodeParseException;
+import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
+import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
 
 
@@ -210,11 +222,114 @@ public class FreeSpaceOpenInstaller
 			}
 		});
 		
-		FreeSpaceOpenInstaller installer = getInstance();
+		String command = args.length == 0 ? null : args[0];
 		
-		// for now, we only have one possible operation: going through the wizard
-		installer.launchWizard();
-		
+		// first custom command is validating install config files
+		if (command != null && command.equals("validate"))
+		{
+			selectAndValidateModFile();
+		}
 		// later we'll evaluate the runtime args to launch the txtfile builder, etc.
+		// default command is the standard wizard installation
+		else
+		{
+			FreeSpaceOpenInstaller installer = getInstance();
+			installer.launchWizard();
+		}
+	}
+	
+	private static void selectAndValidateModFile()
+	{
+		final Configuration config = Configuration.getInstance();
+		final AtomicReference<File> modFileHolder = new AtomicReference<File>(null);
+		
+		// must go on the event thread, ugh...
+		try
+		{
+			EventQueue.invokeAndWait(new Runnable()
+			{
+				public void run()
+				{
+					// create a file chooser
+					JFileChooser chooser = new JFileChooser();
+					chooser.setDialogTitle("Choose a mod config file");
+					chooser.setCurrentDirectory(config.getApplicationDir());
+					FileFilter filter = new FileFilter()
+					{
+						@Override
+						public boolean accept(File path)
+						{
+							if (path.isDirectory())
+								return true;
+							String name = path.getName();
+							int pos = name.lastIndexOf(".");
+							if (pos < 0)
+								return false;
+							return name.substring(pos).equalsIgnoreCase(".txt");
+						}
+						
+						@Override
+						public String getDescription()
+						{
+							return "Text Files (*.txt)";
+						}
+					};
+					chooser.addChoosableFileFilter(filter);
+					chooser.setFileFilter(filter);
+					
+					// display it
+					int result = chooser.showDialog(null, "OK");
+					if (result == JFileChooser.APPROVE_OPTION)
+						modFileHolder.set(chooser.getSelectedFile());
+				}
+			});
+		}
+		catch (InvocationTargetException ite)
+		{
+			logger.error("Error choosing file!", ite);
+		}
+		catch (InterruptedException ie)
+		{
+			logger.error("Thread was interrupted!", ie);
+			Thread.currentThread().interrupt();
+			return;
+		}
+		
+		File modFile = modFileHolder.get();
+		
+		if (modFile == null)
+			return;
+		else if (!modFile.exists())
+		{
+			logger.warn("The file '" + modFile.getAbsolutePath() + "' does not exist!");
+			return;
+		}
+		else if (modFile.isDirectory())
+		{
+			logger.warn("The file '" + modFile.getAbsolutePath() + "' is a directory!");
+			return;
+		}
+		
+		// parse it
+		try
+		{
+			List<InstallerNode> nodes = IOUtils.readInstallFile(modFile);
+			for (InstallerNode node: nodes)
+				logger.info("Successfully parsed " + node.getName());
+			
+			ThreadSafeJOptionPane.showMessageDialog(null, "All nodes were parsed successfully!", config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
+		}
+		catch (FileNotFoundException fnfe)
+		{
+			logger.error("The file could not be found!", fnfe);
+		}
+		catch (IOException ioe)
+		{
+			logger.error("There was an error reading the file!", ioe);
+		}
+		catch (InstallerNodeParseException inpe)
+		{
+			logger.warn("There was an error parsing the mod file!", inpe);
+		}
 	}
 }
