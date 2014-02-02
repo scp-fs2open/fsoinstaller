@@ -843,7 +843,7 @@ public class ConfigPage extends WizardPage
 			
 			// check that we can write to this directory
 			String unique = "installer_" + UUID.randomUUID().toString().replaceAll("-", "") + ".tmp";
-			File writingTest = new File(unique);
+			File writingTest = new File(destinationDir, unique);
 			try
 			{
 				writingTest.createNewFile();
