@@ -19,47 +19,52 @@
 
 package com.fsoinstaller.wizard;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
+
+import com.fsoinstaller.utils.GraphicsUtils;
 
 
 public class StoplightPanel extends JPanel
 {
-	private static final Color DULL_RED = new Color(63, 0, 0);
-	private static final Color DULL_GREEN = new Color(0, 63, 0);
+	private static final BufferedImage BRIGHT_GREEN = GraphicsUtils.getResourceImage("orb_green1.png");
+	private static final BufferedImage BRIGHT_RED = GraphicsUtils.getResourceImage("orb_red1.png");
+	private static final BufferedImage DULL_GREEN = GraphicsUtils.getResourceImage("orb_green3.png");
+	private static final BufferedImage DULL_RED = GraphicsUtils.getResourceImage("orb_red3.png");
 	
 	private final int height;
-	private Color redColor;
-	private Color greenColor;
+	
+	private BufferedImage redImage;
+	private BufferedImage greenImage;
 	
 	public StoplightPanel(int height)
 	{
 		this.height = height;
-		this.redColor = DULL_RED;
-		this.greenColor = DULL_GREEN;
+		this.redImage = DULL_RED;
+		this.greenImage = DULL_GREEN;
 	}
 	
 	public void setPending()
 	{
-		this.redColor = DULL_RED;
-		this.greenColor = DULL_GREEN;
+		this.redImage = DULL_RED;
+		this.greenImage = DULL_GREEN;
 		if (getParent() != null)
 			getParent().repaint();
 	}
 	
 	public void setSuccess()
 	{
-		this.greenColor = Color.GREEN;
+		this.greenImage = BRIGHT_GREEN;
 		if (getParent() != null)
 			getParent().repaint();
 	}
 	
 	public void setFailure()
 	{
-		this.redColor = Color.RED;
+		this.redImage = BRIGHT_RED;
 		if (getParent() != null)
 			getParent().repaint();
 	}
@@ -67,13 +72,12 @@ public class StoplightPanel extends JPanel
 	@Override
 	protected void paintComponent(Graphics g)
 	{
+		super.paintComponent(g);
+		
 		int width = (getWidth() - GUIConstants.SMALL_MARGIN) / 2;
 		
-		g.setColor(redColor);
-		g.fillOval(0, 0, width, height);
-		
-		g.setColor(greenColor);
-		g.fillOval(width + GUIConstants.SMALL_MARGIN, 0, width, height);
+		g.drawImage(redImage, 0, 0, width, height, this);
+		g.drawImage(greenImage, width + GUIConstants.SMALL_MARGIN, 0, width, height, this);
 	}
 	
 	private Dimension calculateSize()
