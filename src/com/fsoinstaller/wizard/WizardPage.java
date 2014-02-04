@@ -20,6 +20,7 @@
 package com.fsoinstaller.wizard;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -112,7 +113,9 @@ public abstract class WizardPage extends JPanel
 	
 	public JPanel createHeaderPanel()
 	{
-		return new ImagePanel(banner);
+		ImagePanel panel = new ImagePanel(banner);
+		panel.setBackground(Color.BLACK);
+		return panel;
 	}
 	
 	public abstract JPanel createCenterPanel();
