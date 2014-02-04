@@ -36,11 +36,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 
 import com.fsoinstaller.main.Configuration;
+import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
 
 
 public class FinishedPage extends WizardPage
 {
+	private static final Logger logger = Logger.getLogger(FinishedPage.class);
+	
 	private final JTextPane textPane;
 	
 	public FinishedPage()
@@ -152,6 +155,7 @@ public class FinishedPage extends WizardPage
 		public void actionPerformed(ActionEvent e)
 		{
 			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
+			logger.debug("Disposing active JFrame '" + frame.getName() + "'...");
 			frame.dispose();
 		}
 	}

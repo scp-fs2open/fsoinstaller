@@ -38,11 +38,14 @@ import javax.swing.JSeparator;
 
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.GraphicsUtils;
+import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.SwingUtils;
 
 
 public abstract class WizardPage extends JPanel
 {
+	private static final Logger logger = Logger.getLogger(WizardPage.class);
+	
 	private static final BufferedImage banner = GraphicsUtils.getResourceImage("top.png");
 	
 	protected InstallerGUI gui;
@@ -230,6 +233,7 @@ public abstract class WizardPage extends JPanel
 		public void actionPerformed(ActionEvent e)
 		{
 			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
+			logger.debug("Disposing active JFrame '" + frame.getName() + "'...");
 			frame.dispose();
 		}
 	}

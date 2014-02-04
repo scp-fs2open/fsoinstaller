@@ -41,6 +41,7 @@ public class InstallerGUI extends JFrame
 	
 	public InstallerGUI()
 	{
+		setName("InstallerGUI");
 		layout = new CardLayout();
 		
 		// instantiate all the pages we'll be using

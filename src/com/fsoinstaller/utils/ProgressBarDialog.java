@@ -142,6 +142,7 @@ public class ProgressBarDialog
 					@Override
 					protected void done()
 					{
+						logger.debug("Disposing ProgressBarDialog...");
 						dialog.dispose();
 						
 						if (isCancelled())

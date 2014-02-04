@@ -217,7 +217,9 @@ public class ConfigPage extends WizardPage
 		{
 			public void run()
 			{
-				SwingUtils.getActiveFrame().dispose();
+				JFrame frame = (JFrame) SwingUtils.getActiveFrame();
+				logger.debug("Disposing active JFrame '" + frame.getName() + "'...");
+				frame.dispose();
 			}
 		};
 		
