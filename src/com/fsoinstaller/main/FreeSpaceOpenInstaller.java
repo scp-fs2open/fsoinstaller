@@ -150,6 +150,8 @@ public class FreeSpaceOpenInstaller
 				}
 			}
 		}
+		
+		logger.debug("All tasks should now be shut down.");
 	}
 	
 	private void launchWizard()
@@ -170,8 +172,9 @@ public class FreeSpaceOpenInstaller
 				gui.addWindowListener(new WindowAdapter()
 				{
 					@Override
-					public void windowClosed(WindowEvent e)
+					public void windowClosing(WindowEvent e)
 					{
+						logger.debug("Main window is closing...");
 						shutDownTasks();
 					}
 				});
