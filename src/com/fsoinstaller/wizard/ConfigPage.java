@@ -720,7 +720,7 @@ public class ConfigPage extends WizardPage
 				if (version.exists())
 					version.delete();
 				File[] filesLeft = oldInstallerInfoDir.listFiles();
-				if (filesLeft.length == 0)
+				if (filesLeft != null && filesLeft.length == 0)
 					oldInstallerInfoDir.delete();
 			}
 			
@@ -807,36 +807,16 @@ public class ConfigPage extends WizardPage
 		
 		public Void call()
 		{
-			logger.info("Checking target directory...");
 			File destinationDir = configuration.getApplicationDir();
 			
-			// if we need FS2 installed, make sure that it is (or that user has been warned)
-			if (configuration.requiresFS2())
+			logger.info("Checking for read access...");
+			
+			// check that we can read from this directory: contents will be null if an I/O error occurred
+			File[] contents = destinationDir.listFiles();
+			if (contents == null)
 			{
-				boolean exists = false;
-				
-				// the best way to do this is probably to check for the presence of root_fs2
-				File[] contents = destinationDir.listFiles();
-				for (File file: contents)
-				{
-					if (file.isDirectory())
-						continue;
-					
-					String name = file.getName();
-					if (name.equalsIgnoreCase("root_fs2.vp"))
-					{
-						exists = true;
-						break;
-					}
-				}
-				
-				if (!exists)
-				{
-					// prompt to continue
-					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not appear to contain a retail installation of FreeSpace 2.  FreeSpace 2 is required to run FreeSpace Open as well as any mods you download.\n\nDo you want to continue anyway?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
-					if (result != JOptionPane.YES_OPTION)
-						return null;
-				}
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The installer could not read from the destination directory.  Please ensure that the directory is readable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				return null;
 			}
 			
 			logger.info("Checking for write and delete access...");
@@ -861,13 +841,41 @@ public class ConfigPage extends WizardPage
 				return null;
 			}
 			
+			// if we need FS2 installed, make sure that it is (or that user has been warned)
+			if (configuration.requiresFS2())
+			{
+				logger.info("Checking for root_fs2.vp...");
+				
+				// the best way to do this is probably to check for the presence of root_fs2
+				boolean exists = false;
+				for (File file: contents)
+				{
+					if (file.isDirectory())
+						continue;
+					
+					String name = file.getName();
+					if (name.equalsIgnoreCase("root_fs2.vp"))
+					{
+						exists = true;
+						break;
+					}
+				}
+				
+				if (!exists)
+				{
+					// prompt to continue
+					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not appear to contain a retail installation of FreeSpace 2.  FreeSpace 2 is required to run FreeSpace Open as well as any mods you download.\n\nDo you want to continue anyway?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
+					if (result != JOptionPane.YES_OPTION)
+						return null;
+				}
+			}
+			
 			logger.info("Checking for extra VPs in the directory");
 			
 			// check for spurious VPs
 			// (note: allowed VPs are in lowercase)
 			List<String> allowedVPs = configuration.getAllowedVPs();
 			List<String> extraVPs = new ArrayList<String>();
-			File[] contents = destinationDir.listFiles();
 			for (File file: contents)
 			{
 				if (file.isDirectory())
