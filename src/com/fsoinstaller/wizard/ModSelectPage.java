@@ -175,19 +175,15 @@ public class ModSelectPage extends WizardPage
 		}
 		
 		// select nodes that have been installed already
-		// but not for COMPLETE, as that's redundant
-		if (choice != InstallChoice.COMPLETE)
+		for (InstallerNode node: treeWalk)
 		{
-			for (InstallerNode node: treeWalk)
+			// standard selection by whether a current or previous version has been installed
+			String propertyName = node.buildTreeName();
+			if (configuration.getUserProperties().containsKey(propertyName))
 			{
-				// standard selection by whether a current or previous version has been installed
-				String propertyName = node.buildTreeName();
-				if (configuration.getUserProperties().containsKey(propertyName))
-				{
-					logger.debug("Selecting '" + node.getName() + "' as already installed based on version");
-					((SingleModPanel) node.getUserObject()).setSelected(true);
-					((SingleModPanel) node.getUserObject()).setAlreadyInstalled(true);
-				}
+				logger.debug("Selecting '" + node.getName() + "' as already installed based on version");
+				((SingleModPanel) node.getUserObject()).setSelected(true);
+				((SingleModPanel) node.getUserObject()).setAlreadyInstalled(true);
 			}
 		}
 		
