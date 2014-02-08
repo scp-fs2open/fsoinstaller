@@ -79,7 +79,7 @@ public class MiscUtils
 		return true;
 	}
 	
-	public enum OperatingSystem
+	public static enum OperatingSystem
 	{
 		WINDOWS,
 		MAC,
@@ -183,7 +183,7 @@ public class MiscUtils
 			{
 				try
 				{
-					ver1 = Integer.valueOf(num1[i]);
+					ver1 = Integer.parseInt(num1[i]);
 				}
 				catch (NumberFormatException nfe)
 				{
@@ -195,7 +195,7 @@ public class MiscUtils
 			{
 				try
 				{
-					ver2 = Integer.valueOf(num2[i]);
+					ver2 = Integer.parseInt(num2[i]);
 				}
 				catch (NumberFormatException nfe)
 				{

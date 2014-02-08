@@ -82,7 +82,7 @@ public class Downloader
 		{
 			String val = System.getProperty("maxParallelDownloads");
 			if (val != null)
-				num = Integer.valueOf(val);
+				num = Integer.parseInt(val);
 		}
 		catch (NumberFormatException nfe)
 		{

@@ -117,7 +117,7 @@ public class Configuration
 	public boolean requiresFS2()
 	{
 		String string = applicationProperties.getProperty("application.requiresfs2", "true");
-		return Boolean.valueOf(string);
+		return Boolean.parseBoolean(string);
 	}
 	
 	public String getUserPropertiesName()
@@ -164,7 +164,7 @@ public class Configuration
 		String port = userProperties.getProperty("proxy.port");
 		try
 		{
-			return Integer.valueOf(port);
+			return Integer.parseInt(port);
 		}
 		catch (NumberFormatException re)
 		{

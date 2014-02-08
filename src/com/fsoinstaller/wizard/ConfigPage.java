@@ -420,7 +420,7 @@ public class ConfigPage extends WizardPage
 				try
 				{
 					host = hostText;
-					port = Integer.valueOf(portText);
+					port = Integer.parseInt(portText);
 					proxy = Connector.createProxy(host, port);
 				}
 				catch (NumberFormatException nfe)

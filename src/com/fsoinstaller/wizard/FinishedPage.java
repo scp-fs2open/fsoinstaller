@@ -144,7 +144,7 @@ public class FinishedPage extends WizardPage
 	{
 	}
 	
-	private final class FinishAction extends AbstractAction
+	private static final class FinishAction extends AbstractAction
 	{
 		public FinishAction()
 		{

@@ -222,7 +222,7 @@ public abstract class WizardPage extends JPanel
 		}
 	}
 	
-	private final class CancelAction extends AbstractAction
+	private static final class CancelAction extends AbstractAction
 	{
 		public CancelAction()
 		{

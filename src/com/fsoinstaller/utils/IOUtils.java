@@ -23,9 +23,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,11 +72,10 @@ public class IOUtils
 		List<String> lines = new ArrayList<String>();
 		
 		BufferedReader br = null;
-		FileReader fr = null;
 		try
 		{
-			fr = new FileReader(inputFile);
-			br = new BufferedReader(fr);
+			Charset charset = Charset.forName("UTF-8");
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), charset));
 			
 			String line;
 			while ((line = br.readLine()) != null)
@@ -85,9 +85,6 @@ public class IOUtils
 		{
 			if (br != null)
 				br.close();
-			
-			if (fr != null)
-				fr.close();
 		}
 		
 		return lines;
@@ -97,10 +94,11 @@ public class IOUtils
 	{
 		List<InstallerNode> nodes = new ArrayList<InstallerNode>();
 		
-		FileReader reader = null;
+		InputStreamReader reader = null;
 		try
 		{
-			reader = new FileReader(inputFile);
+			Charset charset = Charset.forName("UTF-8");
+			reader = new InputStreamReader(new FileInputStream(inputFile), charset);
 			
 			InstallerNode node;
 			while ((node = InstallerNodeFactory.readNode(reader)) != null)
