@@ -55,7 +55,7 @@ public class OutputStreamSequentialOutStream implements ISequentialOutStream
 		}
 		catch (IOException ioe)
 		{
-			throw new SevenZipException("Error writing to output stream");
+			throw new SevenZipException("Error writing to output stream", ioe);
 		}
 	}
 
