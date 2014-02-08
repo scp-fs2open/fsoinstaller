@@ -94,9 +94,8 @@ public class PropertiesUtils
 		catch (FileNotFoundException fnfe)
 		{
 			logger.error("The properties file exists, but it could not be opened for reading!", fnfe);
+			return null;
 		}
-		
-		return null;
 	}
 	
 	public static boolean savePropertiesToFile(File file, Properties properties)
@@ -119,23 +118,22 @@ public class PropertiesUtils
 		logger.info("Loading properties from input stream");
 		try
 		{
+			Properties properties = new Properties();
 			try
 			{
-				Properties properties = new Properties();
 				properties.load(is);
-				return properties;
 			}
 			finally
 			{
 				is.close();
 			}
+			return properties;
 		}
 		catch (IOException ioe)
 		{
 			logger.error("There was a problem reading the properties object from the input stream!", ioe);
+			return null;
 		}
-		
-		return null;
 	}
 	
 	public static boolean savePropertiesToStream(OutputStream os, Properties properties)
