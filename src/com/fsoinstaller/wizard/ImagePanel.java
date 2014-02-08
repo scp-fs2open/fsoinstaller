@@ -39,7 +39,7 @@ import javax.swing.JPanel;
  */
 public class ImagePanel extends JPanel
 {
-	private final Image image;
+	private transient final Image image;
 	private final int width;
 	private final int height;
 	
