@@ -196,12 +196,15 @@ public class JarClassLoader extends ClassLoader {
             log("Not a JAR: %s %s", sUrlTopJAR, e.toString());
             return;
         }
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        Thread hook = new Thread() {
             @Override
             public void run() {
                 shutdown();
             }
-        });
+        };
+		hook.setName("JarClassLoader-shutdownHook");
+		hook.setPriority(Thread.NORM_PRIORITY);
+        Runtime.getRuntime().addShutdownHook(hook);
     } // JarClassLoader()
     
     //--------------------------------separator--------------------------------

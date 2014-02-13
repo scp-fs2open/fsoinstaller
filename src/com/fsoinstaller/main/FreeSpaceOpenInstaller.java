@@ -101,6 +101,7 @@ public class FreeSpaceOpenInstaller
 					INSTANCE.shutdownLatch.countDown();
 				}
 			};
+			hook.setName("FreeSpaceOpenInstaller-shutdownHook");
 			hook.setPriority(Thread.NORM_PRIORITY);
 			Runtime.getRuntime().addShutdownHook(hook);
 		}
@@ -198,12 +199,30 @@ public class FreeSpaceOpenInstaller
 				gui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 				gui.addWindowListener(new WindowAdapter()
 				{
+					/**
+					 * Triggered by someone hitting the close button.
+					 */
 					@Override
 					public void windowClosing(WindowEvent e)
 					{
 						logger.debug("Main window is closing...");
 						shutDownTasks();
+						
+						System.exit(0);
 					}
+					
+					/**
+					 * Triggered by the frame being disposed.
+					 */
+					@Override
+					public void windowClosed(WindowEvent e)
+					{
+						logger.debug("Main window was closed...");
+						shutDownTasks();
+						
+						System.exit(0);
+					}
+					
 				});
 				
 				// display it
