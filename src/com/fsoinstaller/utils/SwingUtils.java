@@ -45,6 +45,12 @@ public class SwingUtils
 	
 	public static void centerWindowOnScreen(Window window)
 	{
+		if (window == null)
+		{
+			logger.warn("Window is null!");
+			return;
+		}
+		
 		// calculate the coordinates to center the window
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int x = (int) ((screenSize.getWidth() - window.getWidth()) / 2.0 + 0.5);
@@ -62,6 +68,13 @@ public class SwingUtils
 	
 	public static void centerWindowOnParent(Window window, Window parent)
 	{
+		if (parent == null)
+		{
+			logger.warn("Centering " + ((window == null) ? null : window.getName()) + " on null parent!");
+			centerWindowOnScreen(window);
+			return;
+		}
+		
 		// calculate the coordinates to center the window
 		int x = (int) (parent.getX() + ((parent.getWidth() - window.getWidth()) / 2.0 + 0.5));
 		int y = (int) (parent.getY() + ((parent.getHeight() - window.getHeight()) / 2.0 + 0.5));
