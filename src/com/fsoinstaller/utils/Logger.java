@@ -27,6 +27,9 @@ import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
+
+import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 
 
 /**
@@ -48,6 +51,9 @@ public final class Logger
 	// do logging setup
 	static
 	{
+		// set the logging manager before any log setup has been done
+		System.setProperty("java.util.logging.manager", DelayedShutdownManager.class.getName());
+		
 		// configure root logger
 		java.util.logging.Logger.getLogger("").setLevel(Level.ALL);
 		for (Handler handler: java.util.logging.Logger.getLogger("").getHandlers())
@@ -233,5 +239,25 @@ public final class Logger
 	public boolean isTraceEnabled()
 	{
 		return logger.isLoggable(Level.FINER);
+	}
+	
+	private static class DelayedShutdownManager extends LogManager
+	{
+		@Override
+		public void reset()
+		{
+			// don't shut down logging until the installer has finished shutdown tasks
+			try
+			{
+				FreeSpaceOpenInstaller.getInstance().awaitShutdown();
+			}
+			catch (InterruptedException ie)
+			{
+				System.err.println("Logger was interrupted while waiting for all shutdown logs to be written!");
+			}
+			
+			// perform normal shutdown
+			super.reset();
+		}
 	}
 }

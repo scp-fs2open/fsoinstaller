@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -86,6 +87,23 @@ public class FreeSpaceOpenInstaller
 	private static final class InstanceHolder
 	{
 		private static final FreeSpaceOpenInstaller INSTANCE = new FreeSpaceOpenInstaller();
+		static
+		{
+			Thread hook = new Thread()
+			{
+				@Override
+				public void run()
+				{
+					logger.info("Entered shutdown hook!");
+					INSTANCE.shutDownTasks();
+					
+					// do this after all shutdown tasks have completed
+					INSTANCE.shutdownLatch.countDown();
+				}
+			};
+			hook.setPriority(Thread.NORM_PRIORITY);
+			Runtime.getRuntime().addShutdownHook(hook);
+		}
 	}
 	
 	public static FreeSpaceOpenInstaller getInstance()
@@ -95,6 +113,7 @@ public class FreeSpaceOpenInstaller
 	
 	private final ExecutorService executorService;
 	private final List<KeyPair<String, Future<Void>>> submittedTasks;
+	private final CountDownLatch shutdownLatch;
 	
 	private FreeSpaceOpenInstaller()
 	{
@@ -104,6 +123,9 @@ public class FreeSpaceOpenInstaller
 		
 		// keep track of all tasks that have been submitted
 		submittedTasks = Collections.synchronizedList(new ArrayList<KeyPair<String, Future<Void>>>());
+		
+		// used to wait until the installer's hook has run
+		shutdownLatch = new CountDownLatch(1);
 	}
 	
 	public Future<Void> submitTask(String taskName, Callable<Void> task)
@@ -152,6 +174,11 @@ public class FreeSpaceOpenInstaller
 		}
 		
 		logger.debug("All tasks should now be shut down.");
+	}
+	
+	public void awaitShutdown() throws InterruptedException
+	{
+		shutdownLatch.await();
 	}
 	
 	private void launchWizard()
