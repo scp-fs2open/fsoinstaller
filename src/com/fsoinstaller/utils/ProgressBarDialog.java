@@ -112,6 +112,7 @@ public class ProgressBarDialog
 				
 				// create a dialog to show progress
 				final JDialog dialog = new JDialog(SwingUtils.getActiveFrame(), title, true);
+				dialog.setName("ProgressBarDialog");
 				dialog.setResizable(false);
 				
 				// populate dialog
