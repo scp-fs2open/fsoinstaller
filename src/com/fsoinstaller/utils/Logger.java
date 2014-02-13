@@ -49,7 +49,8 @@ public final class Logger
 	static
 	{
 		// set the logging manager before any log setup has been done
-		System.setProperty("java.util.logging.manager", DelayedShutdownManager.class.getName());
+		// (actually, disable the delayed shutdown manager for now because the logging system doesn't quite shut down cleanly)
+		//System.setProperty("java.util.logging.manager", DelayedShutdownManager.class.getName());
 		
 		// configure root logger
 		java.util.logging.Logger.getLogger("").setLevel(Level.ALL);
