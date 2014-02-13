@@ -197,7 +197,7 @@ public class JarClassLoader extends ClassLoader {
             return;
         }
         Runtime.getRuntime().addShutdownHook(new Thread() {
-        	@Override
+            @Override
             public void run() {
                 shutdown();
             }
@@ -231,10 +231,17 @@ public class JarClassLoader extends ClassLoader {
         try {
             File file = File.createTempFile(inf.getName() + ".", null);
             file.deleteOnExit();
-            BufferedOutputStream os = new BufferedOutputStream( 
-                                      new FileOutputStream(file));
-            os.write(a_by);
-            os.close();
+            
+            BufferedOutputStream os = null;
+            try {
+                os = new BufferedOutputStream(new FileOutputStream(file)); 
+                os.write(a_by);
+            } finally {
+                if (os != null) {
+                    os.close();
+                }
+            }
+            
             return file;
         } catch (IOException e) {
             throw new JarClassLoaderException("Cannot create temp file for " + inf.jarEntry, e);
