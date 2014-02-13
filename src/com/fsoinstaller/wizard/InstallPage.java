@@ -43,7 +43,6 @@ import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.SwingUtils;
 
 
 public class InstallPage extends WizardPage
@@ -181,7 +180,7 @@ public class InstallPage extends WizardPage
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			int response = JOptionPane.showConfirmDialog(SwingUtils.getActiveFrame(), "Cancelling now will interrupt all downloads that have not yet completed.  Are you sure?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			int response = JOptionPane.showConfirmDialog(gui, "Cancelling now will interrupt all downloads that have not yet completed.  Are you sure?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (response != JOptionPane.YES_OPTION)
 				return;
 			

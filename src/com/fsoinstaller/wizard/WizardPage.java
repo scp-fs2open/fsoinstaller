@@ -39,7 +39,6 @@ import javax.swing.JSeparator;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.GraphicsUtils;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.SwingUtils;
 
 
 public abstract class WizardPage extends JPanel
@@ -222,7 +221,7 @@ public abstract class WizardPage extends JPanel
 		}
 	}
 	
-	private static final class CancelAction extends AbstractAction
+	private final class CancelAction extends AbstractAction
 	{
 		public CancelAction()
 		{
@@ -232,7 +231,7 @@ public abstract class WizardPage extends JPanel
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
+			JFrame frame = gui;
 			logger.debug("Disposing active JFrame '" + frame.getName() + "'...");
 			frame.dispose();
 		}

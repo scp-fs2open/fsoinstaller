@@ -38,6 +38,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -50,7 +51,6 @@ import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
-import com.fsoinstaller.utils.SwingUtils;
 
 
 public class ModSelectPage extends WizardPage
@@ -193,7 +193,7 @@ public class ModSelectPage extends WizardPage
 	
 	private void addTreeNode(InstallerNode node, int depth)
 	{
-		SingleModPanel panel = new SingleModPanel(node, depth, counter);
+		SingleModPanel panel = new SingleModPanel(gui, node, depth, counter);
 		node.setUserObject(panel);
 		treeWalk.add(node);
 		
@@ -226,11 +226,11 @@ public class ModSelectPage extends WizardPage
 		private final JButton button;
 		private final SharedCounter counter;
 		
-		public SingleModPanel(InstallerNode node, int depth, SharedCounter counter)
+		public SingleModPanel(JFrame frame, InstallerNode node, int depth, SharedCounter counter)
 		{
 			this.node = node;
 			this.checkBox = createCheckBox(node, counter);
-			this.button = createMoreInfoButton(node);
+			this.button = createMoreInfoButton(frame, node);
 			this.counter = counter;
 			
 			// set up layout
@@ -336,7 +336,7 @@ public class ModSelectPage extends WizardPage
 		return checkBox;
 	}
 	
-	private static JButton createMoreInfoButton(final InstallerNode node)
+	private static JButton createMoreInfoButton(final JFrame frame, final InstallerNode node)
 	{
 		JButton button = new JButton(new AbstractAction()
 		{
@@ -370,7 +370,7 @@ public class ModSelectPage extends WizardPage
 				
 				// manually wrap the description :-/
 				FontMetrics metrics = description.getFontMetrics(description.getFont());
-				int maxWidth = (int) (SwingUtils.getActiveFrame().getSize().getWidth() * 0.8);
+				int maxWidth = (int) (frame.getSize().getWidth() * 0.8);
 				description.setText(MiscUtils.wrapText(node.getDescription(), metrics, maxWidth));
 				
 				// put together the panel with the header plus the description
@@ -378,7 +378,7 @@ public class ModSelectPage extends WizardPage
 				message.add(header, BorderLayout.NORTH);
 				message.add(description, BorderLayout.CENTER);
 				
-				JOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), message, Configuration.getInstance().getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(frame, message, Configuration.getInstance().getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		

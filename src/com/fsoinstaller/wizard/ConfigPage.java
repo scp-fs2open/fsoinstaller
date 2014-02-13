@@ -63,7 +63,6 @@ import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.ProgressBarDialog;
-import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.l2fprod.common.swing.JDirectoryChooser;
 
@@ -217,7 +216,7 @@ public class ConfigPage extends WizardPage
 		{
 			public void run()
 			{
-				JFrame frame = (JFrame) SwingUtils.getActiveFrame();
+				JFrame frame = gui;
 				logger.debug("Disposing active JFrame '" + frame.getName() + "'...");
 				frame.dispose();
 			}
@@ -228,24 +227,24 @@ public class ConfigPage extends WizardPage
 		{
 			public void handleCancellation()
 			{
-				ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "Validation was cancelled!", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(gui, "Validation was cancelled!", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 			}
 			
 			public void handleException(Exception exception)
 			{
 				if (exception instanceof SecurityException)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The Java security manager is prohibiting the installer from making any changes to the file system.  You will need to change the permissions in the Java control panel before the installer will be able to run successfully.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(gui, "The Java security manager is prohibiting the installer from making any changes to the file system.  You will need to change the permissions in the Java control panel before the installer will be able to run successfully.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
 				else if (exception instanceof InterruptedException)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "Validation was interrupted.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(gui, "Validation was interrupted.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 				else
 				{
-					ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "An unexpected runtime exception occurred.  Please visit Hard Light Productions for technical support.  Make sure you provide the log file.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(gui, "An unexpected runtime exception occurred.  Please visit Hard Light Productions for technical support.  Make sure you provide the log file.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
 			}
@@ -269,15 +268,15 @@ public class ConfigPage extends WizardPage
 			{
 				public void run()
 				{
-					Callable<Void> gog = new DirectoryTask((JFrame) SwingUtils.getActiveFrame(), directoryField.getText(), runWhenReady, exitRunnable);
-					ProgressBarDialog dialog = new ProgressBarDialog("Checking the installation directory...");
+					Callable<Void> gog = new DirectoryTask(gui, directoryField.getText(), runWhenReady, exitRunnable);
+					ProgressBarDialog dialog = new ProgressBarDialog(gui, "Checking the installation directory...");
 					dialog.runTask(gog, callback);
 				}
 			};
 		}
 		
-		Callable<Void> validation = new SuperValidationTask((JFrame) SwingUtils.getActiveFrame(), directoryField.getText(), usingProxy, hostField.getText(), portField.getText(), toRunNext, exitRunnable);
-		ProgressBarDialog dialog = new ProgressBarDialog("Setting up the installer...");
+		Callable<Void> validation = new SuperValidationTask(gui, directoryField.getText(), usingProxy, hostField.getText(), portField.getText(), toRunNext, exitRunnable);
+		ProgressBarDialog dialog = new ProgressBarDialog(gui, "Setting up the installer...");
 		dialog.runTask(validation, callback);
 	}
 	
@@ -300,7 +299,7 @@ public class ConfigPage extends WizardPage
 			chooser.setShowingCreateDirectory(false);
 			
 			// display it
-			int result = chooser.showDialog(SwingUtils.getActiveFrame(), "OK");
+			int result = chooser.showDialog(gui, "OK");
 			if (result == JDirectoryChooser.APPROVE_OPTION)
 				directoryField.setText(chooser.getSelectedFile().getAbsolutePath());
 		}
@@ -833,13 +832,13 @@ public class ConfigPage extends WizardPage
 			catch (IOException ioe)
 			{
 				logger.error("Creating a temporary file '" + unique + "' failed", ioe);
-				ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The installer could not create a temporary file in the destination directory.  Please ensure that the directory is writable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The installer could not create a temporary file in the destination directory.  Please ensure that the directory is writable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			if (!writingTest.delete())
 			{
 				logger.error("Deleting a temporary file '" + unique + "' failed");
-				ThreadSafeJOptionPane.showMessageDialog(SwingUtils.getActiveFrame(), "The installer could not delete a temporary file in the destination directory.  Please ensure that the directory is not read-only, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The installer could not delete a temporary file in the destination directory.  Please ensure that the directory is not read-only, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			

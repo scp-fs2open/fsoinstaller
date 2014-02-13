@@ -22,6 +22,7 @@ package com.fsoinstaller.utils;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.EventQueue;
+import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.Callable;
@@ -51,25 +52,27 @@ public class ProgressBarDialog
 	
 	public static final String INDETERMINATE_STRING = "Working...";
 	
+	private final Frame owner;
 	private final String text;
 	private final String title;
 	private JProgressBar bar;
 	
-	public ProgressBarDialog()
+	public ProgressBarDialog(Frame owner)
 	{
-		this(null, null);
+		this(owner, null, null);
 	}
 	
-	public ProgressBarDialog(String text)
+	public ProgressBarDialog(Frame owner, String text)
 	{
-		this(text, null);
+		this(owner, text, null);
 	}
 	
-	public ProgressBarDialog(String text, String title)
+	public ProgressBarDialog(Frame owner, String text, String title)
 	{
 		if (title == null)
 			title = FreeSpaceOpenInstaller.INSTALLER_TITLE;
 		
+		this.owner = owner;
 		this.text = text;
 		this.title = title;
 	}
@@ -111,7 +114,7 @@ public class ProgressBarDialog
 				maybeCreateProgressBar();
 				
 				// create a dialog to show progress
-				final JDialog dialog = new JDialog(SwingUtils.getActiveFrame(), title, true);
+				final JDialog dialog = new JDialog(owner, title, true);
 				dialog.setName("ProgressBarDialog");
 				dialog.setResizable(false);
 				
@@ -127,7 +130,7 @@ public class ProgressBarDialog
 				dialog.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 				dialog.pack();
-				SwingUtils.centerWindowOnParent(dialog, SwingUtils.getActiveFrame());
+				SwingUtils.centerWindowOnParent(dialog, owner);
 				
 				// create a SwingWorker
 				final SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>()

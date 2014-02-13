@@ -37,7 +37,6 @@ import javax.swing.JTextPane;
 
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.SwingUtils;
 
 
 public class FinishedPage extends WizardPage
@@ -144,7 +143,7 @@ public class FinishedPage extends WizardPage
 	{
 	}
 	
-	private static final class FinishAction extends AbstractAction
+	private final class FinishAction extends AbstractAction
 	{
 		public FinishAction()
 		{
@@ -154,7 +153,7 @@ public class FinishedPage extends WizardPage
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			JFrame frame = (JFrame) SwingUtils.getActiveFrame();
+			JFrame frame = gui;
 			logger.debug("Disposing active JFrame '" + frame.getName() + "'...");
 			frame.dispose();
 		}

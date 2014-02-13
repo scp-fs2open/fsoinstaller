@@ -21,7 +21,6 @@ package com.fsoinstaller.utils;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
@@ -87,18 +86,6 @@ public class SwingUtils
 		
 		// center it
 		window.setLocation(x, y);
-	}
-	
-	public static Frame getActiveFrame()
-	{
-		for (Frame frame: Frame.getFrames())
-		{
-			// the first visible frame ought to be the active one
-			if (frame.isVisible())
-				return frame;
-		}
-		
-		return null;
 	}
 	
 	public static void invokeAndWait(Runnable runnable)
