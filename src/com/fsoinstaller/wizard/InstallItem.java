@@ -341,7 +341,6 @@ public class InstallItem extends JPanel
 			// set GUI
 			setSuccess(false);
 			setIndeterminate(false);
-			setPercentComplete(0);
 			setText("Cancelled");
 		}
 		else if (state == InstallItemState.RUNNING)
@@ -352,7 +351,6 @@ public class InstallItem extends JPanel
 			// set GUI
 			setSuccess(false);
 			setIndeterminate(false);
-			setPercentComplete(0);
 			setText("Cancelled");
 			
 			logInstallError(node.getName() + ": Cancelled by user request.");
