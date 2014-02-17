@@ -58,6 +58,7 @@ public class StoplightPanel extends JPanel
 	public void setSuccess()
 	{
 		this.greenImage = BRIGHT_GREEN;
+		this.redImage = DULL_RED;
 		if (getParent() != null)
 			getParent().repaint();
 	}
@@ -65,6 +66,7 @@ public class StoplightPanel extends JPanel
 	public void setFailure()
 	{
 		this.redImage = BRIGHT_RED;
+		this.greenImage = DULL_GREEN;
 		if (getParent() != null)
 			getParent().repaint();
 	}
