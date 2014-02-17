@@ -163,6 +163,10 @@ public class Downloader
 			}
 			else if (state == DownloadState.CANCELLED)
 			{
+				// interrupt the thread, since we couldn't do that before
+				downloadThread = Thread.currentThread();
+				downloadThread.interrupt();
+				
 				logger.info("Not starting download due to prior cancellation!");
 				return false;
 			}
