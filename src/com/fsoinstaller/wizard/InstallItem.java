@@ -81,7 +81,7 @@ public class InstallItem extends JPanel
 	private List<String> installNotes;
 	private List<String> installErrors;
 	private Future<Void> overallInstallTask;
-	private boolean cancelled;
+	private InstallItemState state;
 	
 	private final Logger modLogger;
 	
@@ -109,7 +109,7 @@ public class InstallItem extends JPanel
 		installNotes = new ArrayList<String>();
 		installErrors = new ArrayList<String>();
 		overallInstallTask = null;
-		cancelled = false;
+		state = InstallItemState.INITIALIZED;
 		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
@@ -210,9 +210,6 @@ public class InstallItem extends JPanel
 	{
 		modLogger.info("Processing is complete; alerting listeners...");
 		
-		setIndeterminate(false);
-		setPercentComplete(100);
-		
 		EventQueue.invokeLater(new Runnable()
 		{
 			public void run()
@@ -235,14 +232,27 @@ public class InstallItem extends JPanel
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
-		// this is here just in case we sneaked in a cancellation when the parent task was complete but the child task was queued to start
-		if (cancelled)
+		// make sure we're okay to start
+		if (state == InstallItemState.INITIALIZED)
+		{
+			modLogger.info("Starting task!");
+			state = InstallItemState.RUNNING;
+		}
+		else if (state == InstallItemState.CANCELLED)
 		{
 			modLogger.info("Not starting task that was cancelled...");
 			return;
 		}
-		
-		modLogger.info("Starting task!");
+		else if (state == InstallItemState.COMPLETED)
+		{
+			modLogger.info("Not starting task that was completed...");
+			return;
+		}
+		else
+		{
+			modLogger.error("Cannot install; item's current state is " + state);
+			return;
+		}
 		
 		// and now we queue up our big task that handles this whole node
 		overallInstallTask = FreeSpaceOpenInstaller.getInstance().submitTask("Install " + node.getName(), new Callable<Void>()
@@ -268,8 +278,7 @@ public class InstallItem extends JPanel
 					// if setup didn't work, can't continue
 					if (modFolder == null || Thread.currentThread().isInterrupted())
 					{
-						setSuccess(false);
-						cancelChildren();
+						failInstallTree();
 						return null;
 					}
 					modLogger.info("Installing to path: " + modFolder.getAbsolutePath());
@@ -282,8 +291,7 @@ public class InstallItem extends JPanel
 					boolean success = performInstallTasks(modFolder);
 					if (!success || Thread.currentThread().isInterrupted())
 					{
-						setSuccess(false);
-						cancelChildren();
+						failInstallTree();
 						return null;
 					}
 					
@@ -295,8 +303,7 @@ public class InstallItem extends JPanel
 					success = performHashTasks(modFolder);
 					if (!success || Thread.currentThread().isInterrupted())
 					{
-						setSuccess(false);
-						cancelChildren();
+						failInstallTree();
 						return null;
 					}
 					
@@ -323,35 +330,73 @@ public class InstallItem extends JPanel
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
 		
-		// cancel only once
-		if (cancelled)
-			return;
-		modLogger.info("User requested cancellation!");
+		InstallItemState oldState = state;
 		
-		// cancel the currently running task (if it is running; if not, it will run into the cancelled flag when the event comes up later)
-		if (overallInstallTask != null)
-			overallInstallTask.cancel(true);
-		
-		// set state
-		setSuccess(false);
-		setText("Cancelled");
-		cancelled = true;
-		
-		// cancel all downloads
-		for (DownloadPanel panel: downloadPanelMap.values())
+		// make sure we're okay to cancel, and make sure we cancel the right way
+		if (state == InstallItemState.INITIALIZED)
 		{
-			Downloader d = panel.getDownloader();
-			if (d != null)
-				d.cancel();
+			modLogger.info("Cancelling task that hasn't started yet!");
+			state = InstallItemState.CANCELLED;
+			
+			// set GUI
+			setSuccess(false);
+			setIndeterminate(false);
+			setPercentComplete(0);
+			setText("Cancelled");
+		}
+		else if (state == InstallItemState.RUNNING)
+		{
+			modLogger.info("Cancelling running task!");
+			state = InstallItemState.CANCELLED;
+			
+			// set GUI
+			setSuccess(false);
+			setIndeterminate(false);
+			setPercentComplete(0);
+			setText("Cancelled");
+			
+			logInstallError(node.getName() + ": Cancelled by user request.");
+			
+			// interrupt the running task
+			overallInstallTask.cancel(true);
+			
+			// cancel all downloads
+			for (DownloadPanel panel: downloadPanelMap.values())
+			{
+				Downloader d = panel.getDownloader();
+				if (d != null)
+					d.cancel();
+			}
+		}
+		else if (state == InstallItemState.CANCELLED)
+		{
+			modLogger.info("Not cancelling task that was already cancelled...");
+		}
+		else if (state == InstallItemState.COMPLETED)
+		{
+			modLogger.info("Not cancelling task that was already completed...");
+		}
+		else
+		{
+			modLogger.error("Cannot cancel; item's current state is " + state);
+			return;
 		}
 		
-		// cancel children
-		for (InstallItem child: childItems)
-			child.cancel();
-		
-		// if no children, we are done
-		if (childItems.isEmpty())
-			fireCompletion();
+		// if we cancelled a task that was running, failInstallTree will take care of all the children and the completion event;
+		// otherwise we will need to continue cancelling the children
+		if (oldState != InstallItemState.RUNNING)
+		{
+			for (InstallItem child: childItems)
+				child.cancel();
+			
+			// don't  fire a redundant completion event
+			if (oldState != InstallItemState.CANCELLED && oldState != InstallItemState.COMPLETED)
+			{
+				// if no children, we are done
+				if (childItems.isEmpty())
+					fireCompletion();
+			}
+		}
 	}
 	
 	/**
@@ -363,6 +408,8 @@ public class InstallItem extends JPanel
 		{
 			public void run()
 			{
+				state = InstallItemState.COMPLETED;
+				
 				for (InstallItem child: childItems)
 					child.start();
 				
@@ -377,35 +424,49 @@ public class InstallItem extends JPanel
 	 * This should only be called from the main install processing task. It's a
 	 * program-initiated cancellation rather than a user-initiated cancellation.
 	 */
-	private void cancelChildren()
+	private void failInstallTree()
 	{
 		EventQueue.invokeLater(new Runnable()
 		{
 			public void run()
 			{
-				for (InstallItem child: childItems)
-				{
-					Logger.getLogger(InstallItem.class, child.node.getName()).info("Parent mod could not be installed; this mod will be skipped!");
-					logInstallError(child.node.getName() + ": Skipped because parent mod was not installed.");
-					
-					// since children haven't actually started yet, they can't be cancelled,
-					// so just indicate status
-					child.setSuccess(false);
-					child.setText("Parent not installed");
-					
-					// ditto with their download panels
-					for (DownloadPanel panel: child.downloadPanelMap.values())
-						panel.downloadCancelled(null);
-					
-					// cancel *their* children as well
-					child.cancelChildren();
-				}
-				
-				// if no children, we are done
-				if (childItems.isEmpty())
-					fireCompletion();
+				failInstallTree0(true);
 			}
 		});
+	}
+	
+	private void failInstallTree0(boolean isTopLevelFailedItem)
+	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
+		// set state
+		state = InstallItemState.CANCELLED;
+		
+		// set GUI
+		// (don't set text for the top level item)
+		setSuccess(false);
+		setIndeterminate(false);
+		
+		if (!isTopLevelFailedItem)
+		{
+			setText("Parent not installed");
+			
+			modLogger.info("Parent mod could not be installed; this mod will be skipped!");
+			logInstallError(node.getName() + ": Skipped because parent mod was not installed.");
+			
+			for (DownloadPanel panel: downloadPanelMap.values())
+				panel.downloadCancelled(null);
+		}
+		
+		// fail child items
+		// (note that at this point, none of the children have started yet)
+		for (InstallItem child: childItems)
+			child.failInstallTree0(false);
+		
+		// if no children, we are done
+		if (childItems.isEmpty())
+			fireCompletion();
 	}
 	
 	/**
@@ -848,5 +909,13 @@ public class InstallItem extends JPanel
 				overallBar.setString(text);
 			}
 		});
+	}
+	
+	protected static enum InstallItemState
+	{
+		INITIALIZED,
+		RUNNING,
+		COMPLETED,
+		CANCELLED
 	}
 }
