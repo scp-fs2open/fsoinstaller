@@ -83,6 +83,7 @@ public class InstallItem extends JPanel
 	private Future<Void> overallInstallTask;
 	private InstallItemState state;
 	
+	private final boolean installNotNeeded;
 	private final Logger modLogger;
 	
 	public InstallItem(InstallerNode node, Set<String> selectedMods)
@@ -111,6 +112,11 @@ public class InstallItem extends JPanel
 		overallInstallTask = null;
 		state = InstallItemState.INITIALIZED;
 		
+		// only perform the installation if the stored version is different from the version available online
+		String propertyName = node.buildTreeName();
+		String storedVersion = Configuration.getInstance().getUserProperties().getProperty(propertyName);
+		installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion()));
+		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
 		progressPanel.add(overallBar);
@@ -127,22 +133,25 @@ public class InstallItem extends JPanel
 		JPanel installPanel = new JPanel();
 		installPanel.setLayout(new BoxLayout(installPanel, BoxLayout.Y_AXIS));
 		
-		// add as many panels as we have download items for
+		// add as many panels as we have install units for
 		Map<KeyPair<InstallUnit, String>, DownloadPanel> tempMap = new HashMap<KeyPair<InstallUnit, String>, DownloadPanel>();
-		for (InstallUnit install: node.getInstallList())
+		if (!installNotNeeded)
 		{
-			for (String file: install.getFileList())
+			for (InstallUnit install: node.getInstallList())
 			{
-				KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
-				if (tempMap.containsKey(key))
+				for (String file: install.getFileList())
 				{
-					logger.error("Duplicate key found for mod '" + node.getName() + "', file '" + file + "'!");
-					continue;
+					KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
+					if (tempMap.containsKey(key))
+					{
+						logger.error("Duplicate key found for mod '" + node.getName() + "', file '" + file + "'!");
+						continue;
+					}
+					
+					DownloadPanel panel = new DownloadPanel();
+					installPanel.add(panel);
+					tempMap.put(key, panel);
 				}
-				
-				DownloadPanel panel = new DownloadPanel();
-				installPanel.add(panel);
-				tempMap.put(key, panel);
 			}
 		}
 		downloadPanelMap = Collections.unmodifiableMap(tempMap);
@@ -261,70 +270,81 @@ public class InstallItem extends JPanel
 			{
 				try
 				{
-					File modFolder;
-					
-					// handle create, delete, rename, and copy
-					try
+					// only install if we have to
+					if (!installNotNeeded)
 					{
-						modFolder = performSetupTasks();
+						File modFolder;
+						
+						// handle create, delete, rename, and copy
+						try
+						{
+							modFolder = performSetupTasks();
+						}
+						catch (SecurityException se)
+						{
+							modLogger.error("Encountered a security exception when processing setup tasks", se);
+							logInstallError(node.getName() + ": A Java security exception prevented setup from running.  Check the log file for more details.");
+							modFolder = null;
+						}
+						
+						// if setup didn't work, can't continue
+						if (modFolder == null || Thread.currentThread().isInterrupted())
+						{
+							failInstallTree();
+							return null;
+						}
+						modLogger.info("Installing to path: " + modFolder.getAbsolutePath());
+						
+						// prepare progress bar for tracking installation units
+						setPercentComplete(0);
+						setIndeterminate(false);
+						
+						// now we are about to download stuff
+						boolean success = performInstallTasks(modFolder);
+						if (!success || Thread.currentThread().isInterrupted())
+						{
+							failInstallTree();
+							return null;
+						}
+						
+						// maybe change the progress bar look again
+						if (!node.getHashList().isEmpty())
+							setIndeterminate(true);
+						
+						// now hash the files we installed
+						success = performHashTasks(modFolder);
+						if (!success || Thread.currentThread().isInterrupted())
+						{
+							failInstallTree();
+							return null;
+						}
+						
+						// success: save the version we just installed
+						// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
+						Configuration configuration = Configuration.getInstance();
+						configuration.getUserProperties().setProperty(node.buildTreeName(), node.getVersion());
+						synchronized (configuration)
+						{
+							configuration.saveUserProperties();
+						}
+						
+						// save any post-installation notes
+						if (node.getNote() != null)
+							logInstallNote(node.getName() + ": " + node.getNote());
+						
+						// update GUI
+						setSuccess(true);
+						setText("Done!");
+						setPercentComplete(100);
 					}
-					catch (SecurityException se)
+					else
 					{
-						modLogger.error("Encountered a security exception when processing setup tasks", se);
-						logInstallError(node.getName() + ": A Java security exception prevented setup from running.  Check the log file for more details.");
-						modFolder = null;
+						// update GUI slightly differently
+						setSuccess(true);
+						setText("Mod is up to date!");
+						setPercentComplete(100);
+						setIndeterminate(false);
 					}
-					
-					// if setup didn't work, can't continue
-					if (modFolder == null || Thread.currentThread().isInterrupted())
-					{
-						failInstallTree();
-						return null;
-					}
-					modLogger.info("Installing to path: " + modFolder.getAbsolutePath());
-					
-					// prepare progress bar for tracking installation units
-					setPercentComplete(0);
-					setIndeterminate(false);
-					
-					// now we are about to download stuff
-					boolean success = performInstallTasks(modFolder);
-					if (!success || Thread.currentThread().isInterrupted())
-					{
-						failInstallTree();
-						return null;
-					}
-					
-					// maybe change the progress bar look again
-					if (!node.getHashList().isEmpty())
-						setIndeterminate(true);
-					
-					// now hash the files we installed
-					success = performHashTasks(modFolder);
-					if (!success || Thread.currentThread().isInterrupted())
-					{
-						failInstallTree();
-						return null;
-					}
-					
-					// success: save the version we just installed
-					// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
-					String propertyName = node.buildTreeName();
-					Configuration configuration = Configuration.getInstance();
-					synchronized (configuration)
-					{
-						configuration.getUserProperties().setProperty(propertyName, node.getVersion());
-						configuration.saveUserProperties();
-					}
-					
-					// save any post-installation notes
-					if (node.getNote() != null)
-						logInstallNote(node.getName() + ": " + node.getNote());
-					
-					// update GUI
-					setSuccess(true);
-					setText("Done!");
-					setPercentComplete(100);
 					
 					// kick off next nodes
 					startChildren();
