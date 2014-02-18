@@ -579,6 +579,11 @@ public class InstallItem extends JPanel
 				{
 					try
 					{
+						// make sure the destination parent folder exists
+						if (!to.getParentFile().exists())
+							if (!to.getParentFile().mkdirs())
+								throw new IOException("Could not create destination parent directory!");
+						
 						IOUtils.copy(from, to);
 					}
 					catch (IOException ioe)
