@@ -519,7 +519,14 @@ public class InstallItem extends JPanel
 				if (!file.exists())
 					modLogger.debug("Cannot delete '" + delete + "'; it does not exist");
 				else if (file.isDirectory())
-					modLogger.debug("Cannot delete '" + delete + "'; deleting directories is not supported at this time");
+				{
+					if (!IOUtils.deleteDirectoryTree(file))
+					{
+						modLogger.error("Unable to delete the directory '" + delete + "'!");
+						logInstallError(node.getName() + ": The directory '" + delete + "' could not be deleted.");
+						return null;
+					}
+				}
 				else if (!file.delete())
 				{
 					modLogger.error("Unable to delete the file '" + delete + "'!");

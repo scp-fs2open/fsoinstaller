@@ -212,4 +212,28 @@ public class IOUtils
 				throw closeException;
 		}
 	}
+	
+	public static boolean deleteDirectoryTree(File directory)
+	{
+		if (directory.isDirectory())
+		{
+			File[] files = directory.listFiles();
+			// I/O error
+			if (files == null)
+				return false;
+			
+			for (File file: files)
+			{
+				if (file.isDirectory())
+				{
+					if (!deleteDirectoryTree(file))
+						return false;
+				}
+				else if (!file.delete())
+					return false;
+			}
+		}
+		
+		return directory.delete();
+	}
 }
