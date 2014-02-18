@@ -154,7 +154,13 @@ public class InstallerNodeFactory
 			case RENAME:
 				String renameFrom = MiscUtils.standardizeSlashes(readString(reader));
 				String renameTo = MiscUtils.standardizeSlashes(readString(reader));
-				node.addRenamePair(new InstallerNode.RenamePair(renameFrom, renameTo));
+				node.addRenamePair(new InstallerNode.FilePair(renameFrom, renameTo));
+				break;
+			
+			case COPY:
+				String copyFrom = MiscUtils.standardizeSlashes(readString(reader));
+				String copyTo = MiscUtils.standardizeSlashes(readString(reader));
+				node.addCopyPair(new InstallerNode.FilePair(copyFrom, copyTo));
 				break;
 			
 			case URL:
@@ -328,8 +334,11 @@ public class InstallerNodeFactory
 		for (String delete: node.getDeleteList())
 			writeLine(indent, writer, InstallerNodeToken.DELETE, delete);
 		
-		for (InstallerNode.RenamePair pair: node.getRenameList())
+		for (InstallerNode.FilePair pair: node.getRenameList())
 			writeLine(indent, writer, InstallerNodeToken.RENAME, pair.getFrom(), pair.getTo());
+		
+		for (InstallerNode.FilePair pair: node.getCopyList())
+			writeLine(indent, writer, InstallerNodeToken.COPY, pair.getFrom(), pair.getTo());
 		
 		for (InstallerNode.InstallUnit unit: node.getInstallList())
 		{

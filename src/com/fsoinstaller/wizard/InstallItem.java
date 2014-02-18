@@ -50,9 +50,9 @@ import javax.swing.event.ChangeListener;
 
 import com.fsoinstaller.common.BaseURL;
 import com.fsoinstaller.common.InstallerNode;
+import com.fsoinstaller.common.InstallerNode.FilePair;
 import com.fsoinstaller.common.InstallerNode.HashTriple;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
-import com.fsoinstaller.common.InstallerNode.RenamePair;
 import com.fsoinstaller.internet.Connector;
 import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.main.Configuration;
@@ -263,7 +263,7 @@ public class InstallItem extends JPanel
 				{
 					File modFolder;
 					
-					// handle create, delete, and rename
+					// handle create, delete, rename, and copy
 					try
 					{
 						modFolder = performSetupTasks();
@@ -469,7 +469,7 @@ public class InstallItem extends JPanel
 	
 	/**
 	 * Perform the preliminary installation tasks for this node (create, delete,
-	 * rename).
+	 * rename, copy).
 	 * 
 	 * @throws SecurityException if e.g. we are not allowed to create a folder
 	 *         or download files to it
@@ -535,7 +535,7 @@ public class InstallItem extends JPanel
 			setText("Renaming files...");
 			
 			// rename what we need to
-			for (RenamePair rename: node.getRenameList())
+			for (FilePair rename: node.getRenameList())
 			{
 				modLogger.debug("Renaming '" + rename.getFrom() + "' to '" + rename.getTo() + "'");
 				File from = new File(folder, rename.getFrom());
@@ -549,6 +549,37 @@ public class InstallItem extends JPanel
 					modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
 					logInstallError(node.getName() + ": The file '" + rename.getFrom() + "' could not be renamed to '" + rename.getTo() + "'.");
 					return null;
+				}
+			}
+		}
+		
+		if (!node.getCopyList().isEmpty())
+		{
+			modLogger.info("Processing COPY items");
+			setText("Copying files...");
+			
+			// copy what we need to
+			for (FilePair copy: node.getCopyList())
+			{
+				modLogger.debug("Copying '" + copy.getFrom() + "' to '" + copy.getTo() + "'");
+				File from = new File(folder, copy.getFrom());
+				File to = new File(folder, copy.getTo());
+				if (!from.exists())
+					modLogger.debug("Cannot copy '" + copy.getFrom() + "'; it does not exist");
+				else if (to.exists())
+					modLogger.debug("Cannot copy '" + copy.getFrom() + "' to '" + copy.getTo() + "'; the latter already exists");
+				else
+				{
+					try
+					{
+						IOUtils.copy(from, to);
+					}
+					catch (IOException ioe)
+					{
+						modLogger.error("Unable to copy '" + copy.getFrom() + "' to '" + copy.getTo() + "'!", ioe);
+						logInstallError(node.getName() + ": The file '" + copy.getFrom() + "' could not be copied to '" + copy.getTo() + "'.");
+						return null;
+					}
 				}
 			}
 		}

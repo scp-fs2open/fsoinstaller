@@ -23,9 +23,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -165,5 +167,49 @@ public class IOUtils
 			sb.append(Integer.toString((hashedBytes[i] & 0xff) + 0x100, 16).substring(1));
 		
 		return sb.toString();
+	}
+	
+	public static void copy(File from, File to) throws IOException
+	{
+		FileChannel fromChannel = null;
+		FileChannel toChannel = null;
+		
+		try
+		{
+			fromChannel = new FileInputStream(from).getChannel();
+			toChannel = new FileOutputStream(to).getChannel();
+			
+			toChannel.transferFrom(fromChannel, 0, fromChannel.size());
+		}
+		finally
+		{
+			IOException closeException = null;
+			
+			if (fromChannel != null)
+			{
+				try
+				{
+					fromChannel.close();
+				}
+				catch (IOException ioe)
+				{
+					closeException = ioe;
+				}
+			}
+			if (toChannel != null)
+			{
+				try
+				{
+					toChannel.close();
+				}
+				catch (IOException ioe)
+				{
+					closeException = ioe;
+				}
+			}
+			
+			if (closeException != null)
+				throw closeException;
+		}
 	}
 }

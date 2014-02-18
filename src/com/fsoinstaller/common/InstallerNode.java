@@ -38,8 +38,9 @@ public class InstallerNode
 	protected String version;
 	protected String note;
 	
-	protected final List<RenamePair> renameList;
 	protected final List<String> deleteList;
+	protected final List<FilePair> renameList;
+	protected final List<FilePair> copyList;
 	protected final List<InstallUnit> installList;
 	protected final List<HashTriple> hashList;
 	
@@ -59,8 +60,9 @@ public class InstallerNode
 		this.version = null;
 		this.note = null;
 		
-		this.renameList = new ArrayList<RenamePair>();
 		this.deleteList = new ArrayList<String>();
+		this.renameList = new ArrayList<FilePair>();
+		this.copyList = new ArrayList<FilePair>();
 		this.installList = new ArrayList<InstallUnit>();
 		this.hashList = new ArrayList<HashTriple>();
 		
@@ -141,14 +143,19 @@ public class InstallerNode
 		this.note = note;
 	}
 	
-	public List<RenamePair> getRenameList()
+	public List<String> getDeleteList()
+	{
+		return Collections.unmodifiableList(deleteList);
+	}
+	
+	public List<FilePair> getRenameList()
 	{
 		return Collections.unmodifiableList(renameList);
 	}
 	
-	public List<String> getDeleteList()
+	public List<FilePair> getCopyList()
 	{
-		return Collections.unmodifiableList(deleteList);
+		return Collections.unmodifiableList(copyList);
 	}
 	
 	public List<InstallUnit> getInstallList()
@@ -176,19 +183,6 @@ public class InstallerNode
 		return userObject;
 	}
 	
-	public void addRenamePair(RenamePair renamePair)
-	{
-		if (renamePair == null)
-			throw new NullPointerException("Cannot add a null rename pair!");
-		
-		renameList.add(renamePair);
-	}
-	
-	public void removeRenamePair(RenamePair renamePair)
-	{
-		renameList.remove(renamePair);
-	}
-	
 	public void addDelete(String deleteItem)
 	{
 		if (deleteItem == null)
@@ -200,6 +194,32 @@ public class InstallerNode
 	public void removeDelete(String deleteItem)
 	{
 		deleteList.remove(deleteItem);
+	}
+	
+	public void addRenamePair(FilePair renamePair)
+	{
+		if (renamePair == null)
+			throw new NullPointerException("Cannot add a null rename pair!");
+		
+		renameList.add(renamePair);
+	}
+	
+	public void removeRenamePair(FilePair renamePair)
+	{
+		renameList.remove(renamePair);
+	}
+	
+	public void addCopyPair(FilePair copyPair)
+	{
+		if (copyPair == null)
+			throw new NullPointerException("Cannot add a null copy pair!");
+		
+		copyList.add(copyPair);
+	}
+	
+	public void removeCopyPair(FilePair copyPair)
+	{
+		copyList.remove(copyPair);
 	}
 	
 	public void addInstall(InstallUnit installUnit)
@@ -291,12 +311,12 @@ public class InstallerNode
 		return null;
 	}
 	
-	public static class RenamePair
+	public static class FilePair
 	{
 		private String from;
 		private String to;
 		
-		public RenamePair(String from, String to)
+		public FilePair(String from, String to)
 		{
 			if (from == null || to == null)
 				throw new NullPointerException("Arguments cannot be null!");

@@ -32,6 +32,7 @@ public enum InstallerNodeToken
 	FOLDER("FOLDER"),
 	DELETE("DELETE"),
 	RENAME("RENAME"),
+	COPY("COPY"),
 	URL("URL"),
 	MULTIURL("MULTIURL"),
 	ENDMULTI("ENDMULTI"),
