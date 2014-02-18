@@ -865,7 +865,7 @@ public class ConfigPage extends WizardPage
 				if (!exists)
 				{
 					// prompt to continue
-					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not appear to contain a retail installation of FreeSpace 2.  FreeSpace 2 is required to run FreeSpace Open as well as any mods you download.\n\nDo you want to continue anyway?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
+					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not appear to contain a retail installation of FreeSpace 2.  FreeSpace 2 is required to run FreeSpace Open as well as any mods you download.\n\nDo you want to continue anyway?  (If you are using this program to install FreeSpace from the GOG package, click Yes.)", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
 					if (result != JOptionPane.YES_OPTION)
 						return null;
 				}
