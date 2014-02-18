@@ -236,4 +236,24 @@ public class IOUtils
 		
 		return directory.delete();
 	}
+	
+	public static File newFileIgnoreCase(File directory, String fileName)
+	{
+		if (!directory.isDirectory())
+			throw new IllegalArgumentException("Directory argument must be a directory!");
+		
+		File[] files = directory.listFiles();
+		if (files != null)
+		{
+			for (File file: files)
+			{
+				// found a file with the same name, using a case-insensitive comparison
+				if (file.getName().equalsIgnoreCase(fileName))
+					return file;
+			}
+		}
+		
+		// didn't find the file, so just use the name we used as the parameter
+		return new File(directory, fileName);
+	}
 }

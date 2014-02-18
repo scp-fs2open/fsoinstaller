@@ -491,7 +491,7 @@ public class InstallItem extends JPanel
 		}
 		else
 		{
-			folder = new File(installDir, folderName);
+			folder = IOUtils.newFileIgnoreCase(installDir, folderName);
 			if (folder.exists())
 				modLogger.info("Using folder '" + folderName + "'");
 			else
@@ -515,7 +515,7 @@ public class InstallItem extends JPanel
 			for (String delete: node.getDeleteList())
 			{
 				modLogger.debug("Deleting '" + delete + "'");
-				File file = new File(folder, delete);
+				File file = IOUtils.newFileIgnoreCase(folder, delete);
 				if (!file.exists())
 					modLogger.debug("Cannot delete '" + delete + "'; it does not exist");
 				else if (file.isDirectory())
@@ -545,8 +545,8 @@ public class InstallItem extends JPanel
 			for (FilePair rename: node.getRenameList())
 			{
 				modLogger.debug("Renaming '" + rename.getFrom() + "' to '" + rename.getTo() + "'");
-				File from = new File(folder, rename.getFrom());
-				File to = new File(folder, rename.getTo());
+				File from = IOUtils.newFileIgnoreCase(folder, rename.getFrom());
+				File to = IOUtils.newFileIgnoreCase(folder, rename.getTo());
 				if (!from.exists())
 					modLogger.debug("Cannot rename '" + rename.getFrom() + "'; it does not exist");
 				else if (to.exists())
@@ -569,8 +569,8 @@ public class InstallItem extends JPanel
 			for (FilePair copy: node.getCopyList())
 			{
 				modLogger.debug("Copying '" + copy.getFrom() + "' to '" + copy.getTo() + "'");
-				File from = new File(folder, copy.getFrom());
-				File to = new File(folder, copy.getTo());
+				File from = IOUtils.newFileIgnoreCase(folder, copy.getFrom());
+				File to = IOUtils.newFileIgnoreCase(folder, copy.getTo());
 				if (!from.exists())
 					modLogger.debug("Cannot copy '" + copy.getFrom() + "'; it does not exist");
 				else if (to.exists())
