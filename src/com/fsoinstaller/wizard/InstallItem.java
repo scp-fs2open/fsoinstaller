@@ -308,6 +308,7 @@ public class InstallItem extends JPanel
 					}
 					
 					setText("Done!");
+					setPercentComplete(100);
 					if (node.getNote() != null)
 						logInstallNote(node.getName() + ": " + node.getNote());
 					

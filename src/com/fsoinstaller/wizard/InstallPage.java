@@ -196,7 +196,7 @@ public class InstallPage extends WizardPage
 			String hash = (String) configuration.getSettings().get(Configuration.ROOT_FS2_VP_HASH_KEY);
 			if (hash != null && hash.equalsIgnoreCase("42bc56a410373112dfddc7985f66524a"))
 			{
-				InstallerNode patchTo1_2 = new InstallerNode("Patch FreeSpace 2 to retail version 1.20");
+				InstallerNode patchTo1_2 = new InstallerNode("Patching FreeSpace 2 to retail version 1.20");
 				patchTo1_2.setFolder(File.separator);
 				InstallUnit installUnit = new InstallUnit();
 				for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
@@ -232,7 +232,7 @@ public class InstallPage extends WizardPage
 			}
 			
 			// if any of the MVE files exist in data2 and data3, but not in data/movies, copy them
-			InstallerNode copyMVEs = new InstallerNode("Copy cutscenes to the data directory used by FreeSpace 2 Open");
+			InstallerNode copyMVEs = new InstallerNode("Copying cutscenes to the data directory used by FreeSpace 2 Open");
 			copyMVEs.setFolder(File.separator);
 			boolean doCopy = false;
 			for (KeyPair<String, String> pair: gogMovies)
