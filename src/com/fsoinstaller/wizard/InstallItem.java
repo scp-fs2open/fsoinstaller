@@ -307,12 +307,26 @@ public class InstallItem extends JPanel
 						return null;
 					}
 					
-					setText("Done!");
-					setPercentComplete(100);
+					// success: save the version we just installed
+					// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
+					String propertyName = node.buildTreeName();
+					Configuration configuration = Configuration.getInstance();
+					synchronized (configuration)
+					{
+						configuration.getUserProperties().setProperty(propertyName, node.getVersion());
+						configuration.saveUserProperties();
+					}
+					
+					// save any post-installation notes
 					if (node.getNote() != null)
 						logInstallNote(node.getName() + ": " + node.getNote());
 					
+					// update GUI
 					setSuccess(true);
+					setText("Done!");
+					setPercentComplete(100);
+					
+					// kick off next nodes
 					startChildren();
 					return null;
 				}
