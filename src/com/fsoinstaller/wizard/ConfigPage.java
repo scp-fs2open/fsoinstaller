@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -857,6 +859,28 @@ public class ConfigPage extends WizardPage
 					String name = file.getName();
 					if (name.equalsIgnoreCase("root_fs2.vp"))
 					{
+						// let's hash it, so that we can use the hash for the v1.2 check later
+						MessageDigest md5Digest;
+						try
+						{
+							md5Digest = MessageDigest.getInstance("MD5");
+							String hash = IOUtils.computeHash(md5Digest, file);
+							settings.put(Configuration.ROOT_FS2_VP_HASH_KEY, hash);
+						}
+						catch (NoSuchAlgorithmException nsae)
+						{
+							logger.error("Impossible error: The MD5 hash should exist in every Java installation!", nsae);
+						}
+						catch (FileNotFoundException fnfe)
+						{
+							logger.error("Impossible error: we just checked for the existence of root_fs2.vp!", fnfe);
+						}
+						catch (IOException ioe)
+						{
+							logger.warn("There was an error computing the hash of root_fs2.vp!", ioe);
+						}
+						
+						// we found root_fs2.vp
 						exists = true;
 						break;
 					}
@@ -905,9 +929,6 @@ public class ConfigPage extends WizardPage
 				if (result != JOptionPane.YES_OPTION)
 					return null;
 			}
-			
-			// TODO: if there are MVE files in data2 and data3 folders, offer to copy them to data/movies
-			// (this is where the GOG installer puts them)
 			
 			// final interruption check for this task
 			if (Thread.currentThread().isInterrupted())

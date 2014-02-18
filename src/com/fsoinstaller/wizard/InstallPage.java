@@ -21,6 +21,7 @@ package com.fsoinstaller.wizard;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,15 +40,36 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.fsoinstaller.common.BaseURL;
 import com.fsoinstaller.common.InstallerNode;
+import com.fsoinstaller.common.InstallerNode.FilePair;
+import com.fsoinstaller.common.InstallerNode.HashTriple;
+import com.fsoinstaller.common.InstallerNode.InstallUnit;
+import com.fsoinstaller.common.InvalidBaseURLException;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 
 
 public class InstallPage extends WizardPage
 {
 	private static final Logger logger = Logger.getLogger(InstallPage.class);
+	
+	private static final List<KeyPair<String, String>> gogMovies = new ArrayList<KeyPair<String, String>>();
+	static
+	{
+		gogMovies.add(new KeyPair<String, String>("INTRO.MVE", "data2"));
+		gogMovies.add(new KeyPair<String, String>("MONO1.MVE", "data2"));
+		gogMovies.add(new KeyPair<String, String>("COLOSSUS.MVE", "data2"));
+		gogMovies.add(new KeyPair<String, String>("MONO2.MVE", "data3"));
+		gogMovies.add(new KeyPair<String, String>("MONO3.MVE", "data3"));
+		gogMovies.add(new KeyPair<String, String>("MONO4.MVE", "data3"));
+		gogMovies.add(new KeyPair<String, String>("BASTION.MVE", "data3"));
+		gogMovies.add(new KeyPair<String, String>("ENDPART1.MVE", "data3"));
+		gogMovies.add(new KeyPair<String, String>("ENDPRT2A.MVE", "data3"));
+		gogMovies.add(new KeyPair<String, String>("ENDPRT2B.MVE", "data3"));
+	}
 	
 	private final JPanel installPanel;
 	
@@ -110,6 +132,17 @@ public class InstallPage extends WizardPage
 		@SuppressWarnings("unchecked")
 		Set<String> selectedMods = (Set<String>) settings.get(Configuration.MODS_TO_INSTALL_KEY);
 		
+		// we might want to add some special non-selectable mods...
+		List<InstallerNode> newNodes = maybeCreateNonSelectableNodes();
+		
+		// if they exist, move them to the front
+		if (!newNodes.isEmpty())
+		{
+			modNodes.addAll(0, newNodes);
+			for (InstallerNode node: newNodes)
+				selectedMods.add(node.getName());
+		}
+		
 		// log the mods
 		logger.info("Selected mods:");
 		for (String mod: selectedMods)
@@ -148,6 +181,79 @@ public class InstallPage extends WizardPage
 			item.start();
 		}
 		installPanel.add(Box.createGlue());
+	}
+	
+	protected List<InstallerNode> maybeCreateNonSelectableNodes()
+	{
+		List<InstallerNode> nodes = new ArrayList<InstallerNode>();
+		
+		// all of these optional nodes, so far, only apply for FS2
+		if (configuration.requiresFS2())
+		{
+			// TODO: add GOG install option
+			
+			// if version 1.2 patch needs to be applied, then add it
+			String hash = (String) configuration.getSettings().get(Configuration.ROOT_FS2_VP_HASH_KEY);
+			if (hash != null && hash.equalsIgnoreCase("42bc56a410373112dfddc7985f66524a"))
+			{
+				InstallerNode patchTo1_2 = new InstallerNode("Patch FreeSpace 2 to retail version 1.20");
+				patchTo1_2.setFolder(File.separator);
+				InstallUnit installUnit = new InstallUnit();
+				for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
+				{
+					try
+					{
+						installUnit.addBaseURL(new BaseURL(url));
+					}
+					catch (InvalidBaseURLException iburle)
+					{
+						logger.error("Impossible error: Internal home URLs should always be correct!", iburle);
+					}
+				}
+				installUnit.addFile("fs21x-12.7z");
+				patchTo1_2.addInstall(installUnit);
+				
+				patchTo1_2.addDelete("FRED2.exe");
+				patchTo1_2.addDelete("FreeSpace2.exe");
+				patchTo1_2.addDelete("FS2.exe");
+				patchTo1_2.addDelete("UpdateLauncher.exe");
+				patchTo1_2.addDelete("readme.txt");
+				patchTo1_2.addDelete("root_fs2.vp");
+				
+				patchTo1_2.addHashTriple(new HashTriple("MD5", "FRED2.exe", "9b8a3dfeb586de9584056f9e8fa28bb5"));
+				patchTo1_2.addHashTriple(new HashTriple("MD5", "FreeSpace2.exe", "091f3f06f596a48ba4e3c42d05ec379f"));
+				patchTo1_2.addHashTriple(new HashTriple("MD5", "FS2.exe", "2c8133768ebd99faba5c00dd03ebf9ea"));
+				patchTo1_2.addHashTriple(new HashTriple("MD5", "UpdateLauncher.exe", "babe53dc03c83067a3336f0c888c4ac2"));
+				patchTo1_2.addHashTriple(new HashTriple("MD5", "readme.txt", "b4df1711c324516e497ce90b66f45de9"));
+				patchTo1_2.addHashTriple(new HashTriple("MD5", "root_fs2.vp", "0d9fd69acfe8b29d616377b057d2fc04"));
+				
+				if (!installUnit.getBaseURLList().isEmpty())
+					nodes.add(patchTo1_2);
+			}
+			
+			// if any of the MVE files exist in data2 and data3, but not in data/movies, copy them
+			InstallerNode copyMVEs = new InstallerNode("Copy cutscenes to the data directory used by FreeSpace 2 Open");
+			copyMVEs.setFolder(File.separator);
+			boolean doCopy = false;
+			for (KeyPair<String, String> pair: gogMovies)
+			{
+				// e.g. data2/INTRO.MVE
+				String source = pair.getObject2() + File.separator + pair.getObject1();
+				// e.g. data/movies/INTRO.MVE
+				String dest = "data" + File.separator + "movies" + File.separator + pair.getObject1();
+				
+				// anticipate copying the files
+				copyMVEs.addCopyPair(new FilePair(source, dest));
+				
+				// check whether at least one file needs to be copied
+				if ((new File(configuration.getApplicationDir(), source)).exists() && !(new File(configuration.getApplicationDir(), dest)).exists())
+					doCopy = true;
+			}
+			if (doCopy)
+				nodes.add(copyMVEs);
+		}
+		
+		return nodes;
 	}
 	
 	protected void installCompleted()

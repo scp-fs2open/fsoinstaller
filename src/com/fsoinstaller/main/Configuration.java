@@ -53,6 +53,7 @@ public class Configuration
 	public static final String CHECKED_DIRECTORIES_KEY = "CHECKED-DIRECTORIES";
 	public static final String INSTALL_NOTES_KEY = "INSTALL-NOTES";
 	public static final String INSTALL_ERRORS_KEY = "INSTALL-ERRORS";
+	public static final String ROOT_FS2_VP_HASH_KEY = "ROOT-FS2-VP-HASH";
 	
 	/**
 	 * Use the Initialization On Demand Holder idiom for thread-safe
