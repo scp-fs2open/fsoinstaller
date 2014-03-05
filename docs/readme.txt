@@ -1,16 +1,28 @@
 README
 ------
 
-we need some sort of readme here
+The FreeSpace Open Installer is the easiest way to install FreeSpace Open, an open-source game
+engine, graphical upgrade, and content pack for one of the world's finest space shooters.  You
+can use it to install the latest upgrades and enhancements from Hard-Light.net or keep your FSO
+installation and mods all up-to-date.
 
+The Installer is known to work on Windows, Linux, and Mac.  More detailed information can be found
+on the Hard-Light Wiki (http://www.hard-light.net/wiki/index.php/FreeSpace_Open_Installer).
+
+The Installer requires that you already have a copy of FreeSpace 2 installed.  You can get it from
+Good Old Games (http://www.gog.com/game/freespace_2).  After that simply run the Installer!
+
+If you have issues, please post on the FSO Support Forum and we'll help you out!
+http://www.hard-light.net/forums/index.php?board=151.0
 
 
 LICENSE
 -------
 
 The FreeSpace Open Installer is licensed under the GNU General Public License, version 2.0.  The
-complete application package, containing source code and library dependencies, can be downloaded
-from the FSO Installer website at http://www.fsoinstaller.com/.
+complete application package can be downloaded from the FSO Installer website at
+http://www.fsoinstaller.com/.  Source code can be downloaded from the FSO Subversion repository
+at svn://svn.icculus.org/fs2open/trunk/fsoinstaller/.
 
 Various components of the FSO Installer are themselves available under their separate licenses.
 Here is a list:
