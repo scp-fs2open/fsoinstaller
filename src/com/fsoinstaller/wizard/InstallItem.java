@@ -115,7 +115,8 @@ public class InstallItem extends JPanel
 		// only perform the installation if the stored version is different from the version available online
 		String propertyName = node.buildTreeName();
 		String storedVersion = Configuration.getInstance().getUserProperties().getProperty(propertyName);
-		installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion()));
+		// note: if a node was successfully installed but had no version, it will save a version of "null" to the properties
+		installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion() == null ? "null" : node.getVersion()));
 		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));
@@ -322,7 +323,7 @@ public class InstallItem extends JPanel
 						// success: save the version we just installed
 						// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
 						Configuration configuration = Configuration.getInstance();
-						configuration.getUserProperties().setProperty(node.buildTreeName(), node.getVersion());
+						configuration.getUserProperties().setProperty(node.buildTreeName(), node.getVersion() == null ? "null" : node.getVersion());
 						synchronized (configuration)
 						{
 							configuration.saveUserProperties();
@@ -354,6 +355,18 @@ public class InstallItem extends JPanel
 				{
 					modLogger.error("Unhandled runtime exception!", re);
 					logInstallError(node.getName() + ": An unexpected error occurred.  Please check the log file for more details.");
+					
+					// fail the tree so we don't get stuck with child nodes that are waiting to start
+					// (but watch out for errors while we're doing this!)
+					try
+					{
+						failInstallTree();
+					}
+					catch (RuntimeException tree_re)
+					{
+						modLogger.error("Well, now we're really in a bind!", tree_re);
+					}
+					
 					return null;
 				}
 			}
