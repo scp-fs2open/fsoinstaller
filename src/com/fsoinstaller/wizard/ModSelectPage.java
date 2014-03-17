@@ -34,7 +34,6 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -42,7 +41,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
@@ -57,9 +55,6 @@ public class ModSelectPage extends WizardPage
 {
 	private static final Logger logger = Logger.getLogger(ModSelectPage.class);
 	
-	private final JRadioButton basicButton;
-	private final JRadioButton completeButton;
-	private final JRadioButton customButton;
 	private final JPanel modPanel;
 	private final JScrollPane modScrollPane;
 	
@@ -73,18 +68,9 @@ public class ModSelectPage extends WizardPage
 		super("mod-select");
 		
 		// create widgets
-		basicButton = new JRadioButton("Basic - FreeSpace Open and MediaVPs, but no mods");
-		completeButton = new JRadioButton("Complete - Everything, including all mods");
-		customButton = new JRadioButton("Custom - Choose the mods to install");
 		modPanel = new JPanel();
 		modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 		modScrollPane = new JScrollPane(modPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		
-		// group them
-		ButtonGroup group = new ButtonGroup();
-		group.add(basicButton);
-		group.add(completeButton);
-		group.add(customButton);
 		
 		treeWalk = new ArrayList<InstallerNode>();
 		inited = false;
@@ -103,8 +89,6 @@ public class ModSelectPage extends WizardPage
 		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
 		panel.add(labelPanel, BorderLayout.NORTH);
 		panel.add(modScrollPane, BorderLayout.CENTER);
-		
-		basicButton.doClick();
 		
 		return panel;
 	}
