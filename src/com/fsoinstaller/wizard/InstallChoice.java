@@ -23,12 +23,14 @@ import java.awt.image.BufferedImage;
 
 import com.fsoinstaller.utils.GraphicsUtils;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public enum InstallChoice
 {
-	BASIC("Basic", "basic.png", "Install the latest FreeSpace Open and MediaVPs, but no mods."),
-	COMPLETE("Complete", "complete.png", "Install everything: FreeSpace Open, the MediaVPs, all mods, and all optional downloads."),
-	CUSTOM("Custom", "custom.png", "Choose the mods to install.");
+	BASIC(XSTR.getString("basicInstallationTitle"), "basic.png", XSTR.getString("basicInstallationDesc")),
+	COMPLETE(XSTR.getString("completeInstallationTitle"), "complete.png", XSTR.getString("completeInstallationDesc")),
+	CUSTOM(XSTR.getString("customInstallationTitle"), "custom.png", XSTR.getString("customInstallationDesc"));
 	
 	private final String name;
 	private final BufferedImage image;

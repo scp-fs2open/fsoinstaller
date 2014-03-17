@@ -63,6 +63,7 @@ import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
 
 public class InstallItem extends JPanel
@@ -99,7 +100,7 @@ public class InstallItem extends JPanel
 		
 		overallBar = new JProgressBar(0, 100);
 		overallBar.setIndeterminate(true);
-		overallBar.setString("Waiting to begin...");
+		overallBar.setString(XSTR.getString("progressBarWaiting2"));
 		overallBar.setStringPainted(true);
 		
 		stoplightPanel = new StoplightPanel((int) overallBar.getPreferredSize().getHeight());
@@ -265,7 +266,7 @@ public class InstallItem extends JPanel
 		}
 		
 		// and now we queue up our big task that handles this whole node
-		overallInstallTask = FreeSpaceOpenInstaller.getInstance().submitTask("Install " + node.getName(), new Callable<Void>()
+		overallInstallTask = FreeSpaceOpenInstaller.getInstance().submitTask(XSTR.getString("installTitle") + " " + node.getName(), new Callable<Void>()
 		{
 			public Void call()
 			{
@@ -284,7 +285,7 @@ public class InstallItem extends JPanel
 						catch (SecurityException se)
 						{
 							modLogger.error("Encountered a security exception when processing setup tasks", se);
-							logInstallError(node.getName() + ": A Java security exception prevented setup from running.  Check the log file for more details.");
+							logInstallError(XSTR.getString("installResultSecurityExceptionInSetup"));
 							modFolder = null;
 						}
 						
@@ -331,18 +332,18 @@ public class InstallItem extends JPanel
 						
 						// save any post-installation notes
 						if (node.getNote() != null)
-							logInstallNote(node.getName() + ": " + node.getNote());
+							logInstallNote(node.getNote());
 						
 						// update GUI
 						setSuccess(true);
-						setText("Done!");
+						setText(XSTR.getString("installStatusDone"));
 						setPercentComplete(100);
 					}
 					else
 					{
 						// update GUI slightly differently
 						setSuccess(true);
-						setText("Mod is up to date!");
+						setText(XSTR.getString("installStatusUpToDate"));
 						setPercentComplete(100);
 						setIndeterminate(false);
 					}
@@ -354,7 +355,7 @@ public class InstallItem extends JPanel
 				catch (RuntimeException re)
 				{
 					modLogger.error("Unhandled runtime exception!", re);
-					logInstallError(node.getName() + ": An unexpected error occurred.  Please check the log file for more details.");
+					logInstallError(XSTR.getString("installResultUnexpectedRuntimeException"));
 					
 					// fail the tree so we don't get stuck with child nodes that are waiting to start
 					// (but watch out for errors while we're doing this!)
@@ -389,7 +390,7 @@ public class InstallItem extends JPanel
 			// set GUI
 			setSuccess(false);
 			setIndeterminate(false);
-			setText("Cancelled");
+			setText(XSTR.getString("installStatusCancelled"));
 		}
 		else if (state == InstallItemState.RUNNING)
 		{
@@ -399,9 +400,9 @@ public class InstallItem extends JPanel
 			// set GUI
 			setSuccess(false);
 			setIndeterminate(false);
-			setText("Cancelled");
+			setText(XSTR.getString("installStatusCancelled"));
 			
-			logInstallError(node.getName() + ": Cancelled by user request.");
+			logInstallError(XSTR.getString("installResultCancelledByRequest"));
 			
 			// interrupt the running task
 			overallInstallTask.cancel(true);
@@ -496,10 +497,10 @@ public class InstallItem extends JPanel
 		
 		if (!isTopLevelFailedItem)
 		{
-			setText("Parent not installed");
+			setText(XSTR.getString("installStatusParentNotInstalled"));
 			
 			modLogger.info("Parent mod could not be installed; this mod will be skipped!");
-			logInstallError(node.getName() + ": Skipped because parent mod was not installed.");
+			logInstallError(XSTR.getString("installResultSkipped"));
 			
 			for (DownloadPanel panel: downloadPanelMap.values())
 				panel.downloadCancelled(null);
@@ -527,7 +528,7 @@ public class InstallItem extends JPanel
 		File installDir = Configuration.getInstance().getApplicationDir();
 		
 		modLogger.info("Starting processing");
-		setText("Setting up the mod...");
+		setText(XSTR.getString("progressBarSettingUpMod"));
 		
 		// create the folder for this mod, if it has one
 		File folder;
@@ -548,7 +549,7 @@ public class InstallItem extends JPanel
 				if (!folder.mkdirs())
 				{
 					modLogger.error("Unable to create the folder '" + folderName + "'!");
-					logInstallError(node.getName() + ": The folder '" + folderName + "' could not be created.");
+					logInstallError(String.format(XSTR.getString("installResultFolderNotCreated"), folderName));
 					return null;
 				}
 			}
@@ -557,7 +558,7 @@ public class InstallItem extends JPanel
 		if (!node.getDeleteList().isEmpty())
 		{
 			modLogger.info("Processing DELETE items");
-			setText("Deleting old files...");
+			setText(XSTR.getString("progressBarDeleting"));
 			
 			// delete what we need to
 			for (String delete: node.getDeleteList())
@@ -571,14 +572,14 @@ public class InstallItem extends JPanel
 					if (!IOUtils.deleteDirectoryTree(file))
 					{
 						modLogger.error("Unable to delete the directory '" + delete + "'!");
-						logInstallError(node.getName() + ": The directory '" + delete + "' could not be deleted.");
+						logInstallError(String.format(XSTR.getString("installResultDirectoryNotDeleted"), file));
 						return null;
 					}
 				}
 				else if (!file.delete())
 				{
 					modLogger.error("Unable to delete the file '" + delete + "'!");
-					logInstallError(node.getName() + ": The file '" + delete + "' could not be deleted.");
+					logInstallError(String.format(XSTR.getString("installResultFileNotDeleted"), file));
 					return null;
 				}
 			}
@@ -587,7 +588,7 @@ public class InstallItem extends JPanel
 		if (!node.getRenameList().isEmpty())
 		{
 			modLogger.info("Processing RENAME items");
-			setText("Renaming files...");
+			setText(XSTR.getString("progressBarRenaming"));
 			
 			// rename what we need to
 			for (FilePair rename: node.getRenameList())
@@ -602,7 +603,7 @@ public class InstallItem extends JPanel
 				else if (!from.renameTo(to))
 				{
 					modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
-					logInstallError(node.getName() + ": The file '" + rename.getFrom() + "' could not be renamed to '" + rename.getTo() + "'.");
+					logInstallError(String.format(XSTR.getString("installResultFileNotRenamed"), rename.getFrom(), rename.getTo()));
 					return null;
 				}
 			}
@@ -611,7 +612,7 @@ public class InstallItem extends JPanel
 		if (!node.getCopyList().isEmpty())
 		{
 			modLogger.info("Processing COPY items");
-			setText("Copying files...");
+			setText(XSTR.getString("progressBarCopying"));
 			
 			// copy what we need to
 			for (FilePair copy: node.getCopyList())
@@ -637,7 +638,7 @@ public class InstallItem extends JPanel
 					catch (IOException ioe)
 					{
 						modLogger.error("Unable to copy '" + copy.getFrom() + "' to '" + copy.getTo() + "'!", ioe);
-						logInstallError(node.getName() + ": The file '" + copy.getFrom() + "' could not be copied to '" + copy.getTo() + "'.");
+						logInstallError(String.format(XSTR.getString("installResultFileNotCopied"), copy.getFrom(), copy.getTo()));
 						return null;
 					}
 				}
@@ -655,7 +656,7 @@ public class InstallItem extends JPanel
 		if (!node.getInstallList().isEmpty())
 		{
 			modLogger.info("Processing INSTALL items");
-			setText("Installing files...");
+			setText(XSTR.getString("progressBarInstalling"));
 			
 			final Connector connector = (Connector) Configuration.getInstance().getSettings().get(Configuration.CONNECTOR_KEY);
 			
@@ -684,7 +685,7 @@ public class InstallItem extends JPanel
 					final DownloadPanel downloadPanel = downloadPanelMap.get(new KeyPair<InstallUnit, String>(install, file));
 					
 					// submit a task for this file
-					FreeSpaceOpenInstaller.getInstance().submitTask("Download " + file, new Callable<Void>()
+					FreeSpaceOpenInstaller.getInstance().submitTask(XSTR.getString("downloadTitle") + " " + file, new Callable<Void>()
 					{
 						public Void call()
 						{
@@ -698,7 +699,7 @@ public class InstallItem extends JPanel
 									successes.incrementAndGet();
 								// don't mislead the user if we cancelled the file
 								else if (!Thread.currentThread().isInterrupted())
-									logInstallError(node.getName() + ": The file '" + file + "' could not be downloaded.");
+									logInstallError(String.format(XSTR.getString("installResultFileNotDownloaded"), file));
 								int complete = completions.incrementAndGet();
 								
 								// next update the progress bar
@@ -710,7 +711,7 @@ public class InstallItem extends JPanel
 							catch (RuntimeException re)
 							{
 								modLogger.error("Unhandled runtime exception!", re);
-								logInstallError(node.getName() + ": An unexpected error occurred.  Please check the log file for more details.");
+								logInstallError(XSTR.getString("installResultUnexpectedRuntimeException"));
 							}
 							finally
 							{
@@ -756,7 +757,7 @@ public class InstallItem extends JPanel
 		if (!node.getHashList().isEmpty())
 		{
 			modLogger.info("Processing HASH items");
-			setText("Computing hash values...");
+			setText(XSTR.getString("progressBarHashing"));
 			
 			int badHashes = 0;
 			
@@ -777,7 +778,7 @@ public class InstallItem extends JPanel
 				catch (NoSuchAlgorithmException nsae)
 				{
 					modLogger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
-					logInstallError(node.getName() + ": The installer cannot compute a hash using the '" + algorithm + "' algorithm.");
+					logInstallError(String.format(XSTR.getString("installResultHashNotComputed"), algorithm));
 					continue;
 				}
 				
@@ -819,15 +820,17 @@ public class InstallItem extends JPanel
 					}
 					
 					// notify the user
-					String result = node.getName() + ": The hash value for '" + hash.getFilename() + "' did not agree with the expected value.  This could indicate a corrupted download.  ";
+					String result = String.format(XSTR.getString("installResultHashMismatch1"), hash.getFilename());
 					if (baleeted)
 					{
-						result += "The file has been deleted.";
+						result += "  ";
+						result += XSTR.getString("installResultHashMismatch2");
 						modLogger.error("File deleted!");
 					}
 					else
 					{
-						result += "Additionally, the installer was unable to delete the file.  Please delete the file yourself and do not open it.";
+						result += "  ";
+						result += XSTR.getString("installResultHashMismatch3");
 						modLogger.error("Unable to delete the file!");
 					}
 					logInstallError(result);
@@ -910,7 +913,7 @@ public class InstallItem extends JPanel
 		{
 			public void run()
 			{
-				installNotes.add(message);
+				installNotes.add(node.getName() + ": " + message);
 			}
 		});
 	}
@@ -921,7 +924,7 @@ public class InstallItem extends JPanel
 		{
 			public void run()
 			{
-				installErrors.add(message);
+				installErrors.add(node.getName() + ": " + message);
 			}
 		});
 	}

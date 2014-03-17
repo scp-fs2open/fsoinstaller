@@ -56,6 +56,8 @@ import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public class FreeSpaceOpenInstaller
 {
@@ -301,7 +303,7 @@ public class FreeSpaceOpenInstaller
 				{
 					// create a file chooser
 					JFileChooser chooser = new JFileChooser();
-					chooser.setDialogTitle("Choose a mod config file");
+					chooser.setDialogTitle(XSTR.getString("chooseModConfigTitle"));
 					chooser.setCurrentDirectory(config.getApplicationDir());
 					FileFilter filter = new FileFilter()
 					{
@@ -320,14 +322,14 @@ public class FreeSpaceOpenInstaller
 						@Override
 						public String getDescription()
 						{
-							return "Text Files (*.txt)";
+							return XSTR.getString("textFilesFilter");
 						}
 					};
 					chooser.addChoosableFileFilter(filter);
 					chooser.setFileFilter(filter);
 					
 					// display it
-					int result = chooser.showDialog(null, "OK");
+					int result = chooser.showDialog(null, XSTR.getString("OK"));
 					if (result == JFileChooser.APPROVE_OPTION)
 						modFileHolder.set(chooser.getSelectedFile());
 				}
@@ -366,7 +368,7 @@ public class FreeSpaceOpenInstaller
 			for (InstallerNode node: nodes)
 				logger.info("Successfully parsed " + node.getName());
 			
-			ThreadSafeJOptionPane.showMessageDialog(null, "All nodes were parsed successfully!", config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
+			ThreadSafeJOptionPane.showMessageDialog(null, XSTR.getString("allNodesParsedSuccessfully"), config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
 		}
 		catch (FileNotFoundException fnfe)
 		{

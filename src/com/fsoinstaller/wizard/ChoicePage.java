@@ -44,6 +44,8 @@ import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.Logger;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public class ChoicePage extends WizardPage
 {
@@ -99,7 +101,7 @@ public class ChoicePage extends WizardPage
 		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, 3 * GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, 3 * GUIConstants.DEFAULT_MARGIN));
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		
-		JLabel selectLabel = new JLabel("Please select a mode of installation.");
+		JLabel selectLabel = new JLabel(XSTR.getString("choicePageSelectLabel"));
 		selectLabel.setAlignmentX(LEFT_ALIGNMENT);
 		panel.add(selectLabel);
 		
@@ -190,7 +192,7 @@ public class ChoicePage extends WizardPage
 		if (basicMods == null || basicMods.isEmpty())
 		{
 			basic.setEnabled(false);
-			JOptionPane.showMessageDialog(gui, "The Basic Installation configuration could not be retrieved from the installer website.  This option will not be available.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(gui, XSTR.getString("basicInstallationNotRetrieved"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 		}
 		else
 		{
@@ -211,7 +213,7 @@ public class ChoicePage extends WizardPage
 				if (!found)
 				{
 					basic.setEnabled(false);
-					JOptionPane.showMessageDialog(gui, "The Basic Installation configuration could not be validated against the current list of mods.  This option will not be available.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(gui, XSTR.getString("basicInstallationNotValidated"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					break;
 				}
 			}

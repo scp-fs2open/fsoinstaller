@@ -40,6 +40,8 @@ import org.jdesktop.swingworker.SwingWorker;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.wizard.GUIConstants;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 /**
  * A neat little class to run a task while displaying a progress bar indicating
@@ -50,7 +52,7 @@ public class ProgressBarDialog
 {
 	private static final Logger logger = Logger.getLogger(ProgressBarDialog.class);
 	
-	public static final String INDETERMINATE_STRING = "Working...";
+	public static final String INDETERMINATE_STRING = XSTR.getString("progressBarWorking");
 	
 	private final Frame owner;
 	private final String text;

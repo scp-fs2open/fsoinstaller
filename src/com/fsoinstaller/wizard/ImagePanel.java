@@ -30,6 +30,8 @@ import java.awt.image.BufferedImage;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 /**
  * This is a panel that just paints an image while staying the size of that
@@ -55,7 +57,7 @@ public class ImagePanel extends JPanel
 		}
 		else
 		{
-			JLabel label = new JLabel("IMAGE NOT AVAILABLE");
+			JLabel label = new JLabel(XSTR.getString("imageNotAvailable"));
 			label.setFont(label.getFont().deriveFont(Font.BOLD, label.getFont().getSize() + 2));
 			label.setForeground(Color.GRAY);
 			

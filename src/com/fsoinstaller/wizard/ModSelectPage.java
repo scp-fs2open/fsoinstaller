@@ -50,6 +50,8 @@ import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public class ModSelectPage extends WizardPage
 {
@@ -82,7 +84,7 @@ public class ModSelectPage extends WizardPage
 	{
 		JPanel labelPanel = new JPanel();
 		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.X_AXIS));
-		labelPanel.add(new JLabel("You can modify your installation here or continue with your current selection."));
+		labelPanel.add(new JLabel(XSTR.getString("modSelectPageText")));
 		labelPanel.add(Box.createHorizontalGlue());
 		
 		JPanel panel = new JPanel(new BorderLayout(0, GUIConstants.DEFAULT_MARGIN));
@@ -96,7 +98,7 @@ public class ModSelectPage extends WizardPage
 	@Override
 	public void prepareForDisplay()
 	{
-		setNextButton("Install", "Proceed with installation");
+		setNextButton(XSTR.getString("installButtonName"), XSTR.getString("installButtonTooltip"));
 		
 		Map<String, Object> settings = configuration.getSettings();
 		@SuppressWarnings("unchecked")
@@ -325,8 +327,8 @@ public class ModSelectPage extends WizardPage
 		JButton button = new JButton(new AbstractAction()
 		{
 			{
-				putValue(AbstractAction.NAME, "More Info");
-				putValue(AbstractAction.SHORT_DESCRIPTION, "Click to display additional information about this mod");
+				putValue(AbstractAction.NAME, XSTR.getString("moreInfoButtonName"));
+				putValue(AbstractAction.SHORT_DESCRIPTION, XSTR.getString("moreInfoButtonTooltip"));
 			}
 			
 			public void actionPerformed(ActionEvent e)

@@ -68,6 +68,8 @@ import com.fsoinstaller.utils.ProgressBarDialog;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.l2fprod.common.swing.JDirectoryChooser;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public class ConfigPage extends WizardPage
 {
@@ -123,7 +125,7 @@ public class ConfigPage extends WizardPage
 		JLabel dummy = new JLabel();
 		
 		// bleh, for multiline we need a JTextArea, but we want it to look like a JLabel
-		JTextArea text = new JTextArea("Choose the directory where you would like to install FreeSpace Open and associated mods.  If your network requires the use of a proxy, you can also specify that here.");
+		JTextArea text = new JTextArea(XSTR.getString("configPageText"));
 		text.setEditable(false);
 		text.setRows(4);
 		text.setOpaque(false);
@@ -140,14 +142,14 @@ public class ConfigPage extends WizardPage
 		dirPanel.add(new JButton(new BrowseAction()));
 		
 		JPanel outerDirPanel = new JPanel();
-		outerDirPanel.setBorder(BorderFactory.createTitledBorder("Installation Directory"));
+		outerDirPanel.setBorder(BorderFactory.createTitledBorder(XSTR.getString("installationDirBorder")));
 		outerDirPanel.setLayout(new BoxLayout(outerDirPanel, BoxLayout.Y_AXIS));
 		outerDirPanel.add(dirPanel);
 		
 		JCheckBox check = new JCheckBox(new ProxyCheckAction());
 		check.setSelected(usingProxy);
-		JLabel hostLabel = new JLabel("Proxy host:");
-		JLabel portLabel = new JLabel("Proxy port:");
+		JLabel hostLabel = new JLabel(XSTR.getString("proxyHostLabel"));
+		JLabel portLabel = new JLabel(XSTR.getString("proxyPortLabel"));
 		int m_width = (int) Math.max(hostLabel.getMinimumSize().getWidth(), portLabel.getMinimumSize().getWidth());
 		int p_width = (int) Math.max(hostLabel.getPreferredSize().getWidth(), portLabel.getPreferredSize().getWidth());
 		hostLabel.setMinimumSize(new Dimension(m_width, (int) hostLabel.getMinimumSize().getHeight()));
@@ -184,7 +186,7 @@ public class ConfigPage extends WizardPage
 		proxyPanel.add(portPanel);
 		
 		JPanel outerProxyPanel = new JPanel();
-		outerProxyPanel.setBorder(BorderFactory.createTitledBorder("Proxy Settings"));
+		outerProxyPanel.setBorder(BorderFactory.createTitledBorder(XSTR.getString("proxySettingsBorder")));
 		outerProxyPanel.setLayout(new BoxLayout(outerProxyPanel, BoxLayout.Y_AXIS));
 		outerProxyPanel.add(proxyPanel);
 		
@@ -230,24 +232,24 @@ public class ConfigPage extends WizardPage
 		{
 			public void handleCancellation()
 			{
-				ThreadSafeJOptionPane.showMessageDialog(gui, "Validation was cancelled!", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(gui, XSTR.getString("validationCancelled"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 			}
 			
 			public void handleException(Exception exception)
 			{
 				if (exception instanceof SecurityException)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(gui, "The Java security manager is prohibiting the installer from making any changes to the file system.  You will need to change the permissions in the Java control panel before the installer will be able to run successfully.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(gui, XSTR.getString("securityManagerError"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
 				else if (exception instanceof InterruptedException)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(gui, "Validation was interrupted.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(gui, XSTR.getString("validationInterrupted"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 				else
 				{
-					ThreadSafeJOptionPane.showMessageDialog(gui, "An unexpected runtime exception occurred.  Please visit Hard Light Productions for technical support.  Make sure you provide the log file.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(gui, XSTR.getString("unexpectedRuntimeException"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					exitRunnable.run();
 				}
 			}
@@ -272,14 +274,14 @@ public class ConfigPage extends WizardPage
 				public void run()
 				{
 					Callable<Void> gog = new DirectoryTask(gui, directoryField.getText(), runWhenReady, exitRunnable);
-					ProgressBarDialog dialog = new ProgressBarDialog(gui, "Checking the installation directory...");
+					ProgressBarDialog dialog = new ProgressBarDialog(gui, XSTR.getString("progressBarCheckingDir"));
 					dialog.runTask(gog, callback);
 				}
 			};
 		}
 		
 		Callable<Void> validation = new SuperValidationTask(gui, directoryField.getText(), usingProxy, hostField.getText(), portField.getText(), toRunNext, exitRunnable);
-		ProgressBarDialog dialog = new ProgressBarDialog(gui, "Setting up the installer...");
+		ProgressBarDialog dialog = new ProgressBarDialog(gui, XSTR.getString("progressBarSettingUpInstaller"));
 		dialog.runTask(validation, callback);
 	}
 	
@@ -287,8 +289,8 @@ public class ConfigPage extends WizardPage
 	{
 		public BrowseAction()
 		{
-			putValue(Action.NAME, "Browse...");
-			putValue(Action.SHORT_DESCRIPTION, "Click to choose an installation directory");
+			putValue(Action.NAME, XSTR.getString("browseButtonName"));
+			putValue(Action.SHORT_DESCRIPTION, XSTR.getString("browseButtonTooltip"));
 		}
 		
 		public void actionPerformed(ActionEvent e)
@@ -298,11 +300,11 @@ public class ConfigPage extends WizardPage
 			// create a file chooser
 			JDirectoryChooser chooser = new JDirectoryChooser();
 			chooser.setCurrentDirectory(dir);
-			chooser.setDialogTitle("Choose a directory");
+			chooser.setDialogTitle(XSTR.getString("chooseDirTitle"));
 			chooser.setShowingCreateDirectory(false);
 			
 			// display it
-			int result = chooser.showDialog(gui, "OK");
+			int result = chooser.showDialog(gui, XSTR.getString("OK"));
 			if (result == JDirectoryChooser.APPROVE_OPTION)
 				directoryField.setText(chooser.getSelectedFile().getAbsolutePath());
 		}
@@ -312,7 +314,7 @@ public class ConfigPage extends WizardPage
 	{
 		public ProxyCheckAction()
 		{
-			putValue(Action.NAME, "Use proxy");
+			putValue(Action.NAME, XSTR.getString("proxyButtonName"));
 		}
 		
 		public void actionPerformed(ActionEvent e)
@@ -387,7 +389,7 @@ public class ConfigPage extends WizardPage
 			File destinationDir = MiscUtils.validateApplicationDir(directoryText);
 			if (destinationDir == null)
 			{
-				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The destination directory is not valid.  Please select another directory.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("directoryInvalid"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 				return null;
 			}
 			
@@ -395,7 +397,7 @@ public class ConfigPage extends WizardPage
 			if (!destinationDir.exists())
 			{
 				// prompt to create it
-				int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not exist.  Do you want to create it?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
+				int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("directoryNotPresent"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
 				if (result != JOptionPane.YES_OPTION)
 					return null;
 				
@@ -404,7 +406,7 @@ public class ConfigPage extends WizardPage
 				// attempt to create it
 				if (!destinationDir.mkdirs())
 				{
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "Could not create the destination directory.  Please select another directory.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("directoryNotCreated"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					return null;
 				}
 				
@@ -427,13 +429,13 @@ public class ConfigPage extends WizardPage
 				}
 				catch (NumberFormatException nfe)
 				{
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The proxy port could not be parsed as an integer.  Please enter a correct proxy port.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("proxyPortParseFailed"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					return null;
 				}
 				catch (InvalidProxyException ipe)
 				{
 					logger.error("Proxy could not be created!", ipe);
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "This proxy appears to be invalid!  Check that you have entered the host and port correctly.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("proxyInvalid"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					return null;
 				}
 				
@@ -469,7 +471,7 @@ public class ConfigPage extends WizardPage
 				catch (IOException ioe)
 				{
 					logger.error("Error creating temporary file!", ioe);
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "There was an error creating a temporary file!  This application may need elevated privileges to run.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("couldNotCreateTempFile"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					return null;
 				}
 				tempVersion.deleteOnExit();
@@ -558,7 +560,7 @@ public class ConfigPage extends WizardPage
 				// make sure we could access version information
 				if (!settings.containsKey(Configuration.REMOTE_VERSION_KEY))
 				{
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "There was a problem accessing the remote sites.  Check your network connection and try again.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("couldNotGetRemoteVersion"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
 					return null;
 				}
 				
@@ -567,7 +569,7 @@ public class ConfigPage extends WizardPage
 				if (MiscUtils.compareVersions(maxVersion, FreeSpaceOpenInstaller.INSTALLER_VERSION) > 0)
 				{
 					logger.info("Installer is out-of-date; prompting user to download new version...");
-					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "This version of the installer is out-of-date.  Would you like to bring up the download page for the most recent version?\n\n(If you click Yes, the program will exit.)", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
+					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("promptToDownloadNewVersion"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
 					if (result == JOptionPane.YES_OPTION)
 					{
 						try
@@ -583,7 +585,7 @@ public class ConfigPage extends WizardPage
 						{
 							logger.error("Something went wrong with the URL!", murle);
 						}
-						ThreadSafeJOptionPane.showMessageDialog(activeFrame, "There was a problem bringing up the download link.  Try re-downloading the installer using your favorite Internet browser.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+						ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("problemDownloading"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 						return null;
 					}
 				}
@@ -602,7 +604,7 @@ public class ConfigPage extends WizardPage
 				List<String> urls = (List<String>) settings.get(Configuration.MOD_URLS_KEY);
 				if (urls == null || urls.isEmpty())
 				{
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "For some reason, there are no mods available for download.  This is not an error with the network, but rather with the remote mod repositories.\n\nThis shouldn't ever happen, and we're rather perplexed that you're seeing this right now.  We can only suggest that you try again later.\n\nClick OK to exit.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("noModsFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					EventQueue.invokeLater(exitRunnable);
 					return null;
 				}
@@ -632,7 +634,7 @@ public class ConfigPage extends WizardPage
 					catch (IOException ioe)
 					{
 						logger.error("Error creating temporary file!", ioe);
-						ThreadSafeJOptionPane.showMessageDialog(activeFrame, "There was an error creating a temporary file!  This application may need elevated privileges to run.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+						ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("couldNotCreateTempFile"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 						return null;
 					}
 					tempModFile.deleteOnExit();
@@ -675,7 +677,7 @@ public class ConfigPage extends WizardPage
 				// check that we have mods
 				if (modNodes.isEmpty())
 				{
-					ThreadSafeJOptionPane.showMessageDialog(activeFrame, "For some reason, there are no mods available for download.  This is not an error with the network, but rather with the remote mod repositories.\n\nThis shouldn't ever happen, and we're rather perplexed that you're seeing this right now.  We can only suggest that you try again later.\n\nClick OK to exit.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("noModsFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 					EventQueue.invokeLater(exitRunnable);
 					return null;
 				}
@@ -819,7 +821,7 @@ public class ConfigPage extends WizardPage
 			File[] contents = destinationDir.listFiles();
 			if (contents == null)
 			{
-				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The installer could not read from the destination directory.  Please ensure that the directory is readable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("readCheckFailed"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			
@@ -835,13 +837,13 @@ public class ConfigPage extends WizardPage
 			catch (IOException ioe)
 			{
 				logger.error("Creating a temporary file '" + unique + "' failed", ioe);
-				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The installer could not create a temporary file in the destination directory.  Please ensure that the directory is writable, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("writeCheckFailed"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			if (!writingTest.delete())
 			{
 				logger.error("Deleting a temporary file '" + unique + "' failed");
-				ThreadSafeJOptionPane.showMessageDialog(activeFrame, "The installer could not delete a temporary file in the destination directory.  Please ensure that the directory is not read-only, or visit Hard Light Productions for technical support.", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("deleteCheckFailed"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
 			
@@ -890,7 +892,7 @@ public class ConfigPage extends WizardPage
 				if (!exists)
 				{
 					// prompt to continue
-					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, "The destination directory does not appear to contain a retail installation of FreeSpace 2.  FreeSpace 2 is required to run FreeSpace Open as well as any mods you download.\n\nDo you want to continue anyway?  (If you are using this program to install FreeSpace from the GOG package, click Yes.)", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
+					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("retailFS2NotFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
 					if (result != JOptionPane.YES_OPTION)
 						return null;
 				}
@@ -917,13 +919,15 @@ public class ConfigPage extends WizardPage
 			
 			if (!extraVPs.isEmpty())
 			{
-				StringBuilder message = new StringBuilder("The destination directory contains several extra VPs beyond the standard ones that should be there:\n\n");
+				StringBuilder message = new StringBuilder(XSTR.getString("foundExtraVPs1"));
+				message.append("\n\n");
 				for (String name: extraVPs)
 				{
 					message.append(name);
 					message.append("\n");
 				}
-				message.append("\nThese are likely to cause problems, and you are encouraged to move or delete them before running the game.  Do you want to continue with the installation?");
+				message.append("\n");
+				message.append(XSTR.getString("foundExtraVPs2"));
 				
 				// prompt to continue
 				int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, message, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);

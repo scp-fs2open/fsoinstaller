@@ -51,6 +51,8 @@ import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public class InstallPage extends WizardPage
 {
@@ -97,7 +99,7 @@ public class InstallPage extends WizardPage
 	{
 		JPanel labelPanel = new JPanel();
 		labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.X_AXIS));
-		labelPanel.add(new JLabel("Installing..."));
+		labelPanel.add(new JLabel(XSTR.getString("installPageText")));
 		labelPanel.add(Box.createHorizontalGlue());
 		
 		// this little trick prevents the install items from stretching if there aren't enough to fill the vertical space
@@ -196,7 +198,7 @@ public class InstallPage extends WizardPage
 			String hash = (String) configuration.getSettings().get(Configuration.ROOT_FS2_VP_HASH_KEY);
 			if (hash != null && hash.equalsIgnoreCase("42bc56a410373112dfddc7985f66524a"))
 			{
-				InstallerNode patchTo1_2 = new InstallerNode("Patching FreeSpace 2 to retail version 1.20");
+				InstallerNode patchTo1_2 = new InstallerNode(XSTR.getString("installPagePatchText"));
 				patchTo1_2.setFolder(File.separator);
 				InstallUnit installUnit = new InstallUnit();
 				for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
@@ -232,7 +234,7 @@ public class InstallPage extends WizardPage
 			}
 			
 			// if any of the MVE files exist in data2 and data3, but not in data/movies, copy them
-			InstallerNode copyMVEs = new InstallerNode("Copying cutscenes to the data directory used by FreeSpace 2 Open");
+			InstallerNode copyMVEs = new InstallerNode(XSTR.getString("installPageCopyCutscenesText"));
 			copyMVEs.setFolder(File.separator);
 			boolean doCopy = false;
 			for (KeyPair<String, String> pair: gogMovies)
@@ -281,13 +283,13 @@ public class InstallPage extends WizardPage
 	{
 		public CancelAction()
 		{
-			putValue(Action.NAME, "Cancel");
-			putValue(Action.SHORT_DESCRIPTION, "Cancel installation");
+			putValue(Action.NAME, XSTR.getString("cancelButtonName"));
+			putValue(Action.SHORT_DESCRIPTION, XSTR.getString("cancelButtonTooltip"));
 		}
 		
 		public void actionPerformed(ActionEvent e)
 		{
-			int response = JOptionPane.showConfirmDialog(gui, "Cancelling now will interrupt all downloads that have not yet completed.  Are you sure?", FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			int response = JOptionPane.showConfirmDialog(gui, XSTR.getString("cancelPrompt"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (response != JOptionPane.YES_OPTION)
 				return;
 			

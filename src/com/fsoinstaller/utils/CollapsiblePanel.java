@@ -38,6 +38,8 @@ import javax.swing.SwingUtilities;
 
 import com.fsoinstaller.wizard.GUIConstants;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 /**
  * This class provides a way to show or hide a child panel by means of an arrow
@@ -68,7 +70,7 @@ public class CollapsiblePanel extends JPanel
 				setCollapsed(!collapsed);
 			}
 		});
-		toggleButton.setToolTipText("Collapse/Expand");
+		toggleButton.setToolTipText(XSTR.getString("collapseExpandTooltip"));
 		
 		// gotta set the alignments so that the components don't float around
 		toggleButton.setAlignmentY(TOP_ALIGNMENT);

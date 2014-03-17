@@ -40,6 +40,8 @@ import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.GraphicsUtils;
 import com.fsoinstaller.utils.Logger;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 public abstract class WizardPage extends JPanel
 {
@@ -185,8 +187,8 @@ public abstract class WizardPage extends JPanel
 	{
 		public BackAction()
 		{
-			putValue(Action.NAME, "< Back");
-			putValue(Action.SHORT_DESCRIPTION, "Go to the previous page");
+			putValue(Action.NAME, XSTR.getString("backButtonName"));
+			putValue(Action.SHORT_DESCRIPTION, XSTR.getString("backButtonTooltip"));
 		}
 		
 		public void actionPerformed(ActionEvent e)
@@ -205,8 +207,8 @@ public abstract class WizardPage extends JPanel
 	{
 		public NextAction()
 		{
-			putValue(Action.NAME, "Next >");
-			putValue(Action.SHORT_DESCRIPTION, "Go to the next page");
+			putValue(Action.NAME, XSTR.getString("nextButtonName"));
+			putValue(Action.SHORT_DESCRIPTION, XSTR.getString("nextButtonTooltip"));
 		}
 		
 		public void actionPerformed(ActionEvent e)
@@ -225,8 +227,8 @@ public abstract class WizardPage extends JPanel
 	{
 		public CancelAction()
 		{
-			putValue(Action.NAME, "Cancel");
-			putValue(Action.SHORT_DESCRIPTION, "Cancel installation");
+			putValue(Action.NAME, XSTR.getString("cancelButtonName"));
+			putValue(Action.SHORT_DESCRIPTION, XSTR.getString("cancelButtonTooltip"));
 		}
 		
 		public void actionPerformed(ActionEvent e)
