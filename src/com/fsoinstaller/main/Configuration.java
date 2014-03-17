@@ -122,10 +122,14 @@ public class Configuration
 			
 			case MAC:
 				dir = applicationProperties.getProperty("application.defaultdir.mac");
+				if (dir == null)
+					dir = applicationProperties.getProperty("application.defaultdir.osx");
 				break;
 			
 			case UNIX:
 				dir = applicationProperties.getProperty("application.defaultdir.unix");
+				if (dir == null)
+					dir = applicationProperties.getProperty("application.defaultdir.linux");
 				break;
 			
 			case OTHER:
