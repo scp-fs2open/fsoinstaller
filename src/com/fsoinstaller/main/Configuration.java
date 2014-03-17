@@ -112,7 +112,32 @@ public class Configuration
 	
 	public String getDefaultDir()
 	{
-		return applicationProperties.getProperty("application.defaultdir", "C:\\Games\\FreeSpace2");
+		String dir = null;
+		
+		switch (MiscUtils.determineOS())
+		{
+			case WINDOWS:
+				dir = applicationProperties.getProperty("application.defaultdir.windows");
+				break;
+			
+			case MAC:
+				dir = applicationProperties.getProperty("application.defaultdir.mac");
+				break;
+			
+			case UNIX:
+				dir = applicationProperties.getProperty("application.defaultdir.unix");
+				break;
+			
+			case OTHER:
+			default:
+				break;
+		}
+		
+		// must always have a non-null default
+		if (dir == null)
+			dir = applicationProperties.getProperty("application.defaultdir", "C:\\Games\\FreeSpace2");
+		
+		return dir;
 	}
 	
 	public boolean requiresFS2()
