@@ -83,19 +83,20 @@ public class ConfigPage extends WizardPage
 		super("config");
 		
 		// load initial directory
-		String dirText = configuration.getDefaultDir();
 		File dir = configuration.getApplicationDir();
-		if (dir != null)
+		if (dir == null)
+			dir = new File(configuration.getDefaultDir());
+		
+		// get canonical path
+		String dirText;
+		try
 		{
-			try
-			{
-				dirText = dir.getCanonicalPath();
-			}
-			catch (IOException ioe)
-			{
-				logger.warn("Could not get canonical path of destination directory", ioe);
-				dirText = dir.getAbsolutePath();
-			}
+			dirText = dir.getCanonicalPath();
+		}
+		catch (IOException ioe)
+		{
+			logger.warn("Could not get canonical path of destination directory", ioe);
+			dirText = dir.getAbsolutePath();
 		}
 		
 		// load initial proxy settings
