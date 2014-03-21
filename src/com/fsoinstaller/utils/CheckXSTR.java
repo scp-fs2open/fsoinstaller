@@ -1,3 +1,21 @@
+/*
+ * This file is part of the FreeSpace Open Installer
+ * Copyright (C) 2014 The FreeSpace 2 Source Code Project
+ * 
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
 
 package com.fsoinstaller.utils;
 
@@ -11,8 +29,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+/**
+ * Just a utility class to check that all XSTR strings have counterparts in
+ * XSTR.properties and vice versa.
+ * 
+ * @author Goober5000
+ */
 public class CheckXSTR
 {
+	private static Logger logger = Logger.getLogger(CheckXSTR.class);
+	
 	public static void main(String[] args)
 	{
 		// get all java files
@@ -40,21 +66,21 @@ public class CheckXSTR
 		
 		if (javaKeysNotInXSTR.isEmpty() && XSTRKeysNotInJava.isEmpty())
 		{
-			System.out.println("All keys are matched!");
+			logger.info("All keys are matched!");
 		}
 		else
 		{
 			if (!javaKeysNotInXSTR.isEmpty())
 			{
-				System.out.println("The following keys are in .java files but not in XSTR.properties:");
+				logger.info("The following keys are in .java files but not in XSTR.properties:");
 				for (String key: javaKeysNotInXSTR)
-					System.out.println(key);
+					logger.info(key);
 			}
 			if (!XSTRKeysNotInJava.isEmpty())
 			{
-				System.out.println("The following keys are in XSTR.properties but not in .java files:");
+				logger.info("The following keys are in XSTR.properties but not in .java files:");
 				for (String key: XSTRKeysNotInJava)
-					System.out.println(key);
+					logger.info(key);
 			}
 		}
 	}
