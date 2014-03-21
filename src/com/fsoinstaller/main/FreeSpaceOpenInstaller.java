@@ -26,7 +26,6 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,14 +37,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
-import javax.swing.filechooser.FileFilter;
 
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.common.InstallerNodeParseException;
@@ -292,65 +288,12 @@ public class FreeSpaceOpenInstaller
 	private static void selectAndValidateModFile()
 	{
 		final Configuration config = Configuration.getInstance();
-		final AtomicReference<File> modFileHolder = new AtomicReference<File>(null);
 		
-		// must go on the event thread, ugh...
-		try
-		{
-			EventQueue.invokeAndWait(new Runnable()
-			{
-				public void run()
-				{
-					// create a file chooser
-					JFileChooser chooser = new JFileChooser();
-					chooser.setDialogTitle(XSTR.getString("chooseModConfigTitle"));
-					chooser.setCurrentDirectory(config.getApplicationDir());
-					FileFilter filter = new FileFilter()
-					{
-						@Override
-						public boolean accept(File path)
-						{
-							if (path.isDirectory())
-								return true;
-							String name = path.getName();
-							int pos = name.lastIndexOf(".");
-							if (pos < 0)
-								return false;
-							return name.substring(pos).equalsIgnoreCase(".txt");
-						}
-						
-						@Override
-						public String getDescription()
-						{
-							return XSTR.getString("textFilesFilter");
-						}
-					};
-					chooser.addChoosableFileFilter(filter);
-					chooser.setFileFilter(filter);
-					
-					// display it
-					int result = chooser.showDialog(null, XSTR.getString("OK"));
-					if (result == JFileChooser.APPROVE_OPTION)
-						modFileHolder.set(chooser.getSelectedFile());
-				}
-			});
-		}
-		catch (InvocationTargetException ite)
-		{
-			logger.error("Error choosing file!", ite);
-		}
-		catch (InterruptedException ie)
-		{
-			logger.error("Thread was interrupted!", ie);
-			Thread.currentThread().interrupt();
-			return;
-		}
-		
-		File modFile = modFileHolder.get();
-		
+		File modFile = SwingUtils.promptForFile(XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
 		if (modFile == null)
 			return;
-		else if (!modFile.exists())
+		
+		if (!modFile.exists())
 		{
 			logger.warn("The file '" + modFile.getAbsolutePath() + "' does not exist!");
 			return;

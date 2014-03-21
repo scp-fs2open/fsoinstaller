@@ -19,11 +19,21 @@
 
 package com.fsoinstaller.utils;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 
 
 /**
@@ -113,5 +123,76 @@ public class SwingUtils
 			logger.error("The invocation was interrupted!", ie);
 			Thread.currentThread().interrupt();
 		}
+	}
+	
+	public static File promptForFile(final String dialogTitle, final File applicationDir, String ... filterInfo)
+	{
+		if (filterInfo.length % 2 != 0)
+			throw new IllegalArgumentException("The filterInfo parameter must be divisible by two!");
+		
+		// the varargs parameter repeats extension and description for as many filters as we need
+		List<FileFilter> filterList = new ArrayList<FileFilter>();
+		for (int i = 0; i < filterInfo.length; i += 2)
+		{
+			final String filterExtension = filterInfo[i];
+			final String filterDescription = filterInfo[i + 1];
+			
+			FileFilter filter = new FileFilter()
+			{
+				@Override
+				public boolean accept(File path)
+				{
+					if (path.isDirectory())
+						return true;
+					String name = path.getName();
+					int pos = name.lastIndexOf('.');
+					if (pos < 0)
+						return false;
+					return name.substring(pos + 1).equalsIgnoreCase(filterExtension);
+				}
+				
+				@Override
+				public String getDescription()
+				{
+					return filterDescription;
+				}
+			};
+			filterList.add(filter);
+		}
+		
+		final List<FileFilter> filters = Collections.unmodifiableList(filterList);
+		final AtomicReference<File> fileHolder = new AtomicReference<File>();
+		
+		// must go on the event thread, ugh...
+		SwingUtils.invokeAndWait(new Runnable()
+		{
+			public void run()
+			{
+				// create a file chooser
+				JFileChooser chooser = new JFileChooser();
+				chooser.setDialogTitle(dialogTitle);
+				chooser.setCurrentDirectory(applicationDir);
+				
+				// set filters
+				boolean firstFilter = true;
+				for (FileFilter filter: filters)
+				{
+					chooser.addChoosableFileFilter(filter);
+					
+					if (firstFilter)
+					{
+						chooser.setFileFilter(filter);
+						firstFilter = false;
+					}
+				}
+				
+				// display it
+				int result = chooser.showDialog(null, XSTR.getString("OK"));
+				if (result == JFileChooser.APPROVE_OPTION)
+					fileHolder.set(chooser.getSelectedFile());
+			}
+		});
+		
+		return fileHolder.get();
 	}
 }
