@@ -145,10 +145,6 @@ public class IOUtils
 			while ((len = fis.read(buffer)) != -1)
 			{
 				messageDigest.update(buffer, 0, len);
-				
-				// be responsive to interrupts
-				if (Thread.currentThread().isInterrupted())
-					return "INTERRUPTED";
 			}
 		}
 		finally
