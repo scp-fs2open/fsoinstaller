@@ -189,10 +189,51 @@ public class InstallPage extends WizardPage
 	{
 		List<InstallerNode> nodes = new ArrayList<InstallerNode>();
 		
-		// all of these optional nodes, so far, only apply for FS2
+		// if OpenAL needs to be installed, do that first
+		// (note, we can't use a primitive boolean because it may be null)
+		Boolean installOpenAL = (Boolean) configuration.getSettings().get(Configuration.ADD_OPENAL_INSTALL_KEY);
+		if (installOpenAL == Boolean.TRUE)
+		{
+			InstallerNode openAL = new InstallerNode(XSTR.getString("installPageOpenALText"));
+			openAL.setFolder(File.separator);
+			InstallUnit installUnit = new InstallUnit();
+			for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
+			{
+				try
+				{
+					installUnit.addBaseURL(new BaseURL(url));
+				}
+				catch (InvalidBaseURLException iburle)
+				{
+					logger.error("Impossible error: Internal home URLs should always be correct!", iburle);
+				}
+			}
+			installUnit.addFile("oalinst.exe");
+			openAL.addInstall(installUnit);
+			
+			openAL.addHashTriple(new HashTriple("MD5", "oalinst.exe", "694F54BD227916B89FC3EB1DB53F0685"));
+			
+			openAL.addExecCmd("oalinst.exe");
+			
+			if (!installUnit.getBaseURLList().isEmpty())
+				nodes.add(openAL);
+		}
+		
+		// all of the optional nodes, except for OpenAL, only apply for FS2
 		if (configuration.requiresFS2())
 		{
-			// TODO: add GOG install option
+			// if GOG needs to be installed, do so
+			File gogInstallPackage = (File) configuration.getSettings().get(Configuration.GOG_INSTALL_PACKAGE_KEY);
+			InstallerNode gog = null;
+			if (gogInstallPackage != null)
+			{
+				gog = new InstallerNode(XSTR.getString("installPageGOGText"));
+				gog.setFolder(File.separator);
+				
+				// TODO: add GOG install option
+				
+				nodes.add(gog);
+			}
 			
 			// if version 1.2 patch needs to be applied, then add it
 			String hash = (String) configuration.getSettings().get(Configuration.ROOT_FS2_VP_HASH_KEY);
@@ -251,7 +292,9 @@ public class InstallPage extends WizardPage
 				if ((new File(configuration.getApplicationDir(), source)).exists() && !(new File(configuration.getApplicationDir(), dest)).exists())
 					doCopy = true;
 			}
-			if (doCopy)
+			if (gog != null)
+				gog.addChild(copyMVEs);
+			else if (doCopy)
 				nodes.add(copyMVEs);
 		}
 		

@@ -814,6 +814,8 @@ public class ConfigPage extends WizardPage
 		public Void call()
 		{
 			// things that we'll need to save after this task
+			boolean installOpenAL = false;
+			File gogInstallPackage = null;
 			String rootVPHash = null;
 			
 			File destinationDir = configuration.getApplicationDir();
@@ -848,6 +850,30 @@ public class ConfigPage extends WizardPage
 				logger.error("Deleting a temporary file '" + unique + "' failed");
 				ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("deleteCheckFailed"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 				return null;
+			}
+			
+			// see if OpenAL needs to be installed
+			logger.info("Attempting to load OpenAL32...");
+			try
+			{
+				System.loadLibrary("OpenAL32");
+				logger.info("OpenAL32 is installed");
+			}
+			catch (UnsatisfiedLinkError ule)
+			{
+				logger.info("OpenAL32 is not installed!");
+				
+				// we can install it on Windows, but not other OSes
+				if (MiscUtils.determineOS() == OperatingSystem.WINDOWS)
+				{
+					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("promptToInstallOpenAL"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
+					if (result == JOptionPane.YES_OPTION)
+						installOpenAL = true;
+				}
+				else
+				{
+					ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("openALIsNeeded"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+				}
 			}
 			
 			// if we need FS2 installed, make sure that it is (or that user has been warned)
@@ -891,14 +917,52 @@ public class ConfigPage extends WizardPage
 					}
 				}
 				
+				// if it doesn't exist, we need to do something about that
 				if (!exists)
 				{
-					// prompt to continue
-					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("retailFS2NotFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
-					if (result != JOptionPane.YES_OPTION)
+					// create options
+					JRadioButton installGOG = new JRadioButton(XSTR.getString("optionInstallGOG"));
+					JRadioButton wrongDir = new JRadioButton(XSTR.getString("optionWrongDirectory"));
+					JRadioButton continueAnyway = new JRadioButton(XSTR.getString("optionContinueAnyway"));
+					
+					// group them and mark the default option
+					ButtonGroup group = new ButtonGroup();
+					group.add(installGOG);
+					group.add(wrongDir);
+					group.add(continueAnyway);
+					installGOG.setSelected(true);
+					
+					// put the prompt in a JTextPane that looks like a JLabel
+					JTextPane prompt = new JTextPane();
+					prompt.setBackground(null);
+					prompt.setEditable(false);
+					prompt.setBorder(null);
+					prompt.setText(XSTR.getString("retailFS2NotFound"));
+					
+					// put the whole thing in a panel and prompt the user
+					JPanel promptPanel = new JPanel();
+					promptPanel.setLayout(new BoxLayout(promptPanel, BoxLayout.Y_AXIS));
+					promptPanel.add(prompt);
+					promptPanel.add(installGOG);
+					promptPanel.add(wrongDir);
+					promptPanel.add(continueAnyway);
+					ThreadSafeJOptionPane.showOptionDialog(activeFrame, promptPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+					
+					// find out what was decided
+					if (wrongDir.isSelected())
+					{
+						// this is basically a cancel; go back and change the dir
 						return null;
 					}
+					// add the GOG install "mod"
+					else if (installGOG.isSelected())
+					{
+						// figure out where we're installing from (we will add the actual "mod" in InstallPage)
+						gogInstallPackage = SwingUtils.promptForFile(XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), ".*\\.exe", XSTR.getString("exeFilesFilter"), ".*", XSTR.getString("allFilesFilter"));
 					}
+					// continue anyway = no special treatment
+				}
+			}
 			
 			// interruption check
 			if (Thread.currentThread().isInterrupted())
@@ -945,6 +1009,8 @@ public class ConfigPage extends WizardPage
 			if (Thread.currentThread().isInterrupted())
 				return null;
 			
+			final boolean _installOpenAL = installOpenAL;
+			final File _gogInstallPackage = gogInstallPackage;
 			final String _rootVPHash = rootVPHash;
 			
 			// directory is good to go, so save our settings
@@ -955,6 +1021,12 @@ public class ConfigPage extends WizardPage
 					@SuppressWarnings("unchecked")
 					Set<String> checked = (Set<String>) settings.get(Configuration.CHECKED_DIRECTORIES_KEY);
 					checked.add(directoryText);
+					
+					if (_installOpenAL)
+						settings.put(Configuration.ADD_OPENAL_INSTALL_KEY, Boolean.TRUE);
+					
+					if (_gogInstallPackage != null)
+						settings.put(Configuration.GOG_INSTALL_PACKAGE_KEY, _gogInstallPackage);
 					
 					if (_rootVPHash != null)
 						settings.put(Configuration.ROOT_FS2_VP_HASH_KEY, _rootVPHash);
