@@ -813,6 +813,9 @@ public class ConfigPage extends WizardPage
 		
 		public Void call()
 		{
+			// things that we'll need to save after this task
+			String rootVPHash = null;
+			
 			File destinationDir = configuration.getApplicationDir();
 			
 			logger.info("Checking for read access...");
@@ -867,8 +870,7 @@ public class ConfigPage extends WizardPage
 						try
 						{
 							md5Digest = MessageDigest.getInstance("MD5");
-							String hash = IOUtils.computeHash(md5Digest, file);
-							settings.put(Configuration.ROOT_FS2_VP_HASH_KEY, hash);
+							rootVPHash = IOUtils.computeHash(md5Digest, file);
 						}
 						catch (NoSuchAlgorithmException nsae)
 						{
@@ -895,8 +897,12 @@ public class ConfigPage extends WizardPage
 					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("retailFS2NotFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION);
 					if (result != JOptionPane.YES_OPTION)
 						return null;
-				}
-			}
+					}
+					}
+			
+			// interruption check
+			if (Thread.currentThread().isInterrupted())
+				return null;
 			
 			logger.info("Checking for extra VPs in the directory");
 			
@@ -939,7 +945,9 @@ public class ConfigPage extends WizardPage
 			if (Thread.currentThread().isInterrupted())
 				return null;
 			
-			// directory is good to go
+			final String _rootVPHash = rootVPHash;
+			
+			// directory is good to go, so save our settings
 			EventQueue.invokeLater(new Runnable()
 			{
 				public void run()
@@ -947,6 +955,9 @@ public class ConfigPage extends WizardPage
 					@SuppressWarnings("unchecked")
 					Set<String> checked = (Set<String>) settings.get(Configuration.CHECKED_DIRECTORIES_KEY);
 					checked.add(directoryText);
+					
+					if (_rootVPHash != null)
+						settings.put(Configuration.ROOT_FS2_VP_HASH_KEY, _rootVPHash);
 				}
 			});
 			
