@@ -786,7 +786,7 @@ public class InstallItem extends JPanel
 				File fileToHash = new File(modFolder, hash.getFilename());
 				if (!fileToHash.exists())
 				{
-					modLogger.debug("Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
+					modLogger.warn("Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
 					continue;
 				}
 				
@@ -854,7 +854,6 @@ public class InstallItem extends JPanel
 		// nothing to hash, so obviously we were successful
 		else
 		{
-			modLogger.info("There was nothing to hash!");
 			return true;
 		}
 	}
@@ -900,7 +899,7 @@ public class InstallItem extends JPanel
 			}
 			catch (RuntimeException re)
 			{
-				logger.error("Unexpected runtime exception while downloading!", re);
+				modLogger.error("Unexpected runtime exception while downloading!", re);
 			}
 		}
 		
