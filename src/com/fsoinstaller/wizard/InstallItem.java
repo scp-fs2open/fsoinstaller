@@ -61,6 +61,7 @@ import com.fsoinstaller.utils.CollapsiblePanel;
 import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
+import com.fsoinstaller.utils.MiscUtils;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
@@ -315,6 +316,14 @@ public class InstallItem extends JPanel
 						
 						// now hash the files we installed
 						success = performHashTasks(modFolder);
+						if (!success || Thread.currentThread().isInterrupted())
+						{
+							failInstallTree();
+							return null;
+						}
+						
+						// run any system commands
+						success = performExecTasks(modFolder);
 						if (!success || Thread.currentThread().isInterrupted())
 						{
 							failInstallTree();
@@ -856,6 +865,49 @@ public class InstallItem extends JPanel
 		{
 			return true;
 		}
+	}
+	
+	/**
+	 * Perform system commands for this node.
+	 */
+	private boolean performExecTasks(File modFolder)
+	{
+		if (!node.getExecCmdList().isEmpty())
+		{
+			modLogger.info("Processing EXEC items");
+			setText(XSTR.getString("progressBarRunningExec"));
+			
+			for (String cmd: node.getExecCmdList())
+			{
+				int exitVal;
+				try
+				{
+					exitVal = MiscUtils.runExecCommand(modFolder, cmd);
+				}
+				catch (InterruptedException ie)
+				{
+					modLogger.error("Thread was interrupted while waiting for exec command to complete!", ie);
+					Thread.currentThread().interrupt();
+					return false;
+				}
+				catch (IOException ie)
+				{
+					modLogger.error("The command '" + cmd + "' failed due to an exception!", ie);
+					logInstallError(String.format(XSTR.getString("installResultExecCmdError"), cmd));
+					return false;
+				}
+				
+				// process completed "successfully" but returned an error code
+				if (exitVal != 0)
+				{
+					modLogger.error("The command '" + cmd + "' exited with error code " + exitVal + "!");
+					logInstallError(String.format(XSTR.getString("installResultExecCmdError"), cmd));
+					return false;
+				}
+			}
+		}
+		
+		return true;
 	}
 	
 	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)

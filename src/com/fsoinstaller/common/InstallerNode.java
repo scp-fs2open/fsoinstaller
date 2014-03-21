@@ -43,6 +43,7 @@ public class InstallerNode
 	protected final List<FilePair> copyList;
 	protected final List<InstallUnit> installList;
 	protected final List<HashTriple> hashList;
+	protected final List<String> cmdList;
 	
 	protected InstallerNode parent;
 	protected final List<InstallerNode> children;
@@ -65,6 +66,7 @@ public class InstallerNode
 		this.copyList = new ArrayList<FilePair>();
 		this.installList = new ArrayList<InstallUnit>();
 		this.hashList = new ArrayList<HashTriple>();
+		this.cmdList = new ArrayList<String>();
 		
 		this.parent = null;
 		this.children = new ArrayList<InstallerNode>();
@@ -168,6 +170,11 @@ public class InstallerNode
 		return Collections.unmodifiableList(hashList);
 	}
 	
+	public List<String> getExecCmdList()
+	{
+		return Collections.unmodifiableList(cmdList);
+	}
+	
 	public List<InstallerNode> getChildren()
 	{
 		return Collections.unmodifiableList(children);
@@ -246,6 +253,19 @@ public class InstallerNode
 	public void removeHashTriple(HashTriple hashTriple)
 	{
 		hashList.remove(hashTriple);
+	}
+	
+	public void addExecCmd(String cmd)
+	{
+		if (cmd == null)
+			throw new NullPointerException("Cannot add a null exec command!");
+		
+		cmdList.add(cmd);
+	}
+	
+	public void removeExecCmd(String cmd)
+	{
+		cmdList.remove(cmd);
 	}
 	
 	public void addChild(InstallerNode installerNode)

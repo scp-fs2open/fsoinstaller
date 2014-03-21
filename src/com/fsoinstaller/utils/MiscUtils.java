@@ -21,6 +21,7 @@ package com.fsoinstaller.utils;
 
 import java.awt.FontMetrics;
 import java.io.File;
+import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,6 +118,57 @@ public class MiscUtils
 		}
 		
 		return true;
+	}
+	
+	public static int runExecCommand(File runDirectory, String command) throws IOException, InterruptedException
+	{
+		if (!runDirectory.isDirectory())
+			throw new IllegalArgumentException("Run directory must exist and be a directory!");
+		if (command == null || command.equals(""))
+			throw new IllegalArgumentException("Command must not be null or blank!");
+		
+		String shell = null;
+		String param = null;
+		
+		// determine the shell command
+		OperatingSystem os = determineOS();
+		switch (os)
+		{
+			case WINDOWS:
+			{
+				String os_name_lower = System.getProperty("os.name").toLowerCase();
+				if (os_name_lower.contains("windows 95") || os_name_lower.contains("windows 98") || os_name_lower.contains("windows me"))
+				{
+					logger.debug("Detected Windows 9X/ME; using COMMAND.COM...");
+					shell = "command";
+					param = "/C";
+				}
+				else
+				{
+					logger.debug("Detected Windows; using CMD.EXE...");
+					shell = "cmd";
+					param = "/C";
+				}
+				break;
+			}
+			
+			default:
+			{
+				shell = "/bin/sh";
+				param = "-c";
+			}
+		}
+		
+		// build and run the process
+		ProcessBuilder builder = new ProcessBuilder(shell, param, command);
+		builder.directory(runDirectory);
+		Process process = builder.start();
+		
+		// pipe the process's output to the appropriate logs
+		// TODO
+		
+		// block until the process completes
+		return process.waitFor();
 	}
 	
 	/**

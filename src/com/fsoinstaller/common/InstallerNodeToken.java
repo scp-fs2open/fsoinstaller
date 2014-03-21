@@ -26,6 +26,7 @@ package com.fsoinstaller.common;
  */
 public enum InstallerNodeToken
 {
+	// NOTE: There is no publicly parseable EXEC token because that would open up a can of worms
 	NAME("NAME"),
 	DESC("DESC"),
 	ENDDESC("ENDDESC"),
