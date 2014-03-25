@@ -310,10 +310,6 @@ public class InstallItem extends JPanel
 							return null;
 						}
 						
-						// maybe change the progress bar look again
-						if (!node.getHashList().isEmpty())
-							setIndeterminate(true);
-						
 						// now hash the files we installed
 						success = performHashTasks(modFolder);
 						if (!success || Thread.currentThread().isInterrupted())
