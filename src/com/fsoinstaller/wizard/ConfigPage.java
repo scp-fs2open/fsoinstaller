@@ -871,7 +871,7 @@ public class ConfigPage extends WizardPage
 				// we can install it on Windows, but not other OSes
 				if (MiscUtils.determineOS() == OperatingSystem.WINDOWS)
 				{
-					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("promptToInstallOpenAL"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
+					int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("promptToInstallOpenAL"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 					if (result == JOptionPane.YES_OPTION)
 						installOpenAL = true;
 				}
