@@ -217,6 +217,8 @@ public class InstallPage extends WizardPage
 			
 			openAL.addExecCmd("oalinst.exe");
 			
+			openAL.setNote(XSTR.getString("openALNote"));
+			
 			if (!installUnit.getBaseURLList().isEmpty())
 				nodes.add(openAL);
 		}
