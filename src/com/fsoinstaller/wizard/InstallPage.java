@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -196,6 +197,7 @@ public class InstallPage extends WizardPage
 		{
 			InstallerNode openAL = new InstallerNode(XSTR.getString("installPageOpenALText"));
 			openAL.setFolder(File.separator);
+			openAL.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
 			InstallUnit installUnit = new InstallUnit();
 			for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
 			{
@@ -229,6 +231,7 @@ public class InstallPage extends WizardPage
 			{
 				gog = new InstallerNode(XSTR.getString("installPageGOGText"));
 				gog.setFolder(File.separator);
+				gog.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
 				
 				// TODO: add GOG install option
 				
@@ -241,6 +244,7 @@ public class InstallPage extends WizardPage
 			{
 				InstallerNode patchTo1_2 = new InstallerNode(XSTR.getString("installPagePatchText"));
 				patchTo1_2.setFolder(File.separator);
+				patchTo1_2.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
 				InstallUnit installUnit = new InstallUnit();
 				for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
 				{
@@ -277,6 +281,7 @@ public class InstallPage extends WizardPage
 			// if any of the MVE files exist in data2 and data3, but not in data/movies, copy them
 			InstallerNode copyMVEs = new InstallerNode(XSTR.getString("installPageCopyCutscenesText"));
 			copyMVEs.setFolder(File.separator);
+			copyMVEs.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
 			boolean doCopy = false;
 			for (KeyPair<String, String> pair: gogMovies)
 			{
