@@ -22,7 +22,9 @@ package com.fsoinstaller.utils;
 import java.awt.FontMetrics;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.BreakIterator;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -165,7 +167,14 @@ public class MiscUtils
 		Process process = builder.start();
 		
 		// pipe the process's output to the appropriate logs
-		// TODO
+		ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO);
+		ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE);
+		
+		// start the loggers
+		Thread t1 = new Thread(stdout);
+		Thread t2 = new Thread(stderr);
+		t1.start();
+		t2.start();
 		
 		// block until the process completes
 		return process.waitFor();

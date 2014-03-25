@@ -154,12 +154,12 @@ public final class Logger
 		this.logger = logger;
 	}
 	
-	private void log(Level level, Object message)
+	public void log(Level level, Object message)
 	{
 		logger.logp(level, className, "", message == null ? "null" : message.toString());
 	}
 	
-	private void log(Level level, Object message, Throwable throwable)
+	public void log(Level level, Object message, Throwable throwable)
 	{
 		logger.logp(level, className, "", message == null ? "null" : message.toString(), throwable);
 	}
