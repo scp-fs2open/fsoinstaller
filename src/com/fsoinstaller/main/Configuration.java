@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.PropertiesUtils;
@@ -41,6 +42,24 @@ public class Configuration
 {
 	private static final Logger logger = Logger.getLogger(Configuration.class);
 	
+	public static final List<KeyPair<String, String>> GOG_MOVIES;
+	static
+	{
+		List<KeyPair<String, String>> temp = new ArrayList<KeyPair<String, String>>();
+		temp.add(new KeyPair<String, String>("INTRO.MVE", "data2"));
+		temp.add(new KeyPair<String, String>("MONO1.MVE", "data2"));
+		temp.add(new KeyPair<String, String>("COLOSSUS.MVE", "data2"));
+		temp.add(new KeyPair<String, String>("MONO2.MVE", "data3"));
+		temp.add(new KeyPair<String, String>("MONO3.MVE", "data3"));
+		temp.add(new KeyPair<String, String>("MONO4.MVE", "data3"));
+		temp.add(new KeyPair<String, String>("BASTION.MVE", "data3"));
+		temp.add(new KeyPair<String, String>("ENDPART1.MVE", "data3"));
+		temp.add(new KeyPair<String, String>("ENDPRT2A.MVE", "data3"));
+		temp.add(new KeyPair<String, String>("ENDPRT2B.MVE", "data3"));
+		
+		GOG_MOVIES = Collections.unmodifiableList(temp);
+	}
+	
 	// these are for the settings
 	public static final String PROXY_KEY = "PROXY";
 	public static final String CONNECTOR_KEY = "CONNECTOR";
@@ -48,6 +67,7 @@ public class Configuration
 	public static final String MOD_URLS_KEY = "MOD-URLS";
 	public static final String BASIC_CONFIG_MODS_KEY = "BASIC-CONFIG-MODS";
 	public static final String MOD_NODES_KEY = "MOD-NODES";
+	public static final String AUTOMATIC_NODES_KEY = "AUTOMATIC-NODES";
 	public static final String INSTALL_CHOICE_KEY = "INSTALL-CHOICE";
 	public static final String MODS_TO_INSTALL_KEY = "MODS-TO-INSTALL";
 	public static final String CHECKED_DIRECTORIES_KEY = "CHECKED-DIRECTORIES";
