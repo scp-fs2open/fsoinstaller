@@ -122,6 +122,8 @@ public class MiscUtils
 		return true;
 	}
 	
+	private static final Object execMutex = new Object();
+	
 	public static int runExecCommand(File runDirectory, String command) throws IOException, InterruptedException
 	{
 		if (!runDirectory.isDirectory())
@@ -161,23 +163,28 @@ public class MiscUtils
 			}
 		}
 		
-		// build and run the process
-		ProcessBuilder builder = new ProcessBuilder(shell, param, command);
-		builder.directory(runDirectory);
-		Process process = builder.start();
-		
-		// pipe the process's output to the appropriate logs
-		ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO);
-		ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE);
-		
-		// start the loggers
-		Thread t1 = new Thread(stdout);
-		Thread t2 = new Thread(stderr);
-		t1.start();
-		t2.start();
-		
-		// block until the process completes
-		return process.waitFor();
+		synchronized (execMutex)
+		{
+			// build and run the process
+			ProcessBuilder builder = new ProcessBuilder(shell, param, command);
+			builder.directory(runDirectory);
+			Process process = builder.start();
+			
+			// pipe the process's output to the appropriate logs
+			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO);
+			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE);
+			
+			// start the loggers
+			Thread t1 = new Thread(stdout, "ExternalProcess-stdout");
+			Thread t2 = new Thread(stderr, "ExternalProcess-stderr");
+			t1.setPriority(Thread.NORM_PRIORITY);
+			t2.setPriority(Thread.NORM_PRIORITY);
+			t1.start();
+			t2.start();
+			
+			// block until the process completes
+			return process.waitFor();
+		}
 	}
 	
 	/**
