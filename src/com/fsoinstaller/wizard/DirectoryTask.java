@@ -230,7 +230,7 @@ class DirectoryTask implements Callable<Void>
 				else if (installGOG.isSelected())
 				{
 					// figure out where we're installing from (we will add the actual "mod" in InstallPage)
-					gogInstallPackage = SwingUtils.promptForFile(XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), ".*\\.exe", XSTR.getString("exeFilesFilter"), ".*", XSTR.getString("allFilesFilter"));
+					gogInstallPackage = SwingUtils.promptForFile(XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), ".*\\.exe", XSTR.getString("exeFilesFilter"));
 				}
 				// continue anyway = no special treatment
 			}
