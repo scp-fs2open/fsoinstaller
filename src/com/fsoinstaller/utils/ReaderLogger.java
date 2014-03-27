@@ -37,12 +37,19 @@ public class ReaderLogger implements Runnable, Callable<Void>
 	private final Reader reader;
 	private final Logger logger;
 	private final Level level;
+	private final String preamble;
 	
 	public ReaderLogger(Reader reader, Logger logger, Level level)
+	{
+		this(reader, logger, level, null);
+	}
+	
+	public ReaderLogger(Reader reader, Logger logger, Level level, String preamble)
 	{
 		this.reader = reader;
 		this.logger = logger;
 		this.level = level;
+		this.preamble = preamble;
 	}
 	
 	public Void call() throws IOException
@@ -51,9 +58,19 @@ public class ReaderLogger implements Runnable, Callable<Void>
 		
 		try
 		{
+			boolean writtenPreamble = false;
+			
 			String line;
 			while ((line = br.readLine()) != null)
+			{
+				if (!writtenPreamble)
+				{
+					if (preamble != null)
+						logger.log(Level.INFO, preamble);
+					writtenPreamble = true;
+				}
 				logger.log(level, line);
+			}
 		}
 		finally
 		{

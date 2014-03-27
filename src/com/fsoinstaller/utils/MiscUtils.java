@@ -171,8 +171,9 @@ public class MiscUtils
 			Process process = builder.start();
 			
 			// pipe the process's output to the appropriate logs
-			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO);
-			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE);
+			String preamble = runDirectory.getAbsolutePath() + File.separator + command;
+			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO, preamble);
+			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE, preamble);
 			
 			// start the loggers
 			Thread t1 = new Thread(stdout, "ExternalProcess-stdout");
