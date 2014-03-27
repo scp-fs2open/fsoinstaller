@@ -95,21 +95,12 @@ public class FinishedPage extends WizardPage
 		List<String> installErrors = (List<String>) settings.get(Configuration.INSTALL_ERRORS_KEY);
 		
 		StringBuilder text = new StringBuilder();
-		if (installErrors.isEmpty())
+		if (installNotes.isEmpty() && installErrors.isEmpty())
 			text.append(XSTR.getString("allModsSuccessful"));
 		
 		// add any notes
 		if (!installNotes.isEmpty())
 		{
-			if (installErrors.isEmpty())
-				text.append("\n\n");
-			
-			if (installNotes.size() == 1)
-				text.append(XSTR.getString("readNotes1"));
-			else
-				text.append(XSTR.getString("readNotes2"));
-			text.append("\n\n");
-			
 			for (String note: installNotes)
 			{
 				text.append(note);
