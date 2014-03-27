@@ -232,7 +232,8 @@ public class ModSelectPage extends WizardPage
 		Boolean installOpenAL = (Boolean) configuration.getSettings().get(Configuration.ADD_OPENAL_INSTALL_KEY);
 		if (installOpenAL == Boolean.TRUE)
 		{
-			InstallerNode openAL = new InstallerNode(XSTR.getString("installPageOpenALText"));
+			InstallerNode openAL = new InstallerNode(XSTR.getString("installOpenALName"));
+			openAL.setDescription(XSTR.getString("installOpenALDesc"));
 			openAL.setFolder(File.separator);
 			openAL.setVersion(versionUUID());
 			InstallUnit installUnit = new InstallUnit();
@@ -268,7 +269,8 @@ public class ModSelectPage extends WizardPage
 			InstallerNode gog = null;
 			if (gogInstallPackage != null)
 			{
-				gog = new InstallerNode(XSTR.getString("installPageGOGText"));
+				gog = new InstallerNode(XSTR.getString("installGOGName"));
+				gog.setDescription(XSTR.getString("installGOGDesc"));
 				gog.setFolder(File.separator);
 				gog.setVersion(versionUUID());
 				
@@ -281,7 +283,8 @@ public class ModSelectPage extends WizardPage
 			String hash = (String) configuration.getSettings().get(Configuration.ROOT_FS2_VP_HASH_KEY);
 			if (hash != null && hash.equalsIgnoreCase("42bc56a410373112dfddc7985f66524a"))
 			{
-				InstallerNode patchTo1_2 = new InstallerNode(XSTR.getString("installPagePatchText"));
+				InstallerNode patchTo1_2 = new InstallerNode(XSTR.getString("installPatchName"));
+				patchTo1_2.setDescription(XSTR.getString("installPatchDesc"));
 				patchTo1_2.setFolder(File.separator);
 				patchTo1_2.setVersion(versionUUID());
 				InstallUnit installUnit = new InstallUnit();
@@ -318,7 +321,8 @@ public class ModSelectPage extends WizardPage
 			}
 			
 			// if any of the MVE files exist in data2 and data3, but not in data/movies, copy them
-			InstallerNode copyMVEs = new InstallerNode(XSTR.getString("installPageCopyCutscenesText"));
+			InstallerNode copyMVEs = new InstallerNode(XSTR.getString("installCopyCutscenesName"));
+			copyMVEs.setDescription(XSTR.getString("installCopyCutscenesDesc"));
 			copyMVEs.setFolder(File.separator);
 			copyMVEs.setVersion(versionUUID());
 			boolean doCopy = false;
