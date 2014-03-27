@@ -54,7 +54,7 @@ public class Log4JFormatter extends Formatter
 		if (record.getSourceClassName() != null)
 		{
 			source = record.getSourceClassName();
-			if (record.getSourceMethodName() != null)
+			if (record.getSourceMethodName() != null && record.getSourceMethodName().length() > 0)
 			{
 				source += " " + record.getSourceMethodName();
 			}
