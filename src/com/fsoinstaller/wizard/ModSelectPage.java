@@ -234,7 +234,7 @@ public class ModSelectPage extends WizardPage
 		{
 			InstallerNode openAL = new InstallerNode(XSTR.getString("installPageOpenALText"));
 			openAL.setFolder(File.separator);
-			openAL.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
+			openAL.setVersion(versionUUID());
 			InstallUnit installUnit = new InstallUnit();
 			for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
 			{
@@ -270,7 +270,7 @@ public class ModSelectPage extends WizardPage
 			{
 				gog = new InstallerNode(XSTR.getString("installPageGOGText"));
 				gog.setFolder(File.separator);
-				gog.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
+				gog.setVersion(versionUUID());
 				
 				// TODO: add GOG install option
 				
@@ -283,7 +283,7 @@ public class ModSelectPage extends WizardPage
 			{
 				InstallerNode patchTo1_2 = new InstallerNode(XSTR.getString("installPagePatchText"));
 				patchTo1_2.setFolder(File.separator);
-				patchTo1_2.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
+				patchTo1_2.setVersion(versionUUID());
 				InstallUnit installUnit = new InstallUnit();
 				for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
 				{
@@ -320,7 +320,7 @@ public class ModSelectPage extends WizardPage
 			// if any of the MVE files exist in data2 and data3, but not in data/movies, copy them
 			InstallerNode copyMVEs = new InstallerNode(XSTR.getString("installPageCopyCutscenesText"));
 			copyMVEs.setFolder(File.separator);
-			copyMVEs.setVersion(UUID.randomUUID().toString().replaceAll("-", ""));
+			copyMVEs.setVersion(versionUUID());
 			boolean doCopy = false;
 			for (KeyPair<String, String> pair: Configuration.GOG_MOVIES)
 			{
@@ -496,7 +496,7 @@ public class ModSelectPage extends WizardPage
 				
 				// make a header panel with the name, and if a version is specified, add that underneath
 				JComponent header;
-				if (node.getVersion() != null)
+				if (node.getVersion() != null && !node.getVersion().startsWith("UUID"))
 				{
 					header = new JPanel(new GridLayout(2, 1));
 					((JPanel) header).add(name);
@@ -529,6 +529,11 @@ public class ModSelectPage extends WizardPage
 			button.setEnabled(false);
 		
 		return button;
+	}
+	
+	private static String versionUUID()
+	{
+		return "UUID" + UUID.randomUUID().toString().replaceAll("-", "");
 	}
 	
 	private static class SharedCounter
