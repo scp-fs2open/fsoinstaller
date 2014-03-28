@@ -32,8 +32,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -211,13 +213,26 @@ class DirectoryTask implements Callable<Void>
 				prompt.setBorder(null);
 				prompt.setText(XSTR.getString("retailFS2NotFound"));
 				
-				// put the whole thing in a panel and prompt the user
+				JComponent strut = (JComponent) Box.createVerticalStrut(GUIConstants.DEFAULT_MARGIN);
+				strut.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+				
+				// align everything...
+				prompt.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+				strut.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+				installGOG.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+				wrongDir.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+				continueAnyway.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+				
+				// put the whole thing in a panel
 				JPanel promptPanel = new JPanel();
 				promptPanel.setLayout(new BoxLayout(promptPanel, BoxLayout.Y_AXIS));
 				promptPanel.add(prompt);
+				promptPanel.add(strut);
 				promptPanel.add(installGOG);
 				promptPanel.add(wrongDir);
 				promptPanel.add(continueAnyway);
+				
+				// prompt the user
 				ThreadSafeJOptionPane.showOptionDialog(activeFrame, promptPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
 				
 				// find out what was decided
