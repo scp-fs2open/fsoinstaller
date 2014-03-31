@@ -20,6 +20,7 @@
 package com.fsoinstaller.wizard;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.GridLayout;
@@ -55,6 +56,7 @@ import com.fsoinstaller.common.InstallerNode.HashTriple;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.utils.HSLColor;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
@@ -141,8 +143,13 @@ public class ModSelectPage extends WizardPage
 			// populate the mod panel
 			modPanel.removeAll();
 			treeWalk.clear();
+			boolean shaded = false;
+			Color shadedBackground = new HSLColor(getBackground()).adjustShade(5);
 			for (InstallerNode node: modNodes)
-				addTreeNode(node, 0);
+			{
+				addTreePanels(node, 0, shaded ? shadedBackground : null);
+				shaded = !shaded;
+			}
 			modPanel.add(Box.createVerticalGlue());
 			
 			// adjust mod scroll speed to be one item per tick (based on an idea by jg18)
@@ -212,15 +219,20 @@ public class ModSelectPage extends WizardPage
 		counter.syncButton();
 	}
 	
-	private void addTreeNode(InstallerNode node, int depth)
+	/**
+	 * Instead of nesting the SingleModPanels inside of each other and returning
+	 * one panel with all its children embedded, this function just stacks all
+	 * the panels directly onto the modPanel.
+	 */
+	private void addTreePanels(InstallerNode node, int depth, Color backgroundColor)
 	{
-		SingleModPanel panel = new SingleModPanel(gui, node, depth, counter);
+		SingleModPanel panel = new SingleModPanel(gui, node, depth, backgroundColor, counter);
 		node.setUserObject(panel);
 		treeWalk.add(node);
 		
 		modPanel.add(panel);
 		for (InstallerNode child: node.getChildren())
-			addTreeNode(child, depth + 1);
+			addTreePanels(child, depth + 1, backgroundColor);
 	}
 	
 	private List<InstallerNode> maybeCreateAutomaticNodes()
@@ -373,7 +385,7 @@ public class ModSelectPage extends WizardPage
 		private final JButton button;
 		private final SharedCounter counter;
 		
-		public SingleModPanel(JFrame frame, InstallerNode node, int depth, SharedCounter counter)
+		public SingleModPanel(JFrame frame, InstallerNode node, int depth, Color backgroundColor, SharedCounter counter)
 		{
 			this.node = node;
 			this.checkBox = createCheckBox(node, counter);
@@ -387,6 +399,14 @@ public class ModSelectPage extends WizardPage
 			add(checkBox);
 			add(Box.createHorizontalGlue());
 			add(button);
+			
+			// maybe set background color
+			if (backgroundColor != null)
+			{
+				setBackground(backgroundColor);
+				checkBox.setBackground(backgroundColor);
+				button.setBackground(backgroundColor);
+			}
 		}
 		
 		@SuppressWarnings("unused")

@@ -19,6 +19,7 @@
 
 package com.fsoinstaller.utils;
 
+import java.awt.Color;
 import java.awt.FontMetrics;
 import java.io.File;
 import java.io.IOException;
@@ -311,5 +312,17 @@ public class MiscUtils
 				logger.error("Unable to initialize 7zip!", sznie);
 			}
 		}
+	}
+	
+	public static Color deriveColorHSB(Color base, float hFactor, float sFactor, float bFactor)
+	{
+		float[] hsb = new float[3];
+		Color.RGBtoHSB(base.getRed(), base.getGreen(), base.getBlue(), hsb);
+		
+		hsb[0] *= hFactor;
+		hsb[1] *= sFactor;
+		hsb[2] *= bFactor;
+		
+		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
 	}
 }
