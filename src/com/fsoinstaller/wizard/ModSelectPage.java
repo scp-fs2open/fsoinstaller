@@ -25,7 +25,6 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +62,8 @@ public class ModSelectPage extends WizardPage
 	private final JPanel modPanel;
 	private final JScrollPane modScrollPane;
 	
-	private final List<InstallerNode> treeWalk;
+	private List<InstallerNode> modNodeTreeWalk;
+	private List<InstallerNode> automaticNodeTreeWalk;
 	
 	private boolean inited;
 	private SharedCounter counter;
@@ -77,7 +77,8 @@ public class ModSelectPage extends WizardPage
 		modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 		modScrollPane = new JScrollPane(modPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		
-		treeWalk = new ArrayList<InstallerNode>();
+		modNodeTreeWalk = null;
+		automaticNodeTreeWalk = null;
 		inited = false;
 		counter = null;
 	}
@@ -120,6 +121,12 @@ public class ModSelectPage extends WizardPage
 				modNodes.addAll(0, automaticNodes);
 		}
 		
+		// node walks
+		if (modNodeTreeWalk == null)
+			modNodeTreeWalk = InstallerUtils.generateTreeWalk(modNodes);
+		if (automaticNodeTreeWalk == null)
+			automaticNodeTreeWalk = InstallerUtils.generateTreeWalk(automaticNodes);
+		
 		// populating the mod panel only needs to be done once
 		if (!inited)
 		{
@@ -134,7 +141,6 @@ public class ModSelectPage extends WizardPage
 			
 			// populate the mod panel
 			modPanel.removeAll();
-			treeWalk.clear();
 			boolean shaded = false;
 			Color shadedBackground = new HSLColor(getBackground()).adjustShade(5);
 			for (InstallerNode node: modNodes)
@@ -145,9 +151,9 @@ public class ModSelectPage extends WizardPage
 			modPanel.add(Box.createVerticalGlue());
 			
 			// adjust mod scroll speed to be one item per tick (based on an idea by jg18)
-			if (!treeWalk.isEmpty())
+			if (!modNodeTreeWalk.isEmpty())
 			{
-				double height = ((SingleModPanel) treeWalk.get(0).getUserObject()).getPreferredSize().getHeight();
+				double height = ((SingleModPanel) modNodeTreeWalk.get(0).getUserObject()).getPreferredSize().getHeight();
 				modScrollPane.getVerticalScrollBar().setUnitIncrement((int) height);
 			}
 			
@@ -161,7 +167,7 @@ public class ModSelectPage extends WizardPage
 			@SuppressWarnings("unchecked")
 			List<String> basicMods = (List<String>) settings.get(Configuration.BASIC_CONFIG_MODS_KEY);
 			
-			for (InstallerNode node: treeWalk)
+			for (InstallerNode node: modNodeTreeWalk)
 			{
 				if (basicMods.contains(node.getName()) && MiscUtils.validForOS(node.getName()))
 				{
@@ -174,7 +180,7 @@ public class ModSelectPage extends WizardPage
 		}
 		else if (choice == InstallChoice.COMPLETE)
 		{
-			for (InstallerNode node: treeWalk)
+			for (InstallerNode node: modNodeTreeWalk)
 			{
 				logger.debug("Selecting '" + node.getName() + "' as a COMPLETE mod");
 				((SingleModPanel) node.getUserObject()).setSelected(MiscUtils.validForOS(node.getName()));
@@ -182,13 +188,13 @@ public class ModSelectPage extends WizardPage
 		}
 		
 		// force-select certain nodes
-		for (InstallerNode node: treeWalk)
+		for (InstallerNode node: modNodeTreeWalk)
 		{
 			String propertyName = node.buildTreeName();
 			boolean force = false;
 			
 			// nodes that are automatically generated
-			if (automaticNodes.contains(node))
+			if (automaticNodeTreeWalk.contains(node))
 			{
 				logger.debug("Force-selecting '" + node.getName() + "' as an installer-generated node");
 				force = true;
@@ -220,7 +226,6 @@ public class ModSelectPage extends WizardPage
 	{
 		SingleModPanel panel = new SingleModPanel(gui, node, depth, backgroundColor, counter);
 		node.setUserObject(panel);
-		treeWalk.add(node);
 		
 		modPanel.add(panel);
 		for (InstallerNode child: node.getChildren())
@@ -232,7 +237,7 @@ public class ModSelectPage extends WizardPage
 	{
 		// store the mod names we selected
 		Set<String> selectedMods = new LinkedHashSet<String>();
-		for (InstallerNode node: treeWalk)
+		for (InstallerNode node: modNodeTreeWalk)
 			if (((SingleModPanel) node.getUserObject()).isSelected())
 				selectedMods.add(node.getName());
 		

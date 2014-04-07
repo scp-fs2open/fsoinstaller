@@ -194,4 +194,22 @@ public class InstallerUtils
 	{
 		return "UUID" + UUID.randomUUID().toString().replaceAll("-", "");
 	}
+	
+	public static List<InstallerNode> generateTreeWalk(List<InstallerNode> nodes)
+	{
+		List<InstallerNode> treeWalk = new ArrayList<InstallerNode>();
+		
+		for (InstallerNode node: nodes)
+			generateTreeWalk(treeWalk, node);
+		
+		return treeWalk;
+	}
+	
+	public static void generateTreeWalk(List<InstallerNode> treeWalk, InstallerNode root)
+	{
+		treeWalk.add(root);
+		
+		for (InstallerNode child: root.getChildren())
+			generateTreeWalk(treeWalk, child);
+	}
 }
