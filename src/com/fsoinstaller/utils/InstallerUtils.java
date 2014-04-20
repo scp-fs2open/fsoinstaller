@@ -110,7 +110,7 @@ public class InstallerUtils
 				installUnit.addFile("innoextract.exe");
 				gog.addInstall(installUnit);
 				
-				gog.addHashTriple(new HashTriple("MD5", "innoextract.exe", "98C89ADFAB259E4CC89D3CC18CEE2ADC"));
+				gog.addHashTriple(new HashTriple("MD5", "innoextract.exe", "5D8A2A1C3058FCEC812914F9B6DBEE68"));
 				
 				StringBuilder cmd = new StringBuilder("innoextract -L -q --progress=true -e ");
 				cmd.append(gogInstallPackage.getAbsolutePath());
