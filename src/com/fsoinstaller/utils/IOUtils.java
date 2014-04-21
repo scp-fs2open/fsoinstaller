@@ -260,4 +260,22 @@ public class IOUtils
 		// didn't find the file, so just use the name we used as the parameter
 		return new File(directory, fileName);
 	}
+	
+	public static List<String> getLowerCaseFiles(File directory)
+	{
+		if (!directory.isDirectory())
+			throw new IllegalArgumentException("Directory argument must be a directory!");
+		
+		List<String> fileNames = new ArrayList<String>();
+		
+		// populate the files in the directory
+		File[] files = directory.listFiles();
+		if (files != null)
+		{
+			for (File file: files)
+				fileNames.add(file.getName().toLowerCase());
+		}
+		
+		return fileNames;
+	}
 }

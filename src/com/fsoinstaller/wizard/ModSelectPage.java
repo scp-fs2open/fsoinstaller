@@ -48,6 +48,7 @@ import javax.swing.ScrollPaneConstants;
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.HSLColor;
+import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
@@ -187,6 +188,9 @@ public class ModSelectPage extends WizardPage
 			}
 		}
 		
+		// do this before iterating through the loop to save time
+		List<String> lowerCaseDirectoryContents = IOUtils.getLowerCaseFiles(Configuration.getInstance().getApplicationDir());
+		
 		// force-select certain nodes
 		for (InstallerNode node: modNodeTreeWalk)
 		{
@@ -202,8 +206,18 @@ public class ModSelectPage extends WizardPage
 			// nodes where a current or previous version has been installed
 			else if (configuration.getUserProperties().containsKey(propertyName))
 			{
-				logger.debug("Force-selecting '" + node.getName() + "' as already installed based on version");
-				force = true;
+				// folder exists, which implies we installed this mod in the past and it is still valid, so select it
+				if (IOUtils.isRootFolderName(node.getFolder()) || lowerCaseDirectoryContents.contains(node.getFolder().toLowerCase()))
+				{
+					logger.debug("Force-selecting '" + node.getName() + "' as already installed based on version");
+					force = true;
+				}
+				// folder does not exist, so remove this mod from the stored configuration
+				else
+				{
+					logger.debug("Mod '" + node.getName() + "' is no longer installed; removing stored version");
+					configuration.getUserProperties().remove(propertyName);
+				}
 			}
 			
 			if (force)
