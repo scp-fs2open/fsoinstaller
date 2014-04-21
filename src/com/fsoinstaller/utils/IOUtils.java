@@ -231,6 +231,16 @@ public class IOUtils
 		return directory.delete();
 	}
 	
+	/**
+	 * Evaluates whether the specified folder name should be interpreted as
+	 * referring to the installation root folder. Candidate names will be either
+	 * null, zero-length, a slash, or a backslash.
+	 */
+	public static boolean isRootFolderName(String folderName)
+	{
+		return (folderName == null || folderName.length() == 0 || folderName.equals("/") || folderName.equals("\\"));
+	}
+	
 	public static File newFileIgnoreCase(File directory, String fileName)
 	{
 		if (!directory.isDirectory())

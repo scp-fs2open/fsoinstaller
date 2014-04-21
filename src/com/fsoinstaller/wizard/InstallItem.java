@@ -538,7 +538,7 @@ public class InstallItem extends JPanel
 		// create the folder for this mod, if it has one
 		File folder;
 		String folderName = node.getFolder();
-		if (folderName == null || folderName.length() == 0 || folderName.equals("/") || folderName.equals("\\"))
+		if (IOUtils.isRootFolderName(folderName))
 		{
 			modLogger.debug("This node has no folder; using application folder instead");
 			folder = installDir;
