@@ -85,6 +85,7 @@ public class InstallItem extends JPanel
 	private Future<Void> overallInstallTask;
 	private InstallItemState state;
 	
+	private final Configuration configuration;
 	private final boolean installNotNeeded;
 	private final Logger modLogger;
 	
@@ -94,6 +95,7 @@ public class InstallItem extends JPanel
 		this.node = node;
 		this.listenerList = new CopyOnWriteArrayList<ChangeListener>();
 		
+		configuration = Configuration.getInstance();
 		modLogger = Logger.getLogger(InstallItem.class, node.getName());
 		
 		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN));
@@ -115,8 +117,7 @@ public class InstallItem extends JPanel
 		state = InstallItemState.INITIALIZED;
 		
 		// only perform the installation if the stored version is different from the version available online
-		String propertyName = node.buildTreeName();
-		String storedVersion = Configuration.getInstance().getUserProperties().getProperty(propertyName);
+		String storedVersion = configuration.getUserProperties().getProperty(node.buildTreeName());
 		// note: if a node was successfully installed but had no version, it will save a version of "null" to the properties
 		installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion() == null ? "null" : node.getVersion()));
 		
@@ -328,7 +329,6 @@ public class InstallItem extends JPanel
 						
 						// success: save the version we just installed
 						// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
-						Configuration configuration = Configuration.getInstance();
 						configuration.getUserProperties().setProperty(node.buildTreeName(), node.getVersion() == null ? "null" : node.getVersion());
 						synchronized (configuration)
 						{
@@ -530,7 +530,7 @@ public class InstallItem extends JPanel
 	 */
 	private File performSetupTasks() throws SecurityException
 	{
-		File installDir = Configuration.getInstance().getApplicationDir();
+		File installDir = configuration.getApplicationDir();
 		
 		modLogger.info("Starting processing");
 		setText(XSTR.getString("progressBarSettingUpMod"));
@@ -663,7 +663,7 @@ public class InstallItem extends JPanel
 			modLogger.info("Processing INSTALL items");
 			setText(XSTR.getString("progressBarInstalling"));
 			
-			final Connector connector = (Connector) Configuration.getInstance().getSettings().get(Configuration.CONNECTOR_KEY);
+			final Connector connector = (Connector) configuration.getSettings().get(Configuration.CONNECTOR_KEY);
 			
 			final int totalTasks = downloadPanelMap.keySet().size();
 			final AtomicInteger successes = new AtomicInteger(0);
