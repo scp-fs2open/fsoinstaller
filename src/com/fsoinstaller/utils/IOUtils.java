@@ -241,11 +241,37 @@ public class IOUtils
 		return (folderName == null || folderName.length() == 0 || folderName.equals("/") || folderName.equals("\\"));
 	}
 	
+	/**
+	 * Creates the given file in the given directory, or returns the file if it
+	 * already exists. Since Linux distinguishes files by file case, we use a
+	 * manual case-insensitive search.
+	 */
 	public static File newFileIgnoreCase(File directory, String fileName)
+	{
+		File file = getFileIgnoreCase(directory, fileName);
+		if (file == null)
+			file = new File(directory, fileName);
+		
+		return file;
+	}
+	
+	/**
+	 * Performs a case-insensitive search of the specified directory for the
+	 * specified file or subdirectory.
+	 * 
+	 * @return the matching file/subdirectory, or null if the file/subdirectory
+	 *         does not exist
+	 */
+	public static File getFileIgnoreCase(File directory, String fileName)
 	{
 		if (!directory.isDirectory())
 			throw new IllegalArgumentException("Directory argument must be a directory!");
 		
+		// if it's the root folder, return the directory itself
+		if (isRootFolderName(fileName))
+			return directory;
+		
+		// search the files in the directory
 		File[] files = directory.listFiles();
 		if (files != null)
 		{
@@ -257,8 +283,7 @@ public class IOUtils
 			}
 		}
 		
-		// didn't find the file, so just use the name we used as the parameter
-		return new File(directory, fileName);
+		return null;
 	}
 	
 	public static List<String> getLowerCaseFiles(File directory)
