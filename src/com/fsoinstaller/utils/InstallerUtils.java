@@ -32,6 +32,7 @@ import com.fsoinstaller.common.InstallerNode.HashTriple;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.utils.MiscUtils.OperatingSystem;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -107,14 +108,24 @@ public class InstallerUtils
 						logger.error("Impossible error: Internal home URLs should always be correct!", iburle);
 					}
 				}
-				installUnit.addFile("innoextract.exe");
 				gog.addInstall(installUnit);
 				
-				gog.addHashTriple(new HashTriple("MD5", "innoextract.exe", "5D8A2A1C3058FCEC812914F9B6DBEE68"));
+				OperatingSystem os = MiscUtils.determineOS();
+				if (os == OperatingSystem.WINDOWS)
+				{
+					installUnit.addFile("innoextract-1.4-windows-r2.zip");
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-windows-r2/innoextract.exe", "5D8A2A1C3058FCEC812914F9B6DBEE68"));
+				}
+				else if (os == OperatingSystem.UNIX)
+				{
+					installUnit.addFile("innoextract-1.4-linux.zip");
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/innoextract", "AAE9EC9837C951E8908D242A68846974"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/bin/amd64/innoextract", "0BE2D7E5CF76DD368FC1FF245EE97D9E"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/bin/armv6j-hardfloat/innoextract", "87A48DBEE7A5BE8CD9B27C139D979017"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/bin/i686/innoextract", "310E477F2F911A147AD7AAEF7512DF06"));
+				}
 				
-				StringBuilder cmd = new StringBuilder("innoextract -L -q --progress=true -e ");
-				cmd.append(gogInstallPackage.getAbsolutePath());
-				gog.addExecCmd(cmd.toString());
+				// don't add any explicit commands because those will be handled in the InnoExtractTask class
 				
 				if (!installUnit.getBaseURLList().isEmpty())
 					nodes.add(gog);

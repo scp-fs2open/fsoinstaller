@@ -327,6 +327,27 @@ public class InstallItem extends JPanel
 							return null;
 						}
 						
+						// maybe run the GOG task
+						if (node.getName().equals(XSTR.getString("installGOGName")))
+						{
+							InnoExtractTask task = new InnoExtractTask(InstallItem.this);
+							try
+							{
+								success = task.call();
+							}
+							catch (Exception e)
+							{
+								modLogger.error("There was an error running innoextract!", e);
+								success = false;
+							}
+							// we don't check for interrupted here because innoextract is not responsive to interrupts
+							if (!success)
+							{
+								failInstallTree();
+								return null;
+							}
+						}
+						
 						// success: save the version we just installed
 						// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
 						configuration.getUserProperties().setProperty(node.buildTreeName(), node.getVersion() == null ? "null" : node.getVersion());
@@ -954,7 +975,7 @@ public class InstallItem extends JPanel
 		return false;
 	}
 	
-	private void logInstallNote(final String message)
+	public void logInstallNote(final String message)
 	{
 		EventQueue.invokeLater(new Runnable()
 		{
@@ -965,7 +986,7 @@ public class InstallItem extends JPanel
 		});
 	}
 	
-	private void logInstallError(final String message)
+	public void logInstallError(final String message)
 	{
 		EventQueue.invokeLater(new Runnable()
 		{
