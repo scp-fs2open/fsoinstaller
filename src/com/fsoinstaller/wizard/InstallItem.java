@@ -209,6 +209,11 @@ public class InstallItem extends JPanel
 		add(Box.createGlue());
 	}
 	
+	public InstallerNode getInstallerNode()
+	{
+		return node;
+	}
+	
 	public void addCompletionListener(ChangeListener listener)
 	{
 		listenerList.add(listener);
