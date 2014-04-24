@@ -114,15 +114,15 @@ public class InstallerUtils
 				if (os == OperatingSystem.WINDOWS)
 				{
 					installUnit.addFile("innoextract-1.4-windows-r2.zip");
-					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-windows-r2/innoextract.exe", "5D8A2A1C3058FCEC812914F9B6DBEE68"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-windows-r2" + File.separator + "innoextract.exe", "5D8A2A1C3058FCEC812914F9B6DBEE68"));
 				}
 				else if (os == OperatingSystem.UNIX)
 				{
 					installUnit.addFile("innoextract-1.4-linux.zip");
-					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/innoextract", "AAE9EC9837C951E8908D242A68846974"));
-					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/bin/amd64/innoextract", "0BE2D7E5CF76DD368FC1FF245EE97D9E"));
-					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/bin/armv6j-hardfloat/innoextract", "87A48DBEE7A5BE8CD9B27C139D979017"));
-					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux/bin/i686/innoextract", "310E477F2F911A147AD7AAEF7512DF06"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux" + File.separator + "innoextract", "AAE9EC9837C951E8908D242A68846974"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux" + File.separator + "bin" + File.separator + "amd64" + File.separator + "innoextract", "0BE2D7E5CF76DD368FC1FF245EE97D9E"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux" + File.separator + "bin" + File.separator + "armv6j-hardfloat" + File.separator + "innoextract", "87A48DBEE7A5BE8CD9B27C139D979017"));
+					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux" + File.separator + "bin" + File.separator + "i686" + File.separator + "innoextract", "310E477F2F911A147AD7AAEF7512DF06"));
 				}
 				
 				// don't add any explicit commands because those will be handled in the InnoExtractTask class
