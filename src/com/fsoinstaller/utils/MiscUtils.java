@@ -123,9 +123,7 @@ public class MiscUtils
 		return true;
 	}
 	
-	private static final Object execMutex = new Object();
-	
-	public static int runExecCommand(File runDirectory, String command) throws IOException, InterruptedException
+	public static ProcessBuilder buildExecCommand(File runDirectory, String command)
 	{
 		if (!runDirectory.isDirectory())
 			throw new IllegalArgumentException("Run directory must exist and be a directory!");
@@ -164,17 +162,33 @@ public class MiscUtils
 			}
 		}
 		
+		// build the process, but don't start it yet
+		ProcessBuilder builder = new ProcessBuilder(shell, param, command);
+		builder.directory(runDirectory);
+		
+		return builder;
+	}
+	
+	public static int runExecCommand(File runDirectory, String command) throws IOException, InterruptedException
+	{
+		String loggingPreamble = runDirectory.getAbsolutePath() + File.separator + command;
+		
+		ProcessBuilder builder = buildExecCommand(runDirectory, command);
+		return runProcess(builder, loggingPreamble);
+	}
+	
+	private static final Object execMutex = new Object();
+	
+	public static int runProcess(ProcessBuilder builder, String loggingPreamble) throws IOException, InterruptedException
+	{
 		synchronized (execMutex)
 		{
-			// build and run the process
-			ProcessBuilder builder = new ProcessBuilder(shell, param, command);
-			builder.directory(runDirectory);
+			// run the process
 			Process process = builder.start();
 			
 			// pipe the process's output to the appropriate logs
-			String preamble = runDirectory.getAbsolutePath() + File.separator + command;
-			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO, preamble);
-			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE, preamble);
+			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO, loggingPreamble);
+			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE, loggingPreamble);
 			
 			// start the loggers
 			Thread t1 = new Thread(stdout, "ExternalProcess-stdout");
