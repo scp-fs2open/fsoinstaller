@@ -49,7 +49,8 @@
     <jar jarfile="${dist}/FreeSpaceOpenInstaller.jar">
       <fileset file="application.properties"/>
       <fileset dir="${build}" excludes="**/svn*"/>
-      <fileset dir="${src}" excludes="**/svn*"/>
+<!-- we don't need the .java files because they make the jar bigger
+      <fileset dir="${src}" excludes="**/svn*"/> -->
       <fileset dir="." includes="${lib}/**" excludes="**/svn*"/>
       <fileset dir="." includes="${resources}/**" excludes="**/svn*"/>
       <fileset dir="${docs}" excludes="**/svn*"/>
