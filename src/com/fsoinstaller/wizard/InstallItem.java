@@ -342,11 +342,11 @@ public class InstallItem extends JPanel
 							}
 							catch (Exception e)
 							{
-								modLogger.error("There was an error running innoextract!", e);
+								modLogger.error("Unhandled exception running innoextract!", e);
 								success = false;
 							}
-							// we don't check for interrupted here because innoextract is not responsive to interrupts
-							if (!success)
+							
+							if (!success || Thread.currentThread().isInterrupted())
 							{
 								failInstallTree();
 								return null;
