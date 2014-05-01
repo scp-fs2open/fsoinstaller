@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -239,6 +240,13 @@ public class FreeSpaceOpenInstaller
 			logger.error("(This means that either your system does not have a display, keyboard, and mouse installed, or your version of Java does not support one of these methods of user interaction.  For example, Ubuntu will sometimes install a version of Java without graphics libraries.  In this case, you will need to reinstall the full version.)");
 			return;
 		}
+		
+		// this has the side-effect of initializing XSTR before any Swing stuff, which keeps things untangled
+		Locale locale = XSTR.getLocale();
+		if (locale.getCountry().equals("") && locale.getLanguage().equals("") && locale.getVariant().equals(""))
+			logger.info("Using the root locale");
+		else
+			logger.info("Using locale '" + XSTR.getLocale() + "'");
 		
 		// Swing code goes on the event-dispatching thread...
 		EventQueue.invokeLater(new Runnable()
