@@ -81,6 +81,42 @@ public class Connector
 		Authenticator.setDefault(authenticator);
 	}
 	
+	/**
+	 * The timeout, in milliseconds, for a connection to be established.
+	 * Defaults to 30000 and can be configured on the command line.
+	 */
+	private static final int connectionTimeout;
+	static
+	{
+		int num = 30000;
+		
+		// maybe parse the user option
+		try
+		{
+			String val = System.getProperty("connectionTimeout");
+			if (val != null)
+				num = Integer.parseInt(val);
+		}
+		catch (NumberFormatException nfe)
+		{
+			logger.error("Couldn't parse connectionTimeout!", nfe);
+		}
+		
+		// sanity
+		if (num < 0)
+		{
+			logger.warn("connectionTimeout must be at least 0!");
+			num = 0;
+		}
+		
+		// set the variable
+		if (num == 0)
+			logger.info("Setting connectionTimeout to infinite");
+		else
+			logger.info("Setting connectionTimeout to " + num + " milliseconds");
+		connectionTimeout = num;
+	}
+	
 	protected final Proxy proxy;
 	protected final boolean onWindows;
 	
@@ -186,11 +222,15 @@ public class Connector
 	{
 		logger.debug("Opening connection to URL: " + url);
 		
+		// create the connection object
 		URLConnection conn;
 		if (proxy == null)
 			conn = url.openConnection();
 		else
 			conn = url.openConnection(proxy);
+		
+		// set the timeout (before we actually use it to connect)
+		conn.setConnectTimeout(connectionTimeout);
 		
 		return conn;
 	}
