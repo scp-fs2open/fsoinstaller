@@ -76,6 +76,7 @@ public class Configuration
 	public static final String ROOT_FS2_VP_HASH_KEY = "ROOT-FS2-VP-HASH";
 	public static final String GOG_INSTALL_PACKAGE_KEY = "GOG-INSTALL-PACKAGE";
 	public static final String ADD_OPENAL_INSTALL_KEY = "ADD-OPENAL-INSTALL";
+	public static final String DONT_SHORT_CIRCUIT_INSTALLATION_KEY = "DON'T-SHORT-CIRCUIT-INSTALLATION";
 	
 	/**
 	 * Use the Initialization On Demand Holder idiom for thread-safe

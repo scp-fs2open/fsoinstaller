@@ -116,10 +116,19 @@ public class InstallItem extends JPanel
 		overallInstallTask = null;
 		state = InstallItemState.INITIALIZED;
 		
-		// only perform the installation if the stored version is different from the version available online
-		String storedVersion = configuration.getUserProperties().getProperty(node.buildTreeName());
-		// note: if a node was successfully installed but had no version, it will save a version of "null" to the properties
-		installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion() == null ? "null" : node.getVersion()));
+		// if the "re-run installation" checkbox was checked, then we don't short-circuit via installNotNeeded
+		if ((Boolean) configuration.getSettings().get(Configuration.DONT_SHORT_CIRCUIT_INSTALLATION_KEY))
+		{
+			installNotNeeded = false;
+		}
+		// possibly short-circuit
+		else
+		{
+			// only perform the installation if the stored version is different from the version available online
+			String storedVersion = configuration.getUserProperties().getProperty(node.buildTreeName());
+			// note: if a node was successfully installed but had no version, it will save a version of "null" to the properties
+			installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion() == null ? "null" : node.getVersion()));
+		}
 		
 		JPanel progressPanel = new JPanel();
 		progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.X_AXIS));

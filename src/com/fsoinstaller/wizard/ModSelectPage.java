@@ -62,6 +62,7 @@ public class ModSelectPage extends WizardPage
 	
 	private final JPanel modPanel;
 	private final JScrollPane modScrollPane;
+	private final JCheckBox reRunCheckBox;
 	
 	private List<InstallerNode> modNodeTreeWalk;
 	private List<InstallerNode> automaticNodeTreeWalk;
@@ -77,6 +78,7 @@ public class ModSelectPage extends WizardPage
 		modPanel = new JPanel();
 		modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 		modScrollPane = new JScrollPane(modPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		reRunCheckBox = new JCheckBox(XSTR.getString("modSelectPageCheckbox"));
 		
 		modNodeTreeWalk = null;
 		automaticNodeTreeWalk = null;
@@ -92,10 +94,19 @@ public class ModSelectPage extends WizardPage
 		labelPanel.add(new JLabel(XSTR.getString("modSelectPageText")));
 		labelPanel.add(Box.createHorizontalGlue());
 		
-		JPanel panel = new JPanel(new BorderLayout(0, GUIConstants.DEFAULT_MARGIN));
-		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
+		JPanel checkBoxPanel = new JPanel();
+		checkBoxPanel.setLayout(new BoxLayout(checkBoxPanel, BoxLayout.X_AXIS));
+		checkBoxPanel.add(reRunCheckBox);
+		checkBoxPanel.add(Box.createHorizontalGlue());
+		
+		labelPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, GUIConstants.DEFAULT_MARGIN, 0));
+		checkBoxPanel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, 0, GUIConstants.SMALL_MARGIN, 0));
+		
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, 0, GUIConstants.DEFAULT_MARGIN));
 		panel.add(labelPanel, BorderLayout.NORTH);
 		panel.add(modScrollPane, BorderLayout.CENTER);
+		panel.add(checkBoxPanel, BorderLayout.SOUTH);
 		
 		return panel;
 	}
@@ -258,6 +269,9 @@ public class ModSelectPage extends WizardPage
 		// save in configuration
 		Map<String, Object> settings = configuration.getSettings();
 		settings.put(Configuration.MODS_TO_INSTALL_KEY, selectedMods);
+		
+		// also save the "force"/"re-run" checkbox
+		settings.put(Configuration.DONT_SHORT_CIRCUIT_INSTALLATION_KEY, reRunCheckBox.isSelected());
 		
 		resetNextButton();
 		runWhenReady.run();
