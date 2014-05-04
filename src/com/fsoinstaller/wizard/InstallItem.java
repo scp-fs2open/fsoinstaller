@@ -98,7 +98,8 @@ public class InstallItem extends JPanel
 		configuration = Configuration.getInstance();
 		modLogger = Logger.getLogger(InstallItem.class, node.getName());
 		
-		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN));
+		// if node has a parent, don't add a margin on the right side because the enclosing parent already has one
+		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, node.getParent() != null ? 0 : SMALL_MARGIN));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		overallBar = new JProgressBar(0, 100);
