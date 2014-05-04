@@ -94,7 +94,7 @@ public class InstallerUtils
 			{
 				gog = new InstallerNode(XSTR.getString("installGOGName"));
 				gog.setDescription(XSTR.getString("installGOGDesc"));
-				gog.setFolder(File.separator);
+				gog.setFolder(UUID());
 				gog.setVersion(versionUUID());
 				InstallUnit installUnit = new InstallUnit();
 				for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
@@ -201,9 +201,14 @@ public class InstallerUtils
 		return nodes;
 	}
 	
+	private static String UUID()
+	{
+		return UUID.randomUUID().toString().replaceAll("-", "");
+	}
+	
 	private static String versionUUID()
 	{
-		return "UUID" + UUID.randomUUID().toString().replaceAll("-", "");
+		return "UUID" + UUID();
 	}
 	
 	public static List<InstallerNode> generateTreeWalk(List<InstallerNode> nodes)

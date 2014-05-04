@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.ListIterator;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fsoinstaller.common.PayloadEvent;
 import com.fsoinstaller.common.PayloadListener;
@@ -51,6 +53,7 @@ class InnoExtractTask implements Callable<Boolean>
 {
 	private static final Logger logger = Logger.getLogger(InnoExtractTask.class);
 	
+	private static final Pattern INNOEXTRACT_FILE_LISTING_PATTERN = Pattern.compile(" \\- \"(.*)\"");
 	private final InstallItem item;
 	private final File gogInstallPackage;
 	
@@ -91,9 +94,12 @@ class InnoExtractTask implements Callable<Boolean>
 				return false;
 		}
 		
-		// bit of a hack... the first hash triple is the thing we run
+		// the mod folder will also be the extraction destination
 		File installDir = Configuration.getInstance().getApplicationDir();
-		File innoExtractExecutable = new File(installDir, item.getInstallerNode().getHashList().get(0).getFilename());
+		File extractDir = new File(installDir, item.getInstallerNode().getFolder());
+		
+		// bit of a hack... the first hash triple is the thing we run
+		File innoExtractExecutable = new File(extractDir, item.getInstallerNode().getHashList().get(0).getFilename());
 		
 		// the first thing we do is obtain a list of the files that need to be extracted
 		item.setIndeterminate(true);
@@ -115,9 +121,6 @@ class InnoExtractTask implements Callable<Boolean>
 			item.logInstallError(XSTR.getString("innoExtractCountingFilesFailed"));
 			return false;
 		}
-		
-		// create a temporary dir for extraction
-		File extractDir = new File(installDir, UUID.randomUUID().toString().replaceAll("-", ""));
 		
 		// now that we have the files, run the installation and report progress
 		item.setIndeterminate(false);
@@ -141,7 +144,7 @@ class InnoExtractTask implements Callable<Boolean>
 		
 		// now move all the files to their proper place
 		item.setText(XSTR.getString("innoExtractMovingFiles"));
-		if (!moveAppFiles(filesToBeExtracted, extractDir, installDir))
+		if (!moveAppFiles(filesToBeExtracted, extractDir))
 		{
 			logger.error("Could not move app files to the correct location!");
 			item.logInstallError(XSTR.getString("innoExtractMovingFilesFailed"));
@@ -154,8 +157,8 @@ class InnoExtractTask implements Callable<Boolean>
 		if (!IOUtils.deleteDirectoryTree(extractDir))
 		{
 			logger.error("Could not delete the temporary directory tree!");
-			item.logInstallError(XSTR.getString("innoExtractDeletingTempFilesFailed"));
-			return false;
+			item.logInstallError(String.format(XSTR.getString("innoExtractDeletingTempFilesFailed"), extractDir.getAbsolutePath()));
+			// don't return false here because it's still playable
 		}
 		
 		// we are done!
@@ -197,6 +200,7 @@ class InnoExtractTask implements Callable<Boolean>
 		// put together the args to list the files
 		List<String> commands = new ArrayList<String>();
 		commands.add(innoExtractExecutable.getName());
+		commands.add("--quiet");
 		commands.add("--list");
 		commands.add(gogInstallPackage.getAbsolutePath());
 		
@@ -214,7 +218,20 @@ class InnoExtractTask implements Callable<Boolean>
 		
 		// obtaining the listing was successful!
 		logger.info("...done");
-		return stdout.getList();
+		List<String> list = stdout.getList();
+		
+		// convert the filenames to usable form
+		ListIterator<String> ii = list.listIterator();
+		while (ii.hasNext())
+		{
+			String line = ii.next();
+			Matcher m = INNOEXTRACT_FILE_LISTING_PATTERN.matcher(line);
+			if (!m.find())
+				throw new IOException("InnoExtract listing line '" + line + "' does not conform to expected pattern!");
+			ii.set(m.group(1));
+		}
+		
+		return list;
 	}
 	
 	private void innoExtractExtractFiles(File innoExtractExecutable, File extractDir, final int totalFiles) throws InterruptedException, IOException
@@ -224,6 +241,7 @@ class InnoExtractTask implements Callable<Boolean>
 		// put together the args to extract the files
 		List<String> commands = new ArrayList<String>();
 		commands.add(innoExtractExecutable.getName());
+		commands.add("--quiet");
 		commands.add("--output-dir");
 		commands.add(extractDir.getAbsolutePath());
 		commands.add(gogInstallPackage.getAbsolutePath());
@@ -258,20 +276,21 @@ class InnoExtractTask implements Callable<Boolean>
 		logger.info("...done");
 	}
 	
-	private boolean moveAppFiles(List<String> filesToMove, File extractDir, File installDir)
+	private boolean moveAppFiles(List<String> filesToMove, File extractDir)
 	{
-		logger.info("files to move");
-		for (String file: filesToMove)
-			logger.info(file);
+		// process all files
+		for (String fileName: filesToMove)
+		{
+			File file = new File(extractDir, fileName);
+			
+			// the files are located in "app" and should move two levels higher
+			// (one for "app", and one for the mod folder)
+			
+			// if the file is a VP, it should be made lower-case
+			
+		}
+		
 		// TODO Auto-generated method stub
 		return false;
-	}
-	
-	public static void main(String[] args) throws Exception
-	{
-		// NOTE: might need to run with the --quiet option!
-		
-		InnoExtractTask task = new InnoExtractTask(null);
-		task.call();
 	}
 }
