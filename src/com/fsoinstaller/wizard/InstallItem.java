@@ -641,11 +641,23 @@ public class InstallItem extends JPanel
 					modLogger.debug("Cannot rename '" + rename.getFrom() + "'; it does not exist");
 				else if (to.exists())
 					modLogger.debug("Cannot rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'; the latter already exists");
-				else if (!from.renameTo(to))
+				else
 				{
-					modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
-					logInstallError(String.format(XSTR.getString("installResultFileNotRenamed"), rename.getFrom(), rename.getTo()));
-					return null;
+					// make sure the parent directory exists
+					if (to.getParentFile() != null && !to.getParentFile().exists() && !to.getParentFile().mkdirs())
+					{
+						modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "': destination file tree could not be created!");
+						logInstallError(String.format(XSTR.getString("installResultFileNotRenamed"), rename.getFrom(), rename.getTo()));
+						return null;
+					}
+					
+					// try to rename it
+					if (!from.renameTo(to))
+					{
+						modLogger.error("Unable to rename '" + rename.getFrom() + "' to '" + rename.getTo() + "'!");
+						logInstallError(String.format(XSTR.getString("installResultFileNotRenamed"), rename.getFrom(), rename.getTo()));
+						return null;
+					}
 				}
 			}
 		}
