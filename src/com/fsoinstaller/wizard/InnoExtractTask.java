@@ -23,11 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.Callable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.fsoinstaller.common.PayloadEvent;
 import com.fsoinstaller.common.PayloadListener;
@@ -53,7 +51,6 @@ class InnoExtractTask implements Callable<Boolean>
 {
 	private static final Logger logger = Logger.getLogger(InnoExtractTask.class);
 	
-	private static final Pattern INNOEXTRACT_FILE_LISTING_PATTERN = Pattern.compile(" \\- \"(.*)\"");
 	private final InstallItem item;
 	private final File gogInstallPackage;
 	
@@ -144,7 +141,7 @@ class InnoExtractTask implements Callable<Boolean>
 		
 		// now move all the files to their proper place
 		item.setText(XSTR.getString("innoExtractMovingFiles"));
-		if (!moveAppFiles(filesToBeExtracted, extractDir))
+		if (!moveAppFiles(new File(extractDir, "app"), installDir))
 		{
 			logger.error("Could not move app files to the correct location!");
 			item.logInstallError(XSTR.getString("innoExtractMovingFilesFailed"));
@@ -154,7 +151,9 @@ class InnoExtractTask implements Callable<Boolean>
 		// delete the folders that we no longer need
 		item.setIndeterminate(true);
 		item.setText(XSTR.getString("innoExtractDeletingTempFiles"));
-		if (!IOUtils.deleteDirectoryTree(extractDir))
+		boolean result = IOUtils.deleteDirectoryTree(extractDir);
+		item.setIndeterminate(false);
+		if (!result)
 		{
 			logger.error("Could not delete the temporary directory tree!");
 			item.logInstallError(String.format(XSTR.getString("innoExtractDeletingTempFilesFailed"), extractDir.getAbsolutePath()));
@@ -218,20 +217,7 @@ class InnoExtractTask implements Callable<Boolean>
 		
 		// obtaining the listing was successful!
 		logger.info("...done");
-		List<String> list = stdout.getList();
-		
-		// convert the filenames to usable form
-		ListIterator<String> ii = list.listIterator();
-		while (ii.hasNext())
-		{
-			String line = ii.next();
-			Matcher m = INNOEXTRACT_FILE_LISTING_PATTERN.matcher(line);
-			if (!m.find())
-				throw new IOException("InnoExtract listing line '" + line + "' does not conform to expected pattern!");
-			ii.set(m.group(1));
-		}
-		
-		return list;
+		return stdout.getList();
 	}
 	
 	private void innoExtractExtractFiles(File innoExtractExecutable, File extractDir, final int totalFiles) throws InterruptedException, IOException
@@ -276,21 +262,73 @@ class InnoExtractTask implements Callable<Boolean>
 		logger.info("...done");
 	}
 	
-	private boolean moveAppFiles(List<String> filesToMove, File extractDir)
+	private boolean moveAppFiles(File appFile, File installDir)
 	{
-		// process all files
-		for (String fileName: filesToMove)
+		// if this is a directory, we iterate over it
+		if (appFile.isDirectory())
 		{
-			File file = new File(extractDir, fileName);
+			File[] files = appFile.listFiles();
+			if (files == null)
+			{
+				logger.error("There was a problem iterating over the directory '" + appFile.getAbsolutePath() + "'!");
+				return false;
+			}
 			
-			// the files are located in "app" and should move two levels higher
-			// (one for "app", and one for the mod folder)
+			for (File file: files)
+			{
+				if (!moveAppFiles(file, installDir))
+					return false;
+			}
+		}
+		// if this is a file, we move it
+		else
+		{
+			// build all the file parts until we get up to "app"
+			LinkedList<String> parts = new LinkedList<String>();
+			File temp = appFile;
+			while (true)
+			{
+				String name = temp.getName();
+				
+				// root_fs2 shouldn't be capitalized
+				if (name.equalsIgnoreCase("root_fs2.vp"))
+					name = name.toLowerCase();
+				// stop at "app"
+				else if (name.equals("app"))
+					break;
+				
+				parts.addFirst(name);
+				
+				// go up through the file tree
+				temp = temp.getParentFile();
+				if (temp == null)
+					throw new IllegalStateException(appFile.getAbsolutePath() + " isn't part of the 'app' file tree!");
+			}
 			
-			// if the file is a VP, it should be made lower-case
+			// now reconstruct the same path, but under the install dir instead
+			File installFile = installDir;
+			for (String part: parts)
+				installFile = new File(installFile, part);
 			
+			// no need to move the file if the destination exists
+			if (!installFile.exists())
+			{
+				// make sure the new directory structure exists
+				if (!installFile.getParentFile().exists() && !installFile.getParentFile().mkdirs())
+				{
+					logger.error("Unable to rename '" + appFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "': destination file tree could not be created!");
+					return false;
+				}
+				
+				// try to rename the files
+				if (!appFile.renameTo(installFile))
+				{
+					logger.error("Unable to rename '" + appFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "'!");
+					return false;
+				}
+			}
 		}
 		
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 }
