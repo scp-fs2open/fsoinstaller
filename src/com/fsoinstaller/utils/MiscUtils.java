@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.BreakIterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,6 +122,22 @@ public class MiscUtils
 		}
 		
 		return true;
+	}
+	
+	public static ProcessBuilder buildExecCommand(File runDirectory, List<String> commands)
+	{
+		StringBuilder str = new StringBuilder();
+		boolean first = true;
+		for (String command: commands)
+		{
+			if (first)
+				first = false;
+			else
+				str.append(" ");
+			str.append(command);
+		}
+		
+		return buildExecCommand(runDirectory, str.toString());
 	}
 	
 	public static ProcessBuilder buildExecCommand(File runDirectory, String command)

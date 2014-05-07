@@ -203,9 +203,8 @@ class InnoExtractTask implements Callable<Boolean>
 		commands.add("--list");
 		commands.add(gogInstallPackage.getAbsolutePath());
 		
-		// we do things this way because InnoExtract does not need administrator privileges to run, and by skipping the shell we can receive the exit code of the process
-		ProcessBuilder builder = new ProcessBuilder(commands);
-		builder.directory(innoExtractExecutable.getParentFile());
+		// build and start the process
+		ProcessBuilder builder = MiscUtils.buildExecCommand(innoExtractExecutable.getParentFile(), commands);
 		Process process = builder.start();
 		
 		// get the output
@@ -232,9 +231,8 @@ class InnoExtractTask implements Callable<Boolean>
 		commands.add(extractDir.getAbsolutePath());
 		commands.add(gogInstallPackage.getAbsolutePath());
 		
-		// we do things this way because InnoExtract does not need administrator privileges to run, and by skipping the shell we can receive the exit code of the process
-		ProcessBuilder builder = new ProcessBuilder(commands);
-		builder.directory(innoExtractExecutable.getParentFile());
+		// build and start the process
+		ProcessBuilder builder = MiscUtils.buildExecCommand(innoExtractExecutable.getParentFile(), commands);
 		Process process = builder.start();
 		
 		// get the output
