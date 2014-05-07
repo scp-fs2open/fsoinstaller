@@ -224,7 +224,10 @@ public class IOUtils
 						return false;
 				}
 				else if (!file.delete())
+				{
+					logger.error("Unable to delete file '" + file.getAbsolutePath() + "'");
 					return false;
+				}
 			}
 		}
 		
