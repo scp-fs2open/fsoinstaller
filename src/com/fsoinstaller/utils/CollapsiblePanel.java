@@ -86,7 +86,10 @@ public class CollapsiblePanel extends JPanel
 		headerPanel.add(toggleButton);
 		headerPanel.add(filler1);
 		headerPanel.add(headerComponent);
-		headerPanel.add(filler2);
+		
+		// this is useful for left-justifying JLabels, but it messes up alignment if we have an actual component
+		if (headerComponent instanceof JLabel)
+			headerPanel.add(filler2);
 		
 		disappearingPanel = new JPanel(new BorderLayout());
 		disappearingPanel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, arrow_right.getIconWidth() + GUIConstants.SMALL_MARGIN, 0, 0));
