@@ -342,8 +342,20 @@ public class InstallItem extends JPanel
 							return null;
 						}
 						
-						// maybe run the GOG task
-						if (node.getName().equals(XSTR.getString("installGOGName")))
+						// ***** HACK: here are some special cases *****
+						
+						// if this is the OpenAL node, re-test for OpenAL
+						if (node.getName().equals(XSTR.getString("installOpenALName")))
+						{
+							if (!MiscUtils.loadOpenAL())
+							{
+								logInstallError(XSTR.getString("openALError"));
+								failInstallTree();
+								return null;
+							}
+						}
+						// if this is the GOG node, run the GOG task
+						else if (node.getName().equals(XSTR.getString("installGOGName")))
 						{
 							InnoExtractTask task = new InnoExtractTask(InstallItem.this);
 							try
@@ -362,6 +374,8 @@ public class InstallItem extends JPanel
 								return null;
 							}
 						}
+						
+						// *********************************************
 						
 						// success: save the version we just installed
 						// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)

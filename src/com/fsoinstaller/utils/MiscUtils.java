@@ -356,4 +356,20 @@ public class MiscUtils
 		
 		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
 	}
+	
+	public static boolean loadOpenAL()
+	{
+		logger.info("Attempting to load OpenAL32...");
+		try
+		{
+			System.loadLibrary("OpenAL32");
+			logger.info("OpenAL32 is installed");
+			return true;
+		}
+		catch (UnsatisfiedLinkError ule)
+		{
+			logger.info("OpenAL32 is not installed!");
+			return false;
+		}
+	}
 }

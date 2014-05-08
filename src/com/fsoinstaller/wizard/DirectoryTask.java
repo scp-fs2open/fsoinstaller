@@ -127,16 +127,8 @@ class DirectoryTask implements Callable<Void>
 		}
 		
 		// see if OpenAL needs to be installed
-		logger.info("Attempting to load OpenAL32...");
-		try
+		if (!MiscUtils.loadOpenAL())
 		{
-			System.loadLibrary("OpenAL32");
-			logger.info("OpenAL32 is installed");
-		}
-		catch (UnsatisfiedLinkError ule)
-		{
-			logger.info("OpenAL32 is not installed!");
-			
 			// we can install it on Windows, but not other OSes
 			if (MiscUtils.determineOS() == OperatingSystem.WINDOWS)
 			{
