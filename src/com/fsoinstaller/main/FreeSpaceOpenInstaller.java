@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -242,11 +241,8 @@ public class FreeSpaceOpenInstaller
 		}
 		
 		// this has the side-effect of initializing XSTR before any Swing stuff, which keeps things untangled
-		Locale locale = XSTR.getLocale();
-		if (locale.getCountry().equals("") && locale.getLanguage().equals("") && locale.getVariant().equals(""))
-			logger.info("Using the root locale");
-		else
-			logger.info("Using locale '" + XSTR.getLocale() + "'");
+		// (though strictly speaking it's not actually necessary)
+		XSTR.getLocale();
 		
 		// Swing code goes on the event-dispatching thread...
 		EventQueue.invokeLater(new Runnable()
@@ -298,8 +294,8 @@ public class FreeSpaceOpenInstaller
 		final Configuration config = Configuration.getInstance();
 		
 		File modFile = SwingUtils.promptForFile(XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
-		if (modFile == null)
-			return;
+			if (modFile == null)
+				return;
 		
 		if (!modFile.exists())
 		{
@@ -319,7 +315,7 @@ public class FreeSpaceOpenInstaller
 			for (InstallerNode node: nodes)
 				logger.info("Successfully parsed " + node.getName());
 			
-			ThreadSafeJOptionPane.showMessageDialog(null, XSTR.getString("allNodesParsedSuccessfully"), config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
+				ThreadSafeJOptionPane.showMessageDialog(null, XSTR.getString("allNodesParsedSuccessfully"), config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
 		}
 		catch (FileNotFoundException fnfe)
 		{

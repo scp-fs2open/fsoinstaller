@@ -23,6 +23,8 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import com.fsoinstaller.utils.Logger;
+
 
 /**
  * Thread-safe class which provides a ResourceBundle so that the application can
@@ -32,11 +34,14 @@ import java.util.ResourceBundle;
  */
 public class ResourceBundleManager
 {
+	private static Logger logger = Logger.getLogger(ResourceBundleManager.class);
+	
 	public static final ResourceBundle XSTR;
 	static
 	{
 		// determine current locale (which is specified by the system)
 		Locale locale = Locale.getDefault();
+		logger.info("System locale: " + toString(locale));
 		
 		try
 		{
@@ -48,5 +53,15 @@ public class ResourceBundleManager
 		{
 			throw new AssertionError("Could not load an XSTR resource bundle!", mre);
 		}
+		
+		logger.info("Locale to use: " + toString(XSTR.getLocale()));
+	}
+	
+	public static String toString(Locale locale)
+	{
+		if (locale.getCountry().equals("") && locale.getLanguage().equals("") && locale.getVariant().equals(""))
+			return "ROOT";
+		else
+			return locale.toString();
 	}
 }
