@@ -278,7 +278,7 @@ public class FreeSpaceOpenInstaller
 		// first custom command is validating install config files
 		if (command != null && command.equals("validate"))
 		{
-			selectAndValidateModFile();
+			selectAndValidateModFile(args);
 		}
 		// later we'll evaluate the runtime args to launch the txtfile builder, etc.
 		// default command is the standard wizard installation
@@ -289,13 +289,26 @@ public class FreeSpaceOpenInstaller
 		}
 	}
 	
-	private static void selectAndValidateModFile()
+	private static void selectAndValidateModFile(String[] args)
 	{
 		final Configuration config = Configuration.getInstance();
+		File modFile;
+		boolean useGUI;
 		
-		File modFile = SwingUtils.promptForFile(XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
+		// see if the user supplied an argument
+		if (args.length > 1)
+		{
+			modFile = new File(args[1]);
+			useGUI = false;
+		}
+		// if not, prompt for it
+		else
+		{
+			modFile = SwingUtils.promptForFile(XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
 			if (modFile == null)
 				return;
+			useGUI = true;
+		}
 		
 		if (!modFile.exists())
 		{
@@ -315,7 +328,10 @@ public class FreeSpaceOpenInstaller
 			for (InstallerNode node: nodes)
 				logger.info("Successfully parsed " + node.getName());
 			
+			if (useGUI)
 				ThreadSafeJOptionPane.showMessageDialog(null, XSTR.getString("allNodesParsedSuccessfully"), config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
+			else
+				logger.info(XSTR.getString("allNodesParsedSuccessfully"));
 		}
 		catch (FileNotFoundException fnfe)
 		{
