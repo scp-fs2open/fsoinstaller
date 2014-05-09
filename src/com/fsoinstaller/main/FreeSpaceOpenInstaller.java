@@ -26,6 +26,8 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -280,6 +282,11 @@ public class FreeSpaceOpenInstaller
 		{
 			selectAndValidateModFile(args);
 		}
+		// we can also generate hashes
+		if (command != null && command.equals("hash"))
+		{
+			selectAndHashFile(args);
+		}
 		// later we'll evaluate the runtime args to launch the txtfile builder, etc.
 		// default command is the standard wizard installation
 		else
@@ -344,6 +351,72 @@ public class FreeSpaceOpenInstaller
 		catch (InstallerNodeParseException inpe)
 		{
 			logger.warn("There was an error parsing the mod file!", inpe);
+		}
+	}
+	
+	private static void selectAndHashFile(String[] args)
+	{
+		final Configuration config = Configuration.getInstance();
+		File fileToHash;
+		
+		// figure out which algorithm to use
+		if (args.length <= 1)
+		{
+			logger.warn("No hash algorithm supplied!");
+			return;
+		}
+		String algorithm = args[1].toUpperCase();
+		if (algorithm.equals("SHA1"))
+			algorithm = "SHA-1";
+		else if (algorithm.equals("SHA256"))
+			algorithm = "SHA-256";
+		
+		// get the file
+		if (args.length > 2)
+		{
+			fileToHash = new File(args[2]);
+		}
+		// if not, prompt for it
+		else
+		{
+			fileToHash = SwingUtils.promptForFile(XSTR.getString("chooseFileTitle"), config.getApplicationDir());
+			if (fileToHash == null)
+				return;
+		}
+		
+		if (!fileToHash.exists())
+		{
+			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' does not exist!");
+			return;
+		}
+		else if (fileToHash.isDirectory())
+		{
+			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' is a directory!");
+			return;
+		}
+		
+		// get the hash processor, provided by Java
+		MessageDigest digest;
+		try
+		{
+			digest = MessageDigest.getInstance(algorithm);
+		}
+		catch (NoSuchAlgorithmException nsae)
+		{
+			logger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
+			return;
+		}
+		
+		// hash the file
+		try
+		{
+			String computedHash = IOUtils.computeHash(digest, fileToHash);
+			logger.info(fileToHash.getAbsolutePath());
+			logger.info(algorithm + " hash: " + computedHash);
+		}
+		catch (IOException ioe)
+		{
+			logger.error("There was a problem computing the hash...", ioe);
 		}
 	}
 }
