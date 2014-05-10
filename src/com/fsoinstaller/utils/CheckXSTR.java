@@ -39,6 +39,8 @@ public class CheckXSTR
 {
 	private static Logger logger = Logger.getLogger(CheckXSTR.class);
 	
+	private static Pattern XSTR_properties = Pattern.compile("XSTR[A-Za-z_]*\\.properties");
+	
 	public static void main(String[] args)
 	{
 		// get all java files
@@ -50,8 +52,29 @@ public class CheckXSTR
 		for (File file: javaFiles)
 			addKeysInJavaFile(file, javaKeys);
 		
+		// check all localization files
+		File resourceDir = new File("resources");
+		File[] files = resourceDir.listFiles();
+		if (files == null)
+		{
+			logger.error("I/O error in " + resourceDir.getAbsolutePath());
+			return;
+		}
+		for (File file: files)
+		{
+			if (XSTR_properties.matcher(file.getName()).matches())
+			{
+				logger.info("For " + file.getName() + "...");
+				compareXSTR(javaKeys, file);
+				logger.info("----------");
+			}
+		}
+	}
+	
+	private static void compareXSTR(Set<String> javaKeys, File propertiesFile)
+	{
 		// get all keys from XSTR
-		Properties XSTR = PropertiesUtils.loadProperties("resources/XSTR.properties");
+		Properties XSTR = PropertiesUtils.loadPropertiesFromFile(propertiesFile);
 		Set<String> XSTRkeys = XSTR.stringPropertyNames();
 		
 		// find the differences
@@ -72,13 +95,13 @@ public class CheckXSTR
 		{
 			if (!javaKeysNotInXSTR.isEmpty())
 			{
-				logger.info("The following keys are in .java files but not in XSTR.properties:");
+				logger.info("The following keys are in .java files but not in " + propertiesFile.getName() + ":");
 				for (String key: javaKeysNotInXSTR)
 					logger.info(key);
 			}
 			if (!XSTRKeysNotInJava.isEmpty())
 			{
-				logger.info("The following keys are in XSTR.properties but not in .java files:");
+				logger.info("The following keys are in " + propertiesFile.getName() + " but not in .java files:");
 				for (String key: XSTRKeysNotInJava)
 					logger.info(key);
 			}
