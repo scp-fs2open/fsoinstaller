@@ -90,8 +90,8 @@ public class ConfigPage extends WizardPage
 		
 		// create widgets
 		directoryField = new JTextField(dirText);
-		hostField = new JTextField(usingProxy ? host : "none");
-		portField = new JTextField(usingProxy ? Integer.toString(port) : "none");
+		hostField = new JTextField(usingProxy ? host : XSTR.getString("none"));
+		portField = new JTextField(usingProxy ? Integer.toString(port) : XSTR.getString("none"));
 		hostField.setEnabled(usingProxy);
 		portField.setEnabled(usingProxy);
 		
