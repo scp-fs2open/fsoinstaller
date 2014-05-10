@@ -242,9 +242,11 @@ public class FreeSpaceOpenInstaller
 			return;
 		}
 		
-		// this has the side-effect of initializing XSTR before any Swing stuff, which keeps things untangled
-		// (though strictly speaking it's not actually necessary)
-		XSTR.getLocale();
+		// we need to set the button text for any dialogs that appear
+		// (this has the side-effect of initializing XSTR before any Swing stuff, which keeps the flow conceptually untangled)
+		UIManager.put("OptionPane.yesButtonText", XSTR.getString("Yes"));
+		UIManager.put("OptionPane.noButtonText", XSTR.getString("No"));
+		UIManager.put("OptionPane.cancelButtonText", XSTR.getString("cancelButtonName"));
 		
 		// Swing code goes on the event-dispatching thread...
 		EventQueue.invokeLater(new Runnable()
