@@ -4,6 +4,7 @@
   <property name="projectname" value="FreeSpace Open Installer"/>
   <property name="projectversion" value="v2.0.0"/>
   <property name="main-class" value="com.fsoinstaller.main.FreeSpaceOpenInstaller"/>
+  <property name="checkxstr-class" value="com.fsoinstaller.utils.CheckXSTR"/>
   <property name="jar-launcher" value="com.jdotsoft.jarloader.JarLauncher"/>
 
   <property name="build" value="build"/>
@@ -40,6 +41,10 @@
 
   <target name="run" depends="compile">
     <java classpathref="runtime.class.path" classname="${main-class}" fork="true"/>
+  </target>
+
+  <target name="checkxstr" depends="compile">
+    <java classpathref="runtime.class.path" classname="${checkxstr-class}" fork="true"/>
   </target>
 
   <target name="jar" depends="compile">
