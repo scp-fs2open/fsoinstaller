@@ -30,6 +30,7 @@ import javax.swing.JProgressBar;
 import com.fsoinstaller.internet.DownloadEvent;
 import com.fsoinstaller.internet.DownloadListener;
 import com.fsoinstaller.internet.Downloader;
+import com.fsoinstaller.utils.MiscUtils;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -86,7 +87,8 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void downloadAboutToStart(DownloadEvent event)
 	{
-		progressBar.setString(String.format(XSTR.getString("progressBarStatus"), event.getDownloadName(), 0, event.getTotalBytes()));
+		progressBar.setString(String.format(XSTR.getString("progressBarStatus"), event.getDownloadName(),
+				MiscUtils.humanReadableByteCount(0, true), MiscUtils.humanReadableByteCount(event.getTotalBytes(), true)));
 		progressBar.setIndeterminate(false);
 		progressBar.setValue(0);
 		
@@ -95,7 +97,10 @@ public class DownloadPanel extends JPanel implements DownloadListener
 	
 	public void downloadProgressReport(DownloadEvent event)
 	{
-		progressBar.setString(String.format(XSTR.getString("progressBarStatus"), event.getDownloadName(), event.getDownloadedBytes(), event.getTotalBytes()));
+		progressBar.setString(String.format(XSTR.getString("progressBarStatus"), event.getDownloadName(),
+				MiscUtils.humanReadableByteCount(event.getDownloadedBytes(), true),
+				MiscUtils.humanReadableByteCount(event.getTotalBytes(), true)));
+
 		progressBar.setIndeterminate(false);
 		progressBar.setValue((int) ((double) event.getDownloadedBytes() / event.getTotalBytes() * GUIConstants.BAR_MAXIMUM));
 	}
