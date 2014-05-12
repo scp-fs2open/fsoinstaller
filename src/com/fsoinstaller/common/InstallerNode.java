@@ -327,17 +327,17 @@ public class InstallerNode
 		return name;
 	}
 	
-	public InstallerNode findInTree(String name)
+	public InstallerNode findTreePath(String treePath)
 	{
-		if (name == null)
-			throw new NullPointerException("Name cannot be null!");
+		if (treePath == null)
+			throw new NullPointerException("Tree path cannot be null!");
 		
-		if (this.name.equals(name))
+		if (treePath.equals(getTreePath()))
 			return this;
 		
 		for (InstallerNode child: this.children)
 		{
-			InstallerNode result = child.findInTree(name);
+			InstallerNode result = child.findTreePath(treePath);
 			if (result != null)
 				return result;
 		}

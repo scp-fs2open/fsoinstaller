@@ -203,7 +203,7 @@ public class ChoicePage extends WizardPage
 				boolean found = false;
 				for (InstallerNode node: modNodes)
 				{
-					if (node.findInTree(mod) != null)
+					if (node.findTreePath(mod) != null)
 					{
 						found = true;
 						break;
