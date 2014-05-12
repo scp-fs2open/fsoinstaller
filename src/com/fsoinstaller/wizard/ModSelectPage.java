@@ -181,9 +181,9 @@ public class ModSelectPage extends WizardPage
 			
 			for (InstallerNode node: modNodeTreeWalk)
 			{
-				if (basicMods.contains(node.getName()) && MiscUtils.validForOS(node.getName()))
+				if (basicMods.contains(node.getTreePath()) && MiscUtils.validForOS(node.getName()))
 				{
-					logger.debug("Selecting '" + node.getName() + "' as a BASIC mod");
+					logger.debug("Selecting '" + node.getTreePath() + "' as a BASIC mod");
 					((SingleModPanel) node.getUserObject()).setSelected(true);
 				}
 				else
@@ -194,7 +194,7 @@ public class ModSelectPage extends WizardPage
 		{
 			for (InstallerNode node: modNodeTreeWalk)
 			{
-				logger.debug("Selecting '" + node.getName() + "' as a COMPLETE mod");
+				logger.debug("Selecting '" + node.getTreePath() + "' as a COMPLETE mod");
 				((SingleModPanel) node.getUserObject()).setSelected(MiscUtils.validForOS(node.getName()));
 			}
 		}
@@ -205,29 +205,28 @@ public class ModSelectPage extends WizardPage
 		// force-select certain nodes
 		for (InstallerNode node: modNodeTreeWalk)
 		{
-			String propertyName = node.buildTreeName();
 			boolean force = false;
 			
 			// nodes that are automatically generated
 			if (automaticNodeTreeWalk.contains(node))
 			{
-				logger.debug("Force-selecting '" + node.getName() + "' as an installer-generated node");
+				logger.debug("Force-selecting '" + node.getTreePath() + "' as an installer-generated node");
 				force = true;
 			}
 			// nodes where a current or previous version has been installed
-			else if (configuration.getUserProperties().containsKey(propertyName))
+			else if (configuration.getUserProperties().containsKey(node.getTreePath()))
 			{
 				// folder exists, which implies we installed this mod in the past and it is still valid, so select it
 				if (IOUtils.isRootFolderName(node.getFolder()) || lowerCaseDirectoryContents.contains(node.getFolder().toLowerCase()))
 				{
-					logger.debug("Force-selecting '" + node.getName() + "' as already installed based on version");
+					logger.debug("Force-selecting '" + node.getTreePath() + "' as already installed based on version");
 					force = true;
 				}
 				// folder does not exist, so remove this mod from the stored configuration
 				else
 				{
-					logger.debug("Mod '" + node.getName() + "' is no longer installed; removing stored version");
-					configuration.getUserProperties().remove(propertyName);
+					logger.debug("Mod '" + node.getTreePath() + "' is no longer installed; removing stored version");
+					configuration.getUserProperties().remove(node.getTreePath());
 				}
 			}
 			
@@ -264,7 +263,7 @@ public class ModSelectPage extends WizardPage
 		Set<String> selectedMods = new LinkedHashSet<String>();
 		for (InstallerNode node: modNodeTreeWalk)
 			if (((SingleModPanel) node.getUserObject()).isSelected())
-				selectedMods.add(node.getName());
+				selectedMods.add(node.getTreePath());
 		
 		// save in configuration
 		Map<String, Object> settings = configuration.getSettings();

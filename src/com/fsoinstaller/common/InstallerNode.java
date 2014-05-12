@@ -38,6 +38,8 @@ public class InstallerNode
 	protected String version;
 	protected String note;
 	
+	protected String treePath;
+	
 	protected final List<String> deleteList;
 	protected final List<FilePair> renameList;
 	protected final List<FilePair> copyList;
@@ -87,22 +89,34 @@ public class InstallerNode
 		this.name = name;
 	}
 	
-	public String buildTreeName()
+	/**
+	 * It is assumed that the tree path of a node will never change after a
+	 * certain point before which we care about calling this method.
+	 * <p>
+	 * (This isn't synchronized, but since the tree path is assumed to be
+	 * immutable, that shouldn't matter.)
+	 */
+	public String getTreePath()
 	{
-		// construct name consisting of tree path to this node
-		StringBuilder builder = new StringBuilder();
-		InstallerNode ii = this;
-		while (ii != null)
+		if (treePath == null)
 		{
-			builder.insert(0, '.');
-			builder.insert(0, ii.getName());
-			ii = ii.getParent();
+			// construct tree path to this node
+			StringBuilder builder = new StringBuilder();
+			InstallerNode ii = this;
+			while (ii != null)
+			{
+				builder.insert(0, '.');
+				builder.insert(0, ii.getName());
+				ii = ii.getParent();
+			}
+			
+			// get rid of trailing period
+			builder.setLength(builder.length() - 1);
+			
+			treePath = builder.toString();
 		}
 		
-		// get rid of trailing period
-		builder.setLength(builder.length() - 1);
-		
-		return builder.toString();
+		return treePath;
 	}
 	
 	public String getDescription()

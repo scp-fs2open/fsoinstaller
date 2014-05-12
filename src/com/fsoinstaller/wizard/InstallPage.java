@@ -136,7 +136,7 @@ public class InstallPage extends WizardPage
 		// iterate through the mod nodes so we keep the proper order
 		for (InstallerNode node: modNodes)
 		{
-			if (!selectedMods.contains(node.getName()))
+			if (!selectedMods.contains(node.getTreePath()))
 				continue;
 			
 			// add item's GUI (and all its children) to the panel

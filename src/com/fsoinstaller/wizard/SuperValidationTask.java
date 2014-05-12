@@ -475,11 +475,8 @@ class SuperValidationTask implements Callable<Void>
 	
 	private void loadLegacyModVersions(InstallerNode node, List<String> installedversions_lines, Properties properties)
 	{
-		String propertyName = node.buildTreeName();
-		
 		// if we have a version already, we don't need to query the legacy version
-		logger.debug(propertyName);
-		if (properties.containsKey(propertyName))
+		if (properties.containsKey(node.getTreePath()))
 			return;
 		
 		// find the version corresponding to this node in the installedversions file
@@ -513,7 +510,7 @@ class SuperValidationTask implements Callable<Void>
 		
 		// now that we have a version, save it
 		if (version != null)
-			properties.setProperty(propertyName, version);
+			properties.setProperty(node.getTreePath(), version);
 		
 		// we need to check all the child nodes as well
 		for (InstallerNode child: node.getChildren())

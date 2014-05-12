@@ -96,7 +96,7 @@ public class InstallItem extends JPanel
 		this.listenerList = new CopyOnWriteArrayList<ChangeListener>();
 		
 		configuration = Configuration.getInstance();
-		modLogger = Logger.getLogger(InstallItem.class, node.getName());
+		modLogger = Logger.getLogger(InstallItem.class, node.getTreePath());
 		
 		// if node has a parent, don't add a margin on the right side because the enclosing parent already has one
 		setBorder(BorderFactory.createEmptyBorder(SMALL_MARGIN, SMALL_MARGIN, SMALL_MARGIN, node.getParent() != null ? 0 : SMALL_MARGIN));
@@ -126,7 +126,7 @@ public class InstallItem extends JPanel
 		else
 		{
 			// only perform the installation if the stored version is different from the version available online
-			String storedVersion = configuration.getUserProperties().getProperty(node.buildTreeName());
+			String storedVersion = configuration.getUserProperties().getProperty(node.getTreePath());
 			// note: if a node was successfully installed but had no version, it will save a version of "null" to the properties
 			installNotNeeded = (storedVersion != null && storedVersion.equals(node.getVersion() == null ? "null" : node.getVersion()));
 		}
@@ -158,7 +158,7 @@ public class InstallItem extends JPanel
 					KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
 					if (tempMap.containsKey(key))
 					{
-						logger.error("Duplicate key found for mod '" + node.getName() + "', file '" + file + "'!");
+						logger.error("Duplicate key found for mod '" + node.getTreePath() + "', file '" + file + "'!");
 						continue;
 					}
 					
@@ -174,7 +174,7 @@ public class InstallItem extends JPanel
 		for (InstallerNode childNode: node.getChildren())
 		{
 			// only add a node if it was selected
-			if (!selectedMods.contains(childNode.getName()))
+			if (!selectedMods.contains(childNode.getTreePath()))
 				continue;
 			
 			// add item's GUI (and all its children) to the panel
@@ -283,7 +283,7 @@ public class InstallItem extends JPanel
 		}
 		
 		// and now we queue up our big task that handles this whole node
-		overallInstallTask = FreeSpaceOpenInstaller.getInstance().submitTask(XSTR.getString("installTitle") + " " + node.getName(), new Callable<Void>()
+		overallInstallTask = FreeSpaceOpenInstaller.getInstance().submitTask(XSTR.getString("installTitle") + " " + node.getTreePath(), new Callable<Void>()
 		{
 			public Void call()
 			{
@@ -379,7 +379,7 @@ public class InstallItem extends JPanel
 						
 						// success: save the version we just installed
 						// (the synchronization here is only so that we don't try to write to the file in multiple threads simultaneously)
-						configuration.getUserProperties().setProperty(node.buildTreeName(), node.getVersion() == null ? "null" : node.getVersion());
+						configuration.getUserProperties().setProperty(node.getTreePath(), node.getVersion() == null ? "null" : node.getVersion());
 						synchronized (configuration)
 						{
 							configuration.saveUserProperties();
