@@ -370,17 +370,27 @@ public class MiscUtils
 	
 	public static boolean loadOpenAL()
 	{
-		logger.info("Attempting to load OpenAL32...");
+		logger.info("Attempting to load OpenAL...");
+		boolean found = false;
 		try
 		{
 			System.loadLibrary("OpenAL32");
-			logger.info("OpenAL32 is installed");
-			return true;
+			logger.info("Found 'OpenAL32'!");
+			found = true;
 		}
 		catch (UnsatisfiedLinkError ule)
 		{
-			logger.info("OpenAL32 is not installed!");
-			return false;
+			try
+			{
+				System.loadLibrary("openal");
+				logger.info("Found 'openal'!");
+				found = true;
+			}
+			catch (UnsatisfiedLinkError ule2)
+			{
+				logger.warn("Neither 'OpenAL32' nor 'openal' could be loaded!");
+			}
 		}
+		return found;
 	}
 }
