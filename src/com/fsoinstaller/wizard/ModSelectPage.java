@@ -25,6 +25,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -199,9 +200,6 @@ public class ModSelectPage extends WizardPage
 			}
 		}
 		
-		// do this before iterating through the loop to save time
-		List<String> lowerCaseDirectoryContents = IOUtils.getLowerCaseFiles(Configuration.getInstance().getApplicationDir());
-		
 		// force-select certain nodes
 		for (InstallerNode node: modNodeTreeWalk)
 		{
@@ -217,7 +215,7 @@ public class ModSelectPage extends WizardPage
 			else if (configuration.getUserProperties().containsKey(node.getTreePath()))
 			{
 				// folder exists, which implies we installed this mod in the past and it is still valid, so select it
-				if (IOUtils.isRootFolderName(node.getFolder()) || lowerCaseDirectoryContents.contains(node.getFolder().toLowerCase()))
+				if (IOUtils.isRootFolderName(node.getFolder()) || (new File(Configuration.getInstance().getApplicationDir(), node.getFolder()).exists()))
 				{
 					logger.debug("Force-selecting '" + node.getTreePath() + "' as already installed based on version");
 					force = true;
