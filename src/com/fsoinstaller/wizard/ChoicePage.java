@@ -210,6 +210,14 @@ public class ChoicePage extends WizardPage
 					}
 				}
 				
+				if (logger.isDebugEnabled())
+				{
+					if (found)
+						logger.debug(mod + ": FOUND");
+					else
+						logger.debug(mod + ": NOT FOUND");
+				}
+				
 				if (!found)
 				{
 					basic.setEnabled(false);
