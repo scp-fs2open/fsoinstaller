@@ -69,7 +69,7 @@ public class FreeSpaceOpenInstaller
 	/**
 	 * Version of the Installer.
 	 */
-	public static final String INSTALLER_VERSION = "2.1.1";
+	public static final String INSTALLER_VERSION = "2.1.2";
 	
 	/**
 	 * URL of the directories where version.txt and filenames.txt reside.
