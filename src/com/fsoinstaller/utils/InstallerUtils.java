@@ -53,7 +53,7 @@ public class InstallerUtils
 		// if OpenAL needs to be installed, do that first
 		// (note, we can't use a primitive boolean because it may be null)
 		Boolean installOpenAL = (Boolean) configuration.getSettings().get(Configuration.ADD_OPENAL_INSTALL_KEY);
-		if (installOpenAL == Boolean.TRUE)
+		if (installOpenAL != null && installOpenAL.booleanValue())
 		{
 			InstallerNode openAL = new InstallerNode(XSTR.getString("installOpenALName"));
 			openAL.setDescription(XSTR.getString("installOpenALDesc"));

@@ -22,6 +22,7 @@ package com.fsoinstaller.wizard;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -208,8 +209,8 @@ class InnoExtractTask implements Callable<Boolean>
 		Process process = builder.start();
 		
 		// get the output
-		ReaderLister stdout = new ReaderLister(new InputStreamReader(process.getInputStream()));
-		ReaderLister stderr = new ReaderLister(new InputStreamReader(process.getErrorStream()));
+		ReaderLister stdout = new ReaderLister(new InputStreamReader(process.getInputStream(), Charset.forName("UTF-8")));
+		ReaderLister stderr = new ReaderLister(new InputStreamReader(process.getErrorStream(), Charset.forName("UTF-8")));
 		
 		// take care of boilerplate stuff
 		runProcess(process, stdout, stderr);
@@ -236,8 +237,8 @@ class InnoExtractTask implements Callable<Boolean>
 		Process process = builder.start();
 		
 		// get the output
-		ReaderLister stdout = new ReaderLister(new InputStreamReader(process.getInputStream()));
-		ReaderLister stderr = new ReaderLister(new InputStreamReader(process.getErrorStream()));
+		ReaderLister stdout = new ReaderLister(new InputStreamReader(process.getInputStream(), Charset.forName("UTF-8")));
+		ReaderLister stderr = new ReaderLister(new InputStreamReader(process.getErrorStream(), Charset.forName("UTF-8")));
 		
 		// update progress as the extraction proceeds
 		item.setPercentComplete(0);

@@ -97,7 +97,7 @@ public class HSLColor
 	 */
 	public HSLColor(float[] hsl, float alpha)
 	{
-		this.hsl = hsl;
+		this.hsl = hsl.clone();
 		this.alpha = alpha;
 		rgb = toRGB(hsl, alpha);
 	}
@@ -209,7 +209,7 @@ public class HSLColor
 	 */
 	public float[] getHSL()
 	{
-		return hsl;
+		return hsl.clone();
 	}
 
 	/**

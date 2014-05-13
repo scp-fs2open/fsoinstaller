@@ -24,6 +24,7 @@ import java.awt.FontMetrics;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.text.BreakIterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -214,8 +215,8 @@ public class MiscUtils
 			Process process = builder.start();
 			
 			// pipe the process's output to the appropriate logs
-			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO, loggingPreamble);
-			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream()), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE, loggingPreamble);
+			ReaderLogger stdout = new ReaderLogger(new InputStreamReader(process.getInputStream(), Charset.forName("UTF-8")), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.INFO, loggingPreamble);
+			ReaderLogger stderr = new ReaderLogger(new InputStreamReader(process.getErrorStream(), Charset.forName("UTF-8")), Logger.getLogger(MiscUtils.class, "ExternalProcess"), Level.SEVERE, loggingPreamble);
 			
 			// start the loggers
 			Thread t1 = new Thread(stdout, "ExternalProcess-stdout");
