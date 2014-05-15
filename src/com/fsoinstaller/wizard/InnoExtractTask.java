@@ -63,7 +63,7 @@ class InnoExtractTask implements Callable<Boolean>
 		this.gogInstallPackage = (File) Configuration.getInstance().getSettings().get(Configuration.GOG_INSTALL_PACKAGE_KEY);
 	}
 	
-	public Boolean call() throws InterruptedException
+	private Boolean call0() throws InterruptedException
 	{
 		if (!gogInstallPackage.exists())
 			throw new IllegalStateException("The GOG install package must exist!");
@@ -149,20 +149,35 @@ class InnoExtractTask implements Callable<Boolean>
 			return false;
 		}
 		
-		// delete the folders that we no longer need
-		item.setIndeterminate(true);
-		item.setText(XSTR.getString("innoExtractDeletingTempFiles"));
-		boolean result = IOUtils.deleteDirectoryTree(extractDir);
-		item.setIndeterminate(false);
-		if (!result)
-		{
-			logger.error("Could not delete the temporary directory tree!");
-			item.logInstallError(String.format(XSTR.getString("innoExtractDeletingTempFilesFailed"), extractDir.getAbsolutePath()));
-			// don't return false here because it's still playable
-		}
-		
 		// we are done!
 		return true;
+	}
+	
+	public Boolean call() throws InterruptedException
+	{
+		Boolean value = Boolean.FALSE;
+		try
+		{
+			value = call0();
+		}
+		finally
+		{
+			// bah, get these again
+			File installDir = Configuration.getInstance().getApplicationDir();
+			File extractDir = new File(installDir, item.getInstallerNode().getFolder());
+			
+			// delete the folder that we no longer need
+			item.setIndeterminate(true);
+			item.setText(XSTR.getString("innoExtractDeletingTempFiles"));
+			boolean result = IOUtils.deleteDirectoryTree(extractDir);
+			item.setIndeterminate(false);
+			if (!result)
+			{
+				logger.error("Could not delete the temporary directory tree!");
+				item.logInstallError(String.format(XSTR.getString("innoExtractDeletingTempFilesFailed"), extractDir.getAbsolutePath()));
+			}
+		}
+		return value;
 	}
 	
 	private void runProcess(Process process, ReaderLister stdout, ReaderLister stderr) throws InterruptedException, IOException
