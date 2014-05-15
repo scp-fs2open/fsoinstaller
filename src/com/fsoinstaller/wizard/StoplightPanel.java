@@ -35,6 +35,8 @@ public class StoplightPanel extends JPanel
 	private static final BufferedImage DULL_GREEN = GraphicsUtils.getResourceImage("orb_green3.png");
 	private static final BufferedImage DULL_RED = GraphicsUtils.getResourceImage("orb_red3.png");
 	
+	private static final int ORB_WIDTH = 18;
+	
 	private final int height;
 	
 	private BufferedImage redImage;
@@ -78,8 +80,14 @@ public class StoplightPanel extends JPanel
 		
 		int width = (getWidth() - GUIConstants.SMALL_MARGIN) / 2;
 		
-		g.drawImage(redImage, 0, 0, width, height, this);
-		g.drawImage(greenImage, width + GUIConstants.SMALL_MARGIN, 0, width, height, this);
+		// to avoid stretching problems, we want to draw the icons centered at their respective halves and at their native sizes,
+		// rather than taking up their entire halves
+		
+		int topLeftX = (width - ORB_WIDTH) / 2;
+		int topLeftY = (height - ORB_WIDTH) / 2;
+		
+		g.drawImage(redImage, topLeftX, topLeftY, ORB_WIDTH, ORB_WIDTH, this);
+		g.drawImage(greenImage, topLeftX + GUIConstants.SMALL_MARGIN + width, topLeftY, ORB_WIDTH, ORB_WIDTH, this);
 	}
 	
 	private Dimension calculateSize()
