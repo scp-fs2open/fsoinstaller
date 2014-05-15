@@ -211,6 +211,7 @@ public class MiscUtils
 		}
 		
 		// build the process, but don't start it yet
+		logger.info("Command to run: " + command);
 		ProcessBuilder builder = new ProcessBuilder(shell, param, command);
 		builder.directory(runDirectory);
 		
@@ -303,6 +304,23 @@ public class MiscUtils
 		
 		// remove any invalid character from the filename.
 		return INVALID_FILENAME_CHARACTER_PATTERN.matcher(fileName.trim()).replaceAll("_");
+	}
+	
+	/**
+	 * If the specified file path has any spaces in it, surround the whole path
+	 * with quotes.
+	 */
+	public static String maybeQuotePath(String filePath)
+	{
+		if (filePath.contains(" "))
+		{
+			StringBuilder str = new StringBuilder("\"");
+			str.append(filePath);
+			str.append("\"");
+			return str.toString();
+		}
+		else
+			return filePath;
 	}
 	
 	/**

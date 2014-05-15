@@ -217,7 +217,7 @@ class InnoExtractTask implements Callable<Boolean>
 		commands.add(innoExtractExecutable.getName());
 		commands.add("--quiet");
 		commands.add("--list");
-		commands.add(gogInstallPackage.getAbsolutePath());
+		commands.add(MiscUtils.maybeQuotePath(gogInstallPackage.getAbsolutePath()));
 		
 		// build and start the process
 		ProcessBuilder builder = MiscUtils.buildExecCommand(innoExtractExecutable.getParentFile(), commands);
@@ -244,8 +244,8 @@ class InnoExtractTask implements Callable<Boolean>
 		commands.add(innoExtractExecutable.getName());
 		commands.add("--quiet");
 		commands.add("--output-dir");
-		commands.add(extractDir.getAbsolutePath());
-		commands.add(gogInstallPackage.getAbsolutePath());
+		commands.add(MiscUtils.maybeQuotePath(extractDir.getAbsolutePath()));
+		commands.add(MiscUtils.maybeQuotePath(gogInstallPackage.getAbsolutePath()));
 		
 		// build and start the process
 		ProcessBuilder builder = MiscUtils.buildExecCommand(innoExtractExecutable.getParentFile(), commands);
