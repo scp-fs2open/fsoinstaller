@@ -57,6 +57,12 @@ public class MiscUtils
 	{
 	}
 	
+	/**
+	 * Prints a large number of bytes in human-readable notation (either SI or
+	 * decimal).
+	 * 
+	 * @author m!m
+	 */
 	public static String humanReadableByteCount(long bytes, boolean si)
 	{
 		int unit = si ? 1000 : 1024;
@@ -67,6 +73,10 @@ public class MiscUtils
 		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 	
+	/**
+	 * Compares two objects for equality, without danger of a
+	 * NullPointerException. Two null objects are assumed to be equal.
+	 */
 	public static boolean nullSafeEquals(Object o1, Object o2)
 	{
 		if (o1 == null && o2 == null)
@@ -103,6 +113,10 @@ public class MiscUtils
 		OTHER
 	}
 	
+	/**
+	 * Determines the host operating system by examining the Java "os.name"
+	 * property.
+	 */
 	public static OperatingSystem determineOS()
 	{
 		String os_name_lower = System.getProperty("os.name").toLowerCase();
@@ -116,6 +130,12 @@ public class MiscUtils
 			return OperatingSystem.OTHER;
 	}
 	
+	/**
+	 * Checks whether a mod can be installed on the host operating system. It is
+	 * assumed that all mods can be installed on all systems unless the mod
+	 * contains an operating system in its name. The host operating system is
+	 * obtained by calling <tt>determineOS()</tt>.
+	 */
 	public static boolean validForOS(String modName)
 	{
 		OperatingSystem os = determineOS();
@@ -272,6 +292,10 @@ public class MiscUtils
 		return paragraph.toString();
 	}
 	
+	/**
+	 * Removes invalid file name characters from the candidate file name,
+	 * replacing them with underscores.
+	 */
 	public static String createValidFileName(String fileName)
 	{
 		if (fileName == null)
@@ -281,6 +305,11 @@ public class MiscUtils
 		return INVALID_FILENAME_CHARACTER_PATTERN.matcher(fileName.trim()).replaceAll("_");
 	}
 	
+	/**
+	 * Compare FSO Installer version strings to see if the first is greater
+	 * than, less than, or equal to the second. Each number in the
+	 * MAJOR.MINOR.BUILD sequence is checked, in order.
+	 */
 	public static int compareVersions(String version1, String version2)
 	{
 		String[] num1 = version1.trim().split("\\.");
@@ -324,9 +353,13 @@ public class MiscUtils
 		return 0;
 	}
 	
-	public static String standardizeSlashes(String fileName)
+	/**
+	 * Replaces any forward or backward slashes in the specified path with the
+	 * proper path separator character on the host operating system.
+	 */
+	public static String standardizeSlashes(String filePath)
 	{
-		return SLASH_PATTERN.matcher(fileName).replaceAll(Matcher.quoteReplacement(File.separator));
+		return SLASH_PATTERN.matcher(filePath).replaceAll(Matcher.quoteReplacement(File.separator));
 	}
 	
 	private static final ObjectHolder<Boolean> isSevenZipInitialized = new ObjectHolder<Boolean>(false);
@@ -356,6 +389,10 @@ public class MiscUtils
 		}
 	}
 	
+	/**
+	 * Modifies an existing Java <tt>Color</tt> object, using a series of values
+	 * in the HSB color space, to obtain a new Java <tt>Color</tt> object.
+	 */
 	public static Color deriveColorHSB(Color base, float hFactor, float sFactor, float bFactor)
 	{
 		float[] hsb = new float[3];
@@ -368,6 +405,12 @@ public class MiscUtils
 		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
 	}
 	
+	/**
+	 * Checks whether OpenAL is installed on the host system. This is done by
+	 * attempting to load OpenAL using the Java <tt>System.loadLibrary</tt>
+	 * call. Both 'OpenAL32' (which is recognized on Windows) and 'openal'
+	 * (which is recognized on Linux) are tried.
+	 */
 	public static boolean loadOpenAL()
 	{
 		logger.info("Attempting to load OpenAL...");
