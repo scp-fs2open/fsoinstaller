@@ -887,20 +887,16 @@ public class InstallItem extends JPanel
 					}
 					
 					// notify the user
-					String result = String.format(XSTR.getString("installResultHashMismatch1"), hash.getFilename());
 					if (baleeted)
 					{
-						result += "  ";
-						result += XSTR.getString("installResultHashMismatch2");
+						logInstallError(String.format(XSTR.getString("installResultHashMismatch1"), hash.getFilename()));
 						modLogger.error("File deleted!");
 					}
 					else
 					{
-						result += "  ";
-						result += XSTR.getString("installResultHashMismatch3");
+						logInstallError(String.format(XSTR.getString("installResultHashMismatch2"), hash.getFilename()));
 						modLogger.error("Unable to delete the file!");
 					}
-					logInstallError(result);
 					
 					// fail
 					badHashes++;
