@@ -47,9 +47,9 @@ import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
-import com.fsoinstaller.utils.MiscUtils.OperatingSystem;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 

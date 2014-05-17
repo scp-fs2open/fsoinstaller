@@ -149,7 +149,7 @@ public class Configuration
 					dir = applicationProperties.getProperty("application.defaultdir.osx");
 				break;
 			
-			case UNIX:
+			case LINUX:
 				dir = applicationProperties.getProperty("application.defaultdir.unix");
 				if (dir == null)
 					dir = applicationProperties.getProperty("application.defaultdir.linux");

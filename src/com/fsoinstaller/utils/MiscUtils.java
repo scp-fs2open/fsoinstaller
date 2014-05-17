@@ -105,14 +105,6 @@ public class MiscUtils
 		return true;
 	}
 	
-	public static enum OperatingSystem
-	{
-		WINDOWS,
-		MAC,
-		UNIX,
-		OTHER
-	}
-	
 	/**
 	 * Determines the host operating system by examining the Java "os.name"
 	 * property.
@@ -120,14 +112,15 @@ public class MiscUtils
 	public static OperatingSystem determineOS()
 	{
 		String os_name_lower = System.getProperty("os.name").toLowerCase();
-		if (os_name_lower.startsWith("windows"))
-			return OperatingSystem.WINDOWS;
-		else if (os_name_lower.startsWith("mac"))
-			return OperatingSystem.MAC;
-		else if (os_name_lower.contains("nix") || os_name_lower.contains("nux"))
-			return OperatingSystem.UNIX;
-		else
-			return OperatingSystem.OTHER;
+		for (OperatingSystem os: OperatingSystem.values())
+		{
+			for (String os_name: os.os_names())
+			{
+				if (os_name_lower.startsWith(os_name))
+					return os;
+			}
+		}
+		return OperatingSystem.OTHER;
 	}
 	
 	/**
@@ -138,18 +131,24 @@ public class MiscUtils
 	 */
 	public static boolean validForOS(String modName)
 	{
-		OperatingSystem os = determineOS();
+		OperatingSystem hostOS = determineOS();
 		
 		// if we have a specific OS, make sure the name doesn't exclude itself
-		if (os != OperatingSystem.OTHER)
+		if (hostOS != OperatingSystem.OTHER)
 		{
-			String mod_lower = modName.toLowerCase();
-			if (mod_lower.contains("windows") && os != OperatingSystem.WINDOWS)
-				return false;
-			if ((mod_lower.contains("macintosh") || mod_lower.contains("osx") || mod_lower.contains("os x")) && os != OperatingSystem.MAC)
-				return false;
-			if ((mod_lower.contains("linux") || mod_lower.contains("unix")) && os != OperatingSystem.UNIX)
-				return false;
+			for (OperatingSystem os: OperatingSystem.values())
+			{
+				// exclude all mods which have an match for some other OS
+				if (os != hostOS)
+				{
+					String mod_lower = modName.toLowerCase();
+					for (String mod_substring: os.mod_substrings())
+					{
+						if (mod_lower.contains(mod_substring))
+							return false;
+					}
+				}
+			}
 		}
 		
 		return true;

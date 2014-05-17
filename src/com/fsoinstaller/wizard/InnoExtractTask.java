@@ -34,7 +34,7 @@ import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
-import com.fsoinstaller.utils.MiscUtils.OperatingSystem;
+import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.ReaderLister;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
@@ -83,7 +83,7 @@ class InnoExtractTask implements Callable<Boolean>
 				break;
 			
 			// we'll assume all versions of Linux/Unix are okay
-			case UNIX:
+			case LINUX:
 				break;
 			
 			// no other OS is supported

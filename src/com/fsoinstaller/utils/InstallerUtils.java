@@ -32,7 +32,7 @@ import com.fsoinstaller.common.InstallerNode.HashTriple;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
-import com.fsoinstaller.utils.MiscUtils.OperatingSystem;
+import com.fsoinstaller.utils.OperatingSystem;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -116,7 +116,7 @@ public class InstallerUtils
 					installUnit.addFile("innoextract-1.4-windows-r2.zip");
 					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-windows-r2" + File.separator + "innoextract.exe", "5D8A2A1C3058FCEC812914F9B6DBEE68"));
 				}
-				else if (os == OperatingSystem.UNIX)
+				else if (os == OperatingSystem.LINUX)
 				{
 					installUnit.addFile("innoextract-1.4-linux.zip");
 					gog.addHashTriple(new HashTriple("MD5", "innoextract-1.4-linux" + File.separator + "innoextract", "AAE9EC9837C951E8908D242A68846974"));

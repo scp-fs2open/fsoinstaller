@@ -50,6 +50,7 @@ import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
+import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
@@ -241,6 +242,10 @@ public class FreeSpaceOpenInstaller
 			logger.error("(This means that either your system does not have a display, keyboard, and mouse installed, or your version of Java does not support one of these methods of user interaction.  For example, Ubuntu will sometimes install a version of Java without graphics libraries.  In this case, you will need to reinstall the full version.)");
 			return;
 		}
+		
+		// since we're logging the locale (when XSTR is invoked), let's log the system information too
+		logger.info("System OS string: " + System.getProperty("os.name"));
+		logger.info("OS recognized as: " + MiscUtils.determineOS().name());
 		
 		// we need to set the button text for any dialogs that appear
 		// (this has the side-effect of initializing XSTR before any Swing stuff, which keeps the flow conceptually untangled)
