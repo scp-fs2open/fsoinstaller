@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -209,6 +210,27 @@ public class Downloader
 					if (format.getMethodName().equalsIgnoreCase(extension))
 					{
 						result = downloadFromArchive(sourceURL, destinationDirectory, format);
+						
+						// if we ended up with a tar archive, extract that too
+						if (result && periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
+						{
+							File tarFile = new File(destinationDirectory, fileName.substring(0, periodPos));
+							if (tarFile.exists())
+							{
+								try
+								{
+									result = downloadFromArchive(tarFile.toURI().toURL(), destinationDirectory, ArchiveFormat.TAR);
+									if (result && !tarFile.delete())
+										logger.warn("TAR file was not deleted...");
+								}
+								catch (MalformedURLException murle)
+								{
+									logger.error("Could not extract from '" + tarFile.getName() + "'!");
+								}
+							}
+						}
+						
+						// this extension matched: no need to check any other extensions
 						break;
 					}
 				}
