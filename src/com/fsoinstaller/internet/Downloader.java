@@ -188,6 +188,10 @@ public class Downloader
 			int periodPos = fileName.lastIndexOf('.');
 			String extension = (periodPos >= 0) ? fileName.substring(periodPos + 1) : "";
 			
+			// bz2 is the only extension that doesn't match its algorithm name
+			if (extension.equalsIgnoreCase("bz2"))
+				extension = "bzip2";
+			
 			// download a zip
 			if (extension.equalsIgnoreCase("zip"))
 			{
@@ -444,13 +448,29 @@ public class Downloader
 			
 			for (int item = 0; item < numItems; item++)
 			{
-				currentEntry = archiveEntries[item] = archive.getStringProperty(item, PropID.PATH);
-				totalBytes = archiveSizes[item] = (Long) archive.getProperty(item, PropID.SIZE);
-				Date lastModifiedDate = (Date) archive.getProperty(item, PropID.LAST_WRITE_TIME);
-				archiveModifiedTimes[item] = lastModifiedDate == null ? -1 : lastModifiedDate.getTime();
+				String pathProp = archive.getStringProperty(item, PropID.PATH);
+				// this can happen in formats that only zip a single file
+				if (pathProp == null || pathProp.equals(""))
+				{
+					String path = sourceURL.getPath();
+					int slashPos = path.lastIndexOf('/');
+					int dotPos = path.lastIndexOf('.');
+					pathProp = path.substring(slashPos + 1, (dotPos < 0) ? path.length() : dotPos);
+				}
+				currentEntry = archiveEntries[item] = pathProp;
+				
+				Long sizeProp = (Long) archive.getProperty(item, PropID.SIZE);
+				// this can happen in formats that only zip a single file
+				if (sizeProp == null)
+					sizeProp = totalBytes;
+				totalBytes = archiveSizes[item] = sizeProp;
+				
+				Date dateProp = (Date) archive.getProperty(item, PropID.LAST_WRITE_TIME);
+				archiveModifiedTimes[item] = dateProp == null ? -1 : dateProp.getTime();
 				
 				logger.debug("Checking entry '" + currentEntry + "'");
-				if ((Boolean) archive.getProperty(item, PropID.IS_FOLDER))
+				Boolean folderProp = (Boolean) archive.getProperty(item, PropID.IS_FOLDER);
+				if (folderProp != null && folderProp.booleanValue())
 				{
 					continue;
 				}
