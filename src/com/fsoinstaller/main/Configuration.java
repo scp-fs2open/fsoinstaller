@@ -150,9 +150,17 @@ public class Configuration
 				break;
 			
 			case LINUX:
-				dir = applicationProperties.getProperty("application.defaultdir.unix");
+				dir = applicationProperties.getProperty("application.defaultdir.linux");
 				if (dir == null)
-					dir = applicationProperties.getProperty("application.defaultdir.linux");
+					dir = applicationProperties.getProperty("application.defaultdir.unix");
+				break;
+			
+			case FREEBSD:
+				dir = applicationProperties.getProperty("application.defaultdir.freebsd");
+				break;
+			
+			case SOLARIS:
+				dir = applicationProperties.getProperty("application.defaultdir.solaris");
 				break;
 			
 			case OTHER:

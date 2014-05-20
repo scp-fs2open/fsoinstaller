@@ -86,6 +86,10 @@ class InnoExtractTask implements Callable<Boolean>
 			case LINUX:
 				break;
 			
+			// FreeBSD is okay
+			case FREEBSD:
+				break;
+			
 			// no other OS is supported
 			default:
 				item.logInstallError(XSTR.getString("innoExtractNotSupported"));
