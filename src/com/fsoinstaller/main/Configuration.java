@@ -172,6 +172,12 @@ public class Configuration
 		if (dir == null)
 			dir = applicationProperties.getProperty("application.defaultdir", "C:\\Games\\FreeSpace2");
 		
+		dir = dir.trim();
+		
+		// Java doesn't expand tilde, so let's do it ourselves
+		if (dir.startsWith("~" + File.separator))
+			dir = System.getProperty("user.home") + dir.substring(1);
+		
 		return dir;
 	}
 	
