@@ -81,6 +81,10 @@ class InnoExtractTask implements Callable<Boolean>
 				}
 				// other versions of Windows are okay
 				break;
+				
+			// OSX is okay, at least for 64-bit Intel 10.8+
+			case MAC:
+				break;
 			
 			// we'll assume all versions of Linux/Unix are okay
 			case LINUX:

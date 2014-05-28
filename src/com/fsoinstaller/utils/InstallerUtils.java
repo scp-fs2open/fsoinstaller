@@ -116,6 +116,11 @@ public class InstallerUtils
 					installUnit.addFile("innoextract-1.4-windows-r2.zip");
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-windows-r2" + File.separator + "innoextract.exe", "426536da6b3accfd329197949be56c609dec37e7"));
 				}
+				else if (os == OperatingSystem.MAC)
+				{
+					installUnit.addFile("innoextract-1.4-osx.zip");
+					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-osx", "4dc520791c85cf9917b4c9f344458ee920076c35"));
+				}
 				else if (os == OperatingSystem.LINUX)
 				{
 					installUnit.addFile("innoextract-1.4-linux.tar.xz");
