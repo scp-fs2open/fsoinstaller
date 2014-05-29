@@ -106,32 +106,14 @@ public class MiscUtils
 	}
 	
 	/**
-	 * Determines the host operating system by examining the Java "os.name"
-	 * property.
-	 */
-	public static OperatingSystem determineOS()
-	{
-		String os_name_lower = System.getProperty("os.name").toLowerCase();
-		for (OperatingSystem os: OperatingSystem.values())
-		{
-			for (String os_name: os.os_names())
-			{
-				if (os_name_lower.startsWith(os_name))
-					return os;
-			}
-		}
-		return OperatingSystem.OTHER;
-	}
-	
-	/**
 	 * Checks whether a mod can be installed on the host operating system. It is
 	 * assumed that all mods can be installed on all systems unless the mod
 	 * contains an operating system in its name. The host operating system is
-	 * obtained by calling <tt>determineOS()</tt>.
+	 * obtained by calling <tt>OperatingSystem.getHostOS()</tt>.
 	 */
 	public static boolean validForOS(String modName)
 	{
-		OperatingSystem hostOS = determineOS();
+		OperatingSystem hostOS = OperatingSystem.getHostOS();
 		
 		// if we have a specific OS, make sure the name doesn't exclude itself
 		if (hostOS != OperatingSystem.OTHER)
@@ -181,13 +163,13 @@ public class MiscUtils
 		String param = null;
 		
 		// determine the shell command
-		OperatingSystem os = determineOS();
+		OperatingSystem os = OperatingSystem.getHostOS();
 		switch (os)
 		{
 			case WINDOWS:
 			{
-				String os_name_lower = System.getProperty("os.name").toLowerCase();
-				if (os_name_lower.contains("windows 95") || os_name_lower.contains("windows 98") || os_name_lower.contains("windows me"))
+				String os_name_lcase = System.getProperty("os.name").toLowerCase();
+				if (os_name_lcase.contains("windows 95") || os_name_lcase.contains("windows 98") || os_name_lcase.contains("windows me"))
 				{
 					logger.debug("Detected Windows 9X/ME; using COMMAND.COM...");
 					shell = "command";

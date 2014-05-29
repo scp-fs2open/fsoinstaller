@@ -69,12 +69,12 @@ class InnoExtractTask implements Callable<Boolean>
 			throw new IllegalStateException("The GOG install package must exist!");
 		
 		// some operating systems are not supported
-		OperatingSystem os = MiscUtils.determineOS();
+		OperatingSystem os = OperatingSystem.getHostOS();
 		switch (os)
 		{
 			case WINDOWS:
-				String os_name_lower = System.getProperty("os.name").toLowerCase();
-				if (os_name_lower.contains("windows 95") || os_name_lower.contains("windows 98") || os_name_lower.contains("windows me"))
+				String os_name_lcase = System.getProperty("os.name").toLowerCase();
+				if (os_name_lcase.contains("windows 95") || os_name_lcase.contains("windows 98") || os_name_lcase.contains("windows me"))
 				{
 					item.logInstallError(XSTR.getString("innoExtractRequiresXP"));
 					return false;

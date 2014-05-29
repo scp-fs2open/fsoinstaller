@@ -50,7 +50,7 @@ import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
-import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
@@ -245,7 +245,7 @@ public class FreeSpaceOpenInstaller
 		
 		// since we're logging the locale (when XSTR is invoked), let's log the system information too
 		logger.info("System OS string: " + System.getProperty("os.name"));
-		logger.info("OS recognized as: " + MiscUtils.determineOS().name());
+		logger.info("OS recognized as: " + OperatingSystem.getHostOS().name());
 		
 		// we need to set the button text for any dialogs that appear
 		// (this has the side-effect of initializing XSTR before any Swing stuff, which keeps the flow conceptually untangled)

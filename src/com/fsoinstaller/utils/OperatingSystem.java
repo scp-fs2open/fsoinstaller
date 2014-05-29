@@ -39,7 +39,7 @@ public enum OperatingSystem
 		} : (String[]) mod_substrings;
 	}
 	
-	public String[] os_names()
+	private String[] os_names()
 	{
 		return os_names;
 	}
@@ -47,5 +47,42 @@ public enum OperatingSystem
 	public String[] mod_substrings()
 	{
 		return mod_substrings;
+	}
+	
+	// the OS is not going to change, so let's cache it
+	private static volatile OperatingSystem hostOS = null;
+	
+	/**
+	 * Determines the host operating system by examining the Java "os.name"
+	 * property.
+	 */
+	public static OperatingSystem getHostOS()
+	{
+		OperatingSystem result = hostOS;
+		
+		// figure it out if not yet cached
+		if (result == null)
+		{
+			result = OperatingSystem.OTHER;
+			
+			String os_name_lcase = System.getProperty("os.name").toLowerCase();
+osvalues:	for (OperatingSystem os: OperatingSystem.values())
+			{
+				for (String os_name: os.os_names())
+				{
+					if (os_name_lcase.startsWith(os_name))
+					{
+						result = os;
+						break osvalues;
+					}
+				}
+			}
+			
+			// now cache it
+			// (it's okay if there are redundant caches because multiple computations will all obtain the same OS)
+			hostOS = result;
+		}
+		
+		return result;
 	}
 }

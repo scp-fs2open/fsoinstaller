@@ -110,7 +110,7 @@ public class InstallerUtils
 				}
 				gog.addInstall(installUnit);
 				
-				OperatingSystem os = MiscUtils.determineOS();
+				OperatingSystem os = OperatingSystem.getHostOS();
 				if (os == OperatingSystem.WINDOWS)
 				{
 					installUnit.addFile("innoextract-1.4-windows-r2.zip");

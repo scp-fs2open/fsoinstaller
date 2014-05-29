@@ -30,6 +30,7 @@ import java.util.Properties;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.PropertiesUtils;
 
 
@@ -137,7 +138,7 @@ public class Configuration
 	{
 		String dir = null;
 		
-		switch (MiscUtils.determineOS())
+		switch (OperatingSystem.getHostOS())
 		{
 			case WINDOWS:
 				dir = applicationProperties.getProperty("application.defaultdir.windows");

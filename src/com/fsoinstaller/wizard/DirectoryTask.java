@@ -130,7 +130,7 @@ class DirectoryTask implements Callable<Void>
 		if (!MiscUtils.loadOpenAL())
 		{
 			// we can install it on Windows, but not other OSes
-			if (MiscUtils.determineOS() == OperatingSystem.WINDOWS)
+			if (OperatingSystem.getHostOS() == OperatingSystem.WINDOWS)
 			{
 				int result = ThreadSafeJOptionPane.showConfirmDialog(activeFrame, XSTR.getString("promptToInstallOpenAL"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION)
