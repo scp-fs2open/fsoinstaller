@@ -44,7 +44,7 @@ public enum OperatingSystem
 		return os_names;
 	}
 	
-	public String[] mod_substrings()
+	private String[] mod_substrings()
 	{
 		return mod_substrings;
 	}
@@ -84,5 +84,36 @@ osvalues:	for (OperatingSystem os: OperatingSystem.values())
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Checks whether a mod can be installed on this operating system. It is
+	 * assumed that all mods can be installed on all systems unless the mod
+	 * contains an operating system in its name.
+	 */
+	public boolean isModValidForOS(String modName)
+	{
+		// for nonspecific systems, all mods are valid
+		if (this == OperatingSystem.OTHER)
+			return true;
+		
+		// all we need to do is make sure the name doesn't match some other OS
+		for (OperatingSystem os: OperatingSystem.values())
+		{
+			// obviously we're okay with matching our own OS...
+			if (os != this)
+			{
+				// exclude all mods which have an match for some other OS
+				String mod_lcase = modName.toLowerCase();
+				for (String mod_substring: os.mod_substrings())
+				{
+					if (mod_lcase.contains(mod_substring))
+						return false;
+				}
+			}
+		}
+		
+		// no exclusions found
+		return true;
 	}
 }

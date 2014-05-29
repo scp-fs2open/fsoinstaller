@@ -53,6 +53,7 @@ import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
+import com.fsoinstaller.utils.OperatingSystem;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -173,6 +174,8 @@ public class ModSelectPage extends WizardPage
 			inited = true;
 		}
 		
+		OperatingSystem hostOS = OperatingSystem.getHostOS();
+		
 		// select applicable nodes
 		InstallChoice choice = (InstallChoice) settings.get(Configuration.INSTALL_CHOICE_KEY);
 		if (choice == InstallChoice.BASIC)
@@ -182,7 +185,7 @@ public class ModSelectPage extends WizardPage
 			
 			for (InstallerNode node: modNodeTreeWalk)
 			{
-				if (basicMods.contains(node.getTreePath()) && MiscUtils.validForOS(node.getName()))
+				if (basicMods.contains(node.getTreePath()) && hostOS.isModValidForOS(node.getName()))
 				{
 					logger.debug("Selecting '" + node.getTreePath() + "' as a BASIC mod");
 					((SingleModPanel) node.getUserObject()).setSelected(true);
@@ -196,7 +199,7 @@ public class ModSelectPage extends WizardPage
 			for (InstallerNode node: modNodeTreeWalk)
 			{
 				logger.debug("Selecting '" + node.getTreePath() + "' as a COMPLETE mod");
-				((SingleModPanel) node.getUserObject()).setSelected(MiscUtils.validForOS(node.getName()));
+				((SingleModPanel) node.getUserObject()).setSelected(hostOS.isModValidForOS(node.getName()));
 			}
 		}
 		

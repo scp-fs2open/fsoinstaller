@@ -105,37 +105,6 @@ public class MiscUtils
 		return true;
 	}
 	
-	/**
-	 * Checks whether a mod can be installed on the host operating system. It is
-	 * assumed that all mods can be installed on all systems unless the mod
-	 * contains an operating system in its name. The host operating system is
-	 * obtained by calling <tt>OperatingSystem.getHostOS()</tt>.
-	 */
-	public static boolean validForOS(String modName)
-	{
-		OperatingSystem hostOS = OperatingSystem.getHostOS();
-		
-		// if we have a specific OS, make sure the name doesn't exclude itself
-		if (hostOS != OperatingSystem.OTHER)
-		{
-			for (OperatingSystem os: OperatingSystem.values())
-			{
-				// exclude all mods which have an match for some other OS
-				if (os != hostOS)
-				{
-					String mod_lower = modName.toLowerCase();
-					for (String mod_substring: os.mod_substrings())
-					{
-						if (mod_lower.contains(mod_substring))
-							return false;
-					}
-				}
-			}
-		}
-		
-		return true;
-	}
-	
 	public static ProcessBuilder buildExecCommand(File runDirectory, List<String> commands)
 	{
 		StringBuilder str = new StringBuilder();
