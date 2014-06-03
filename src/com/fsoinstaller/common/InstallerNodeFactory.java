@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 
@@ -40,7 +41,6 @@ public class InstallerNodeFactory
 {
 	private static final Logger logger = Logger.getLogger(InstallerNodeFactory.class);
 	
-	private static final String EOL = System.getProperty("line.separator");
 	private static final Pattern SPACE_OR_TAB_PATTERN = Pattern.compile("[ \t]");
 	static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Z_]+");
 	
@@ -400,6 +400,6 @@ public class InstallerNodeFactory
 				writer.write('\t');
 			writer.write(trimmed);
 		}
-		writer.write(EOL);
+		writer.write(IOUtils.ENDL);
 	}
 }
