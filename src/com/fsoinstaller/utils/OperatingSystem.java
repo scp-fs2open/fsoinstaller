@@ -50,7 +50,7 @@ public enum OperatingSystem
 	}
 	
 	// the OS is not going to change, so let's cache it
-	private static volatile OperatingSystem hostOS = null;
+	private static volatile OperatingSystem cachedHostOS = null;
 	
 	/**
 	 * Determines the host operating system by examining the Java "os.name"
@@ -58,7 +58,7 @@ public enum OperatingSystem
 	 */
 	public static OperatingSystem getHostOS()
 	{
-		OperatingSystem result = hostOS;
+		OperatingSystem result = cachedHostOS;
 		
 		// figure it out if not yet cached
 		if (result == null)
@@ -80,7 +80,7 @@ osvalues:	for (OperatingSystem os: OperatingSystem.values())
 			
 			// now cache it
 			// (it's okay if there are redundant caches because multiple computations will all obtain the same OS)
-			hostOS = result;
+			cachedHostOS = result;
 		}
 		
 		return result;
