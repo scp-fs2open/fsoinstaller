@@ -42,7 +42,6 @@ import javax.swing.event.ChangeListener;
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
-import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
@@ -51,21 +50,6 @@ import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 public class InstallPage extends WizardPage
 {
 	private static final Logger logger = Logger.getLogger(InstallPage.class);
-	
-	private static final List<KeyPair<String, String>> gogMovies = new ArrayList<KeyPair<String, String>>();
-	static
-	{
-		gogMovies.add(new KeyPair<String, String>("INTRO.MVE", "data2"));
-		gogMovies.add(new KeyPair<String, String>("MONO1.MVE", "data2"));
-		gogMovies.add(new KeyPair<String, String>("COLOSSUS.MVE", "data2"));
-		gogMovies.add(new KeyPair<String, String>("MONO2.MVE", "data3"));
-		gogMovies.add(new KeyPair<String, String>("MONO3.MVE", "data3"));
-		gogMovies.add(new KeyPair<String, String>("MONO4.MVE", "data3"));
-		gogMovies.add(new KeyPair<String, String>("BASTION.MVE", "data3"));
-		gogMovies.add(new KeyPair<String, String>("ENDPART1.MVE", "data3"));
-		gogMovies.add(new KeyPair<String, String>("ENDPRT2A.MVE", "data3"));
-		gogMovies.add(new KeyPair<String, String>("ENDPRT2B.MVE", "data3"));
-	}
 	
 	private final JPanel installPanel;
 	
