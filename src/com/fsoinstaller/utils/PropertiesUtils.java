@@ -57,7 +57,7 @@ public class PropertiesUtils
 			return properties;
 		
 		// try file in home dir
-		file = new File(System.getProperty("user.home"), resource);
+		file = new File(MiscUtils.getUserHome(), resource);
 		if (file.exists())
 			properties = loadPropertiesFromFile(file);
 		if (properties != null)
@@ -76,7 +76,7 @@ public class PropertiesUtils
 	public static boolean saveProperties(String resource, Properties properties)
 	{
 		// try file in home dir
-		File file = new File(System.getProperty("user.home"), resource);
+		File file = new File(MiscUtils.getUserHome(), resource);
 		return savePropertiesToFile(file, properties);
 	}
 	

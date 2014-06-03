@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.BreakIterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -103,6 +104,61 @@ public class MiscUtils
 	{
 		// should be valid
 		return true;
+	}
+	
+	// the home directory is not going to change, so let's cache it
+	private static volatile String cachedUserHome = null;
+	
+	/**
+	 * Determines the user's home directory in an OS-appropriate way. For
+	 * Windows, this involves checking USERPROFILE; for other systems, this
+	 * involves checking the Java "os.name" property.
+	 */
+	public static String getUserHome()
+	{
+		String result = cachedUserHome;
+		
+		// figure it out if not yet cached
+		if (result == null)
+		{
+			OperatingSystem os = OperatingSystem.getHostOS();
+			
+			// Java has had a longstanding dumb bug on windows; see
+			// http://bugs.java.com/bugdatabase/view_bug.do?bug_id=4787931
+			if (os == OperatingSystem.WINDOWS)
+			{
+				String windir = "C:\\WINDOWS";
+				
+				// search the environment variables
+				for (Map.Entry<String, String> entry: System.getenv().entrySet())
+				{
+					// this is where the real home path is stored
+					if (entry.getKey().equalsIgnoreCase("userprofile"))
+					{
+						result = entry.getValue();
+						break;
+					}
+					// this is the Windows directory which is the profile path on Win9X if the userprofile variable is not defined
+					else if (entry.getKey().equalsIgnoreCase("windir"))
+					{
+						windir = entry.getValue();
+					}
+				}
+				
+				// if there was no userprofile variable, use WINDIR
+				if (result == null || result.equals(""))
+					result = windir;
+			}
+			// other OSes are fine
+			else
+				result = System.getProperty("user.home");
+			
+			// now cache it
+			// (it's okay if there are redundant caches because multiple computations will all obtain the same path)
+			cachedUserHome = result;
+		}
+		
+		return result;
 	}
 	
 	public static ProcessBuilder buildExecCommand(File runDirectory, List<String> commands)

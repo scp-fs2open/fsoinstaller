@@ -177,7 +177,7 @@ public class Configuration
 		
 		// Java doesn't expand tilde, so let's do it ourselves
 		if (dir.startsWith("~" + File.separator))
-			dir = System.getProperty("user.home") + dir.substring(1);
+			dir = MiscUtils.getUserHome() + dir.substring(1);
 		
 		return dir;
 	}
