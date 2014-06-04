@@ -678,6 +678,9 @@ public class Downloader
 			
 			public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException
 			{
+				// if an entry actually produced an error, we should throw an exception
+				SevenZipException exception = null;
+				
 				switch (extractOperationResult)
 				{
 					case OK:
@@ -690,24 +693,27 @@ public class Downloader
 					
 					case UNSUPPORTEDMETHOD:
 						logger.warn("Extraction failed due to unknown compression method!");
+						exception = new SevenZipException("Unknown compression method");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], new SevenZipException("Unknown compression method"));
+							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], exception);
 						break;
 					
 					case DATAERROR:
 						logger.warn("Extraction failed due to data error!");
+						exception = new SevenZipException("Data error");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], new SevenZipException("Data error"));
+							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], exception);
 						break;
 					
 					case CRCERROR:
 						logger.warn("Extraction failed due to CRC error!");
+						exception = new SevenZipException("CRC error");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], new SevenZipException("CRC error"));
+							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], exception);
 						break;
 					
 					default:
-						throw new IllegalArgumentException("Unknown operation result");
+						exception = new SevenZipException("Unknown operation result: " + extractOperationResult.name());
 				}
 				
 				if (currentIndex >= 0)
@@ -731,6 +737,9 @@ public class Downloader
 						currentOutStream = null;
 					}
 				}
+				
+				if (exception != null)
+					throw exception;
 			}
 			
 			public void setCompleted(long completeValue) throws SevenZipException
