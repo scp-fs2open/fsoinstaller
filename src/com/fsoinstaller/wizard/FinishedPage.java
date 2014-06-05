@@ -127,6 +127,9 @@ public class FinishedPage extends WizardPage
 			}
 		}
 		
+		// log the results for great justice
+		logger.info(text.toString());
+		
 		// populate the text pane
 		textPane.setText(text.toString());
 	}
