@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -214,8 +215,17 @@ class SuperValidationTask implements Callable<Void>
 			String maxVersion = "0.0.0.0";
 			String maxVersionURL = null;
 			
+			// put URLs in random order
+			List<String> homeURLs = FreeSpaceOpenInstaller.INSTALLER_HOME_URLs;
+			if (homeURLs.size() > 1)
+			{
+				List<String> tempURLs = new ArrayList<String>(homeURLs);
+				Collections.shuffle(tempURLs);
+				homeURLs = tempURLs;
+			}
+			
 			// check all URLs for version and filename info
-			for (String url: FreeSpaceOpenInstaller.INSTALLER_HOME_URLs)
+			for (String url: homeURLs)
 			{
 				logger.debug("Accessing version info from " + url + "...");
 				
