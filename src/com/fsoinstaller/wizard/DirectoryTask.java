@@ -225,10 +225,10 @@ class DirectoryTask implements Callable<Void>
 				promptPanel.add(continueAnyway);
 				
 				// prompt the user
-				ThreadSafeJOptionPane.showOptionDialog(activeFrame, promptPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+				int result = ThreadSafeJOptionPane.showOptionDialog(activeFrame, promptPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
 				
 				// find out what was decided
-				if (wrongDir.isSelected())
+				if ((result == JOptionPane.CLOSED_OPTION) || wrongDir.isSelected())
 				{
 					// this is basically a cancel; go back and change the dir
 					return null;
