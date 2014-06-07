@@ -32,15 +32,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextPane;
 
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
@@ -186,55 +179,16 @@ class DirectoryTask implements Callable<Void>
 			// if it doesn't exist, we need to do something about that
 			if (!exists)
 			{
-				// create options
-				JRadioButton installGOG = new JRadioButton(XSTR.getString("optionInstallGOG"));
-				JRadioButton wrongDir = new JRadioButton(XSTR.getString("optionWrongDirectory"));
-				JRadioButton continueAnyway = new JRadioButton(XSTR.getString("optionContinueAnyway"));
-				
-				// group them and mark the default option
-				ButtonGroup group = new ButtonGroup();
-				group.add(installGOG);
-				group.add(wrongDir);
-				group.add(continueAnyway);
-				installGOG.setSelected(true);
-				
-				// put the prompt in a JTextPane that looks like a JLabel
-				JTextPane prompt = new JTextPane();
-				prompt.setBackground(null);
-				prompt.setEditable(false);
-				prompt.setBorder(null);
-				prompt.setText(XSTR.getString("retailFS2NotFound"));
-				
-				JComponent strut = (JComponent) Box.createVerticalStrut(GUIConstants.DEFAULT_MARGIN);
-				strut.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-				
-				// align everything...
-				prompt.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-				strut.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-				installGOG.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-				wrongDir.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-				continueAnyway.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-				
-				// put the whole thing in a panel
-				JPanel promptPanel = new JPanel();
-				promptPanel.setLayout(new BoxLayout(promptPanel, BoxLayout.Y_AXIS));
-				promptPanel.add(prompt);
-				promptPanel.add(strut);
-				promptPanel.add(installGOG);
-				promptPanel.add(wrongDir);
-				promptPanel.add(continueAnyway);
-				
-				// prompt the user
-				int result = ThreadSafeJOptionPane.showOptionDialog(activeFrame, promptPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+				int result = ThreadSafeJOptionPane.showCustomOptionDialog(activeFrame, XSTR.getString("retailFS2NotFound"), 0, XSTR.getString("optionInstallGOG"), XSTR.getString("optionWrongDirectory"), XSTR.getString("optionContinueAnyway"));
 				
 				// find out what was decided
-				if ((result == JOptionPane.CLOSED_OPTION) || wrongDir.isSelected())
+				if ((result < 0) || (result == 1))
 				{
 					// this is basically a cancel; go back and change the dir
 					return null;
 				}
 				// add the GOG install "mod"
-				else if (installGOG.isSelected())
+				else if (result == 0)
 				{
 					// figure out where we're installing from (we will add the actual "mod" in InstallPage)
 					gogInstallPackage = SwingUtils.promptForFile(XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), "exe", XSTR.getString("exeFilesFilter"));

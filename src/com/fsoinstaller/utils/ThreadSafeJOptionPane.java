@@ -21,10 +21,13 @@ package com.fsoinstaller.utils;
 
 import java.awt.Component;
 import java.awt.EventQueue;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.Icon;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 
@@ -348,6 +351,24 @@ public final class ThreadSafeJOptionPane
 			public void run()
 			{
 				result.set(JOptionPane.showInternalOptionDialog(parentComponent, message, title, optionType, messageType, icon, options, initialValue));
+			}
+		});
+		return result.get();
+	}
+	
+	public static int showCustomOptionDialog(JFrame activeFrame, String prompt, int defaultOption, String ... options)
+	{
+		return showCustomOptionDialog(activeFrame, prompt, defaultOption, Arrays.asList(options));
+	}
+	
+	public static int showCustomOptionDialog(final JFrame activeFrame, final String prompt, final int defaultOption, final List<String> options)
+	{
+		final AtomicInteger result = new AtomicInteger();
+		SwingUtils.invokeAndWait(new Runnable()
+		{
+			public void run()
+			{
+				result.set(SwingUtils.showCustomOptionDialog(activeFrame, prompt, defaultOption, options));
 			}
 		});
 		return result.get();

@@ -28,12 +28,25 @@ import java.awt.Window;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextPane;
 import javax.swing.filechooser.FileFilter;
+
+import com.fsoinstaller.main.FreeSpaceOpenInstaller;
+import com.fsoinstaller.wizard.GUIConstants;
 
 
 /**
@@ -219,5 +232,80 @@ public class SwingUtils
 		});
 		
 		return fileHolder.get();
+	}
+	
+	public static int showCustomOptionDialog(JFrame activeFrame, String prompt, int defaultOption, String ... options)
+	{
+		return showCustomOptionDialog(activeFrame, prompt, defaultOption, Arrays.asList(options));
+	}
+	
+	/**
+	 * Constructs a dialog with a list of radio buttons representing options a
+	 * user can select. This must be called from the event dispatching thread;
+	 * for a thread-safe version, see ThreadSafeJOptionPane.
+	 */
+	public static int showCustomOptionDialog(JFrame activeFrame, String prompt, int defaultOption, List<String> options)
+	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
+		if (defaultOption < 0 || defaultOption >= options.size())
+			throw new IllegalArgumentException("Default option " + defaultOption + " must be in the range [0, " + (options.size() - 1) + "]!");
+		
+		List<JRadioButton> optionButtons = new ArrayList<JRadioButton>();
+		ButtonGroup group = new ButtonGroup();
+		
+		// create options and group them
+		for (String option: options)
+		{
+			JRadioButton button = new JRadioButton(option);
+			button.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+			
+			optionButtons.add(button);
+			group.add(button);
+		}
+		
+		// mark the default option
+		optionButtons.get(defaultOption).setSelected(true);
+		
+		// put the whole thing in a panel
+		JPanel optionDialogPanel = new JPanel();
+		optionDialogPanel.setLayout(new BoxLayout(optionDialogPanel, BoxLayout.Y_AXIS));
+		
+		// we might not actually need the prompt
+		if (prompt != null)
+		{
+			// put the prompt in a JTextPane that looks like a JLabel
+			JTextPane promptPane = new JTextPane();
+			promptPane.setBackground(null);
+			promptPane.setEditable(false);
+			promptPane.setBorder(null);
+			promptPane.setText(prompt);
+			promptPane.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+			
+			JComponent strut = (JComponent) Box.createVerticalStrut(GUIConstants.DEFAULT_MARGIN);
+			strut.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+			
+			optionDialogPanel.add(promptPane);
+			optionDialogPanel.add(strut);
+		}
+		// but we do need the buttons
+		for (JRadioButton button: optionButtons)
+			optionDialogPanel.add(button);
+		
+		// prompt the user
+		int result = JOptionPane.showOptionDialog(activeFrame, optionDialogPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+		
+		// hitting the Close button should be interpreted as a Cancel
+		if (result == JOptionPane.CLOSED_OPTION)
+			return -1;
+		
+		// return the option the user selected
+		for (int i = 0; i < optionButtons.size(); i++)
+			if (optionButtons.get(i).isSelected())
+				return i;
+		
+		logger.error("How did the user manage to hit OK with nothing being selected?");
+		return defaultOption;
 	}
 }
