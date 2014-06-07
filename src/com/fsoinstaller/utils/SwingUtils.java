@@ -52,8 +52,15 @@ public class SwingUtils
 	{
 	}
 	
+	/**
+	 * Does what it says on the tin. Must be called on the event dispatching
+	 * thread.
+	 */
 	public static void centerWindowOnScreen(Window window)
 	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
 		if (window == null)
 		{
 			logger.warn("Window is null!");
@@ -75,8 +82,15 @@ public class SwingUtils
 		window.setLocation(x, y);
 	}
 	
+	/**
+	 * Does what it says on the tin. Must be called on the event dispatching
+	 * thread.
+	 */
 	public static void centerWindowOnParent(Window window, Window parent)
 	{
+		if (!EventQueue.isDispatchThread())
+			throw new IllegalStateException("Must be called on the event-dispatch thread!");
+		
 		if (parent == null)
 		{
 			logger.warn("Centering " + ((window == null) ? null : window.getName()) + " on null parent!");
@@ -98,6 +112,11 @@ public class SwingUtils
 		window.setLocation(x, y);
 	}
 	
+	/**
+	 * A thread-safe method for calling the given Runnable and waiting for it to
+	 * complete. Can be safely called from any thread, including the event
+	 * dispatching thread.
+	 */
 	public static void invokeAndWait(Runnable runnable)
 	{
 		try
@@ -125,6 +144,12 @@ public class SwingUtils
 		}
 	}
 	
+	/**
+	 * Displays a file chooser dialog with a custom prompt and file filter
+	 * information. The <tt>filterInfo</tt> parameter should contain 0 or more
+	 * pairs of extensions and descriptions. Can be safely called from any
+	 * thread, including the event dispatching thread.
+	 */
 	public static File promptForFile(final String dialogTitle, final File applicationDir, String ... filterInfo)
 	{
 		if (filterInfo.length % 2 != 0)
