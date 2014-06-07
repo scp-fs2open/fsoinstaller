@@ -290,7 +290,7 @@ public class FreeSpaceOpenInstaller
 			selectAndValidateModFile(args);
 		}
 		// we can also generate hashes
-		if (command != null && command.equals("hash"))
+		else if (command != null && command.equals("hash"))
 		{
 			selectAndHashFile(args);
 		}
