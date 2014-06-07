@@ -123,7 +123,7 @@ public class InstallerUtils
 				}
 				else if (os == OperatingSystem.LINUX)
 				{
-					installUnit.addFile("innoextract-1.4-linux.tar.xz");
+					installUnit.addFile("innoextract-1.4-linux.zip");
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-linux" + File.separator + "innoextract", "269eaa97ba14360eeae2b72ecafbfd2741b2fabd"));
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-linux" + File.separator + "bin" + File.separator + "amd64" + File.separator + "innoextract", "bfccfaf1a5a7ac5947cc322f5bdd6c9ea817876f"));
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-linux" + File.separator + "bin" + File.separator + "armv6j-hardfloat" + File.separator + "innoextract", "b9c96572d25d118e90f722db18341fec2e76a0e7"));
@@ -131,7 +131,7 @@ public class InstallerUtils
 				}
 				else if (os == OperatingSystem.FREEBSD)
 				{
-					installUnit.addFile("innoextract-1.4-freebsd.tar.xz");
+					installUnit.addFile("innoextract-1.4-freebsd.zip");
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-freebsd" + File.separator + "innoextract", "64e97f160c9bc334b9036c171425157f1263dd9d"));
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-freebsd" + File.separator + "bin" + File.separator + "amd64" + File.separator + "innoextract", "75c8cc9d7f8ab29b64b7fcdfb249ecdecb72b713"));
 					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-freebsd" + File.separator + "bin" + File.separator + "i686" + File.separator + "innoextract", "58d4352e4e4afbd2e1d558795ce6875a5817e800"));
