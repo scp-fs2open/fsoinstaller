@@ -318,7 +318,7 @@ public class FreeSpaceOpenInstaller
 		// if not, prompt for it
 		else
 		{
-			modFile = SwingUtils.promptForFile(XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
+			modFile = SwingUtils.promptForFile(null, XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
 			if (modFile == null)
 				return;
 			useGUI = true;
@@ -386,7 +386,7 @@ public class FreeSpaceOpenInstaller
 		// if not, prompt for it
 		else
 		{
-			fileToHash = SwingUtils.promptForFile(XSTR.getString("chooseFileTitle"), config.getApplicationDir());
+			fileToHash = SwingUtils.promptForFile(null, XSTR.getString("chooseFileTitle"), config.getApplicationDir());
 			if (fileToHash == null)
 				return;
 		}

@@ -163,7 +163,7 @@ public class SwingUtils
 	 * pairs of extensions and descriptions. Can be safely called from any
 	 * thread, including the event dispatching thread.
 	 */
-	public static File promptForFile(final String dialogTitle, final File applicationDir, String ... filterInfo)
+	public static File promptForFile(final JFrame parentFrame, final String dialogTitle, final File applicationDir, String ... filterInfo)
 	{
 		if (filterInfo.length % 2 != 0)
 			throw new IllegalArgumentException("The filterInfo parameter must be divisible by two!");
@@ -225,7 +225,7 @@ public class SwingUtils
 				}
 				
 				// display it
-				int result = chooser.showDialog(null, XSTR.getString("OK"));
+				int result = chooser.showDialog(parentFrame, XSTR.getString("OK"));
 				if (result == JFileChooser.APPROVE_OPTION)
 					fileHolder.set(chooser.getSelectedFile());
 			}
@@ -234,9 +234,9 @@ public class SwingUtils
 		return fileHolder.get();
 	}
 	
-	public static int showCustomOptionDialog(JFrame activeFrame, String prompt, int defaultOption, String ... options)
+	public static int showCustomOptionDialog(JFrame parentFrame, String prompt, int defaultOption, String ... options)
 	{
-		return showCustomOptionDialog(activeFrame, prompt, defaultOption, Arrays.asList(options));
+		return showCustomOptionDialog(parentFrame, prompt, defaultOption, Arrays.asList(options));
 	}
 	
 	/**
@@ -244,7 +244,7 @@ public class SwingUtils
 	 * user can select. This must be called from the event dispatching thread;
 	 * for a thread-safe version, see ThreadSafeJOptionPane.
 	 */
-	public static int showCustomOptionDialog(JFrame activeFrame, String prompt, int defaultOption, List<String> options)
+	public static int showCustomOptionDialog(JFrame parentFrame, String prompt, int defaultOption, List<String> options)
 	{
 		if (!EventQueue.isDispatchThread())
 			throw new IllegalStateException("Must be called on the event-dispatch thread!");
@@ -294,7 +294,7 @@ public class SwingUtils
 			optionDialogPanel.add(button);
 		
 		// prompt the user
-		int result = JOptionPane.showOptionDialog(activeFrame, optionDialogPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+		int result = JOptionPane.showOptionDialog(parentFrame, optionDialogPanel, FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
 		
 		// hitting the Close button should be interpreted as a Cancel
 		if (result == JOptionPane.CLOSED_OPTION)
