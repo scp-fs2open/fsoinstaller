@@ -26,6 +26,8 @@ import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,12 +50,14 @@ import javax.swing.ScrollPaneConstants;
 
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.main.Configuration;
+import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.HSLColor;
 import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.OperatingSystem;
+import com.fsoinstaller.utils.SwingUtils;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -260,15 +264,187 @@ public class ModSelectPage extends WizardPage
 	@Override
 	public void prepareToLeavePage(Runnable runWhenReady)
 	{
-		// store the mod names we selected
-		Set<String> selectedMods = new LinkedHashSet<String>();
+		Map<String, InstallerNode> allModPaths = new LinkedHashMap<String, InstallerNode>();
+		Map<String, InstallerNode> selectedModPaths = new LinkedHashMap<String, InstallerNode>();
+		Set<String> alreadyInstalled = new LinkedHashSet<String>();
+		
+		// store the mod nodes and paths we selected
 		for (InstallerNode node: modNodeTreeWalk)
+		{
+			allModPaths.put(node.getTreePath(), node);
+			
 			if (((SingleModPanel) node.getUserObject()).isSelected())
-				selectedMods.add(node.getTreePath());
+				selectedModPaths.put(node.getTreePath(), node);
+			if (((SingleModPanel) node.getUserObject()).isAlreadyInstalled())
+				alreadyInstalled.add(node.getTreePath());
+		}
+		
+		// check whether we have any dependencies that aren't selected
+		Set<String> modsMissingDependencies = new LinkedHashSet<String>();
+		Set<String> dependenciesNotSelected = new LinkedHashSet<String>();
+		for (Map.Entry<String, InstallerNode> entry: selectedModPaths.entrySet())
+		{
+			String path = entry.getKey();
+			InstallerNode node = entry.getValue();
+			
+			for (String dependency: node.getDependencyList())
+			{
+				// do we have a dependency that was not selected?
+				if (!selectedModPaths.containsKey(dependency))
+				{
+					// is it even in the list of mods?
+					if (!allModPaths.containsKey(dependency))
+					{
+						logger.error("Mod '" + path + "' requires dependency '" + dependency + "' which was not found in the list of mods!");
+						
+						// do not prompt the user if the mod which requires this dependency is already installed
+						if (!alreadyInstalled.contains(path))
+							modsMissingDependencies.add(path);
+					}
+					else
+					{
+						logger.warn("Mod '" + path + "' requires dependency '" + dependency + "' which was not selected...");
+						
+						dependenciesNotSelected.add(dependency);
+					}
+				}
+			}
+		}
+		
+		// notify of dependencies that aren't even available
+		if (!modsMissingDependencies.isEmpty())
+		{
+			// list mods in the prompt
+			StringBuilder modList = new StringBuilder();
+			for (String modPath: modsMissingDependencies)
+			{
+				modList.append(allModPaths.get(modPath).getName());
+				modList.append("\n");
+			}
+			String prompt = String.format(XSTR.getString("dependenciesNotAvailable"), modList.toString());
+			
+			// prompt user about dependencies that don't exist
+			int result = SwingUtils.showCustomOptionDialog(gui, prompt, 0, XSTR.getString("optionInstallMods"), XSTR.getString("optionRemoveTheseMods"), XSTR.getString("optionModifySelection"));
+			if (result < 0 || result == 2)
+			{
+				// go back to the mod selection
+				return;
+			}
+			else if (result == 1)
+			{
+				// remove mods that have missing dependencies, as well as all of their child mods
+				Iterator<Map.Entry<String, InstallerNode>> ii = selectedModPaths.entrySet().iterator();
+				while (ii.hasNext())
+				{
+					String selectedPath = ii.next().getValue().getTreePath();
+					
+					for (String modPath: modsMissingDependencies)
+					{
+						if (selectedPath.startsWith(modPath))
+						{
+							logger.info("Removing '" + selectedPath + "'");
+							ii.remove();
+							((SingleModPanel) allModPaths.get(selectedPath).getUserObject()).setSelected(false);
+							break;
+						}
+					}
+				}
+				counter.syncButton();
+				
+				// we might have removed our entire selection!
+				if (selectedModPaths.isEmpty())
+				{
+					JOptionPane.showMessageDialog(gui, XSTR.getString("removeModsAlert"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+			}
+			// otherwise continue with the installation as-is
+		}
+		
+		// notify of dependencies that aren't selected
+		if (!dependenciesNotSelected.isEmpty())
+		{
+			// list mods in the prompt
+			StringBuilder modList = new StringBuilder();
+			for (String modPath: dependenciesNotSelected)
+			{
+				modList.append(allModPaths.get(modPath).getName());
+				modList.append("\n");
+			}
+			String prompt = String.format(XSTR.getString("dependenciesNotSelected"), modList.toString());
+			
+			// prompt user about dependencies that aren't selected
+			int result = SwingUtils.showCustomOptionDialog(gui, prompt, 0, XSTR.getString("optionAddToSelection"), XSTR.getString("optionRemoveOtherMods"), XSTR.getString("optionModifySelection"));
+			if (result == 0)
+			{
+				// add all the dependencies, as well as all of their parent mods
+				for (Map.Entry<String, InstallerNode> entry: allModPaths.entrySet())
+				{
+					for (String modPath: dependenciesNotSelected)
+					{
+						if (modPath.startsWith(entry.getKey()))
+						{
+							logger.info("Adding '" + entry.getKey() + "'");
+							selectedModPaths.put(entry.getKey(), entry.getValue());
+							((SingleModPanel) entry.getValue().getUserObject()).setSelected(true);
+							break;
+						}
+					}
+				}
+				counter.syncButton();
+			}
+			else if (result == 1)
+			{
+				// remove all the mods depending on these dependencies, as well as all of their child mods
+				Set<String> modPathsToRemove = new LinkedHashSet<String>();
+				for (Map.Entry<String, InstallerNode> entry: selectedModPaths.entrySet())
+				{
+					for (String dependency: entry.getValue().getDependencyList())
+					{
+						if (dependenciesNotSelected.contains(dependency))
+						{
+							modPathsToRemove.add(entry.getKey());
+							break;
+						}
+					}
+				}
+				Iterator<Map.Entry<String, InstallerNode>> ii = selectedModPaths.entrySet().iterator();
+				while (ii.hasNext())
+				{
+					String selectedPath = ii.next().getValue().getTreePath();
+					
+					for (String modPath: modPathsToRemove)
+					{
+						if (selectedPath.startsWith(modPath))
+						{
+							logger.info("Removing '" + selectedPath + "'");
+							ii.remove();
+							((SingleModPanel) allModPaths.get(selectedPath).getUserObject()).setSelected(false);
+							break;
+						}
+					}
+				}
+				counter.syncButton();
+				
+				// we might have removed our entire selection!
+				if (selectedModPaths.isEmpty())
+				{
+					JOptionPane.showMessageDialog(gui, XSTR.getString("removeModsAlert"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+			}
+			else
+			{
+				// go back to mod selection
+				return;
+			}
+		}
+		
+		// whew... we are now done resolving dependencies
 		
 		// save in configuration
 		Map<String, Object> settings = configuration.getSettings();
-		settings.put(Configuration.MODS_TO_INSTALL_KEY, selectedMods);
+		settings.put(Configuration.MODS_TO_INSTALL_KEY, selectedModPaths.keySet());
 		
 		// also save the "force"/"re-run" checkbox
 		settings.put(Configuration.DONT_SHORT_CIRCUIT_INSTALLATION_KEY, reRunCheckBox.isSelected());
@@ -330,7 +506,6 @@ public class ModSelectPage extends WizardPage
 			checkBox.setSelected(selected);
 		}
 		
-		@SuppressWarnings("unused")
 		public boolean isAlreadyInstalled()
 		{
 			return !checkBox.isEnabled();

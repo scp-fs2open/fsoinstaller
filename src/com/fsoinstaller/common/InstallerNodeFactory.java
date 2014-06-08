@@ -164,10 +164,10 @@ public class InstallerNodeFactory
 				break;
 			
 			case URL:
-				String string = readString(reader);
+				String url = readString(reader);
 				try
 				{
-					currentInstallUnit.addBaseURL(new BaseURL(string));
+					currentInstallUnit.addBaseURL(new BaseURL(url));
 				}
 				catch (InvalidBaseURLException ibue)
 				{
@@ -176,12 +176,11 @@ public class InstallerNodeFactory
 				break;
 			
 			case MULTIURL:
-				List<String> strings = readStringsUntilEndToken(reader, InstallerNodeToken.ENDMULTI);
+				List<String> multiURLList = readStringsUntilEndToken(reader, InstallerNodeToken.ENDMULTI);
 				try
 				{
-					Iterator<String> ii = strings.iterator();
-					while (ii.hasNext())
-						currentInstallUnit.addBaseURL(new BaseURL(ii.next()));
+					for (String multiURL: multiURLList)
+						currentInstallUnit.addBaseURL(new BaseURL(multiURL));
 				}
 				catch (InvalidBaseURLException ibue)
 				{
@@ -211,14 +210,20 @@ public class InstallerNodeFactory
 				node.addHashTriple(new InstallerNode.HashTriple(type, filename, hash));
 				break;
 			
-			case VERSION:
-				String version = readString(reader);
-				node.setVersion(version);
-				break;
-			
 			case NOTE:
 				String note = readStringUntilEndToken(reader, InstallerNodeToken.ENDNOTE);
 				node.setNote(note);
+				break;
+			
+			case DEPENDENCIES:
+				List<String> dependencies = readStringsUntilEndToken(reader, InstallerNodeToken.ENDDEPENDENCIES);
+				for (String dependency: dependencies)
+					node.addDependency(dependency);
+				break;
+			
+			case VERSION:
+				String version = readString(reader);
+				node.setVersion(version);
 				break;
 			
 			case ENDDESC:
@@ -370,6 +375,14 @@ public class InstallerNodeFactory
 		
 		if (node.getNote() != null)
 			writeLine(indent, writer, InstallerNodeToken.NOTE, node.getNote(), InstallerNodeToken.ENDNOTE);
+		
+		if (!node.getDependencyList().isEmpty())
+		{
+			writeLine(indent, writer, InstallerNodeToken.DEPENDENCIES);
+			for (String dependency: node.getDependencyList())
+				writeLine(indent, writer, dependency);
+			writeLine(indent, writer, InstallerNodeToken.ENDDEPENDENCIES);
+		}
 		
 		if (node.getVersion() != null)
 			writeLine(indent, writer, InstallerNodeToken.VERSION, node.getVersion());

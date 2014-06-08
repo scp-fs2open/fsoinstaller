@@ -46,6 +46,7 @@ public class InstallerNode
 	protected final List<InstallUnit> installList;
 	protected final List<HashTriple> hashList;
 	protected final List<String> cmdList;
+	protected final List<String> dependencyList;
 	
 	protected InstallerNode parent;
 	protected final List<InstallerNode> children;
@@ -69,6 +70,7 @@ public class InstallerNode
 		this.installList = new ArrayList<InstallUnit>();
 		this.hashList = new ArrayList<HashTriple>();
 		this.cmdList = new ArrayList<String>();
+		this.dependencyList = new ArrayList<String>();
 		
 		this.parent = null;
 		this.children = new ArrayList<InstallerNode>();
@@ -189,6 +191,11 @@ public class InstallerNode
 		return Collections.unmodifiableList(cmdList);
 	}
 	
+	public List<String> getDependencyList()
+	{
+		return Collections.unmodifiableList(dependencyList);
+	}
+	
 	public List<InstallerNode> getChildren()
 	{
 		return Collections.unmodifiableList(children);
@@ -280,6 +287,19 @@ public class InstallerNode
 	public void removeExecCmd(String cmd)
 	{
 		cmdList.remove(cmd);
+	}
+	
+	public void addDependency(String dependency)
+	{
+		if (dependency == null)
+			throw new NullPointerException("Cannot add a null dependency!");
+		
+		dependencyList.add(dependency);
+	}
+	
+	public void removeDependency(String dependency)
+	{
+		dependencyList.remove(dependency);
 	}
 	
 	public void addChild(InstallerNode installerNode)
