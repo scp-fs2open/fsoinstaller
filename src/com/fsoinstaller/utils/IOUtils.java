@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -71,12 +72,17 @@ public class IOUtils
 	
 	public static List<String> readTextFile(File inputFile) throws FileNotFoundException, IOException
 	{
+		return readText(new InputStreamReader(new FileInputStream(inputFile), Charset.forName("UTF-8")));
+	}
+	
+	public static List<String> readText(Reader reader) throws IOException
+	{
 		List<String> lines = new ArrayList<String>();
 		
 		BufferedReader br = null;
 		try
 		{
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), Charset.forName("UTF-8")));
+			br = (reader instanceof BufferedReader) ? (BufferedReader) reader : new BufferedReader(reader);
 			
 			String line;
 			while ((line = br.readLine()) != null)
