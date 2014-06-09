@@ -47,9 +47,9 @@ public class MiscUtils
 {
 	private static final Logger logger = Logger.getLogger(MiscUtils.class);
 	
-	private static final Pattern SLASH_PATTERN = Pattern.compile("[/\\\\]");
-	private static final Pattern LEADING_WHITESPACE_PATTERN = Pattern.compile("^\\s+");
-	private static final Pattern INVALID_FILENAME_CHARACTER_PATTERN = Pattern.compile("[^a-zA-Z0-9._]+");
+	public static final Pattern SLASH_PATTERN = Pattern.compile("[/\\\\]+");
+	public static final Pattern LEADING_WHITESPACE_PATTERN = Pattern.compile("^\\s+");
+	public static final Pattern INVALID_FILENAME_CHARACTER_PATTERN = Pattern.compile("[^a-zA-Z0-9._]+");
 	
 	/**
 	 * Prevent instantiation.

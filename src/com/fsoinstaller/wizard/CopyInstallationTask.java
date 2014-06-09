@@ -82,12 +82,17 @@ class CopyInstallationTask implements Callable<Boolean>
 			return false;
 		}
 		
-		// replace slashes with path separators
+		// replace slashes with path separators, and count the size
+		long totalSize = 0;
 		ListIterator<String> ii = fileList.listIterator();
 		while (ii.hasNext())
 		{
-			String file = ii.next();
-			ii.set(MiscUtils.standardizeSlashes(file));
+			String fileName = MiscUtils.standardizeSlashes(ii.next());
+			ii.set(fileName);
+			
+			File file = new File(steamInstallLocation, fileName);
+			if (file.exists() && !file.isDirectory())
+				totalSize += file.length();
 		}
 		
 		// copy the files and report progress
@@ -95,7 +100,7 @@ class CopyInstallationTask implements Callable<Boolean>
 		item.setText(XSTR.getString("copyInstallationCopyingFiles"));
 		try
 		{
-			copyFiles(fileList);
+			copyFiles(fileList, totalSize);
 		}
 		catch (IOException ioe)
 		{
@@ -108,15 +113,13 @@ class CopyInstallationTask implements Callable<Boolean>
 		return true;
 	}
 	
-	private void copyFiles(List<String> fileList) throws IOException
+	private void copyFiles(List<String> fileList, long totalSize) throws IOException
 	{
 		// copy all the files from the Steam location to the game location
 		File installDir = Configuration.getInstance().getApplicationDir();
+		logger.info("Copying " + fileList.size() + " files from '" + steamInstallLocation.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'...");
 		
-		int totalFiles = fileList.size();
-		logger.info("Copying " + totalFiles + " files from '" + steamInstallLocation.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'...");
-		
-		int numFiles = 0;
+		long numBytes = 0;
 		item.setPercentComplete(0);
 		for (String fileName: fileList)
 		{
@@ -128,8 +131,9 @@ class CopyInstallationTask implements Callable<Boolean>
 			{
 				logger.warn("Source file '" + from.getAbsolutePath() + "' does not exist!");
 				
-				if (to.getName().toLowerCase().endsWith(".vp"))
-					throw new IOException("A required .vp file '" + to.getName() + "' was not found!");
+				// VPs in the root directory are needed
+				if (!MiscUtils.SLASH_PATTERN.matcher(fileName).find() && fileName.toLowerCase().endsWith(".vp"))
+					throw new IOException("A required .vp file '" + fileName + "' was not found!");
 			}
 			else if (from.isDirectory())
 			{
@@ -146,11 +150,11 @@ class CopyInstallationTask implements Callable<Boolean>
 				// do the copying
 				logger.debug(fileName);
 				IOUtils.copy(from, to);
+				numBytes += from.length();
 			}
 			
 			// update progress as the copy proceeds
-			numFiles++;
-			item.setPercentComplete(numFiles * 100 / totalFiles);
+			item.setPercentComplete((int) (numBytes * 100 / totalSize));
 		}
 		
 		// copying was successful!
