@@ -227,7 +227,14 @@ promptForSteamFS2:	while (true)
 						File[] steamContents = steamInstallLocation.listFiles();
 						if (steamContents == null)
 						{
-							ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("readCheckFailed2"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+							// we need to wait here because the directory chooser uses invokeAndWait
+							SwingUtils.invokeAndWait(new Runnable()
+							{
+								public void run()
+								{
+									JOptionPane.showMessageDialog(activeFrame, XSTR.getString("readCheckFailed2"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+								}
+							});
 						}
 						else
 						{
@@ -240,10 +247,18 @@ promptForSteamFS2:	while (true)
 								if (name.equalsIgnoreCase("root_fs2.vp"))
 									break promptForSteamFS2;
 							}
+							
+							// we need to wait here because the directory chooser uses invokeAndWait
+							SwingUtils.invokeAndWait(new Runnable()
+							{
+								public void run()
+								{
+									JOptionPane.showMessageDialog(activeFrame, XSTR.getString("copyFS2NotFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+								}
+							});
 						}
 						
 						// FS2 not found in this location, so loop again
-						ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("copyFS2NotFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
 						fileResult.set(null);
 						steamInstallLocation = null;
 					}
