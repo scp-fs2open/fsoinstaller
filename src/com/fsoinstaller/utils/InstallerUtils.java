@@ -143,6 +143,20 @@ public class InstallerUtils
 					nodes.add(gog);
 			}
 			
+			// if we are copying from Steam, do so
+			File steamInstallLocation = (File) configuration.getSettings().get(Configuration.STEAM_INSTALL_LOCATION_KEY);
+			InstallerNode steam = null;
+			if (steamInstallLocation != null)
+			{
+				steam = new InstallerNode(XSTR.getString("copyInstallationName"));
+				steam.setDescription(XSTR.getString("copyInstallationDesc"));
+				steam.setFolder(UUID());
+				steam.setVersion(versionUUID());
+				
+				// nothing to do until we actually need to copy things
+				nodes.add(steam);
+			}
+			
 			// if version 1.2 patch needs to be applied, then add it
 			String hash = (String) configuration.getSettings().get(Configuration.ROOT_FS2_VP_HASH_KEY);
 			if (hash != null && hash.equalsIgnoreCase("42bc56a410373112dfddc7985f66524a"))
@@ -206,6 +220,8 @@ public class InstallerUtils
 			}
 			if (gog != null)
 				gog.addChild(copyMVEs);
+			else if (steam != null)
+				steam.addChild(copyMVEs);
 			else if (doCopy)
 				nodes.add(copyMVEs);
 		}

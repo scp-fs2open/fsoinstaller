@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -43,6 +44,7 @@ import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
+import com.l2fprod.common.swing.JDirectoryChooser;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -83,9 +85,10 @@ class DirectoryTask implements Callable<Void>
 		// things that we'll need to save after this task
 		boolean installOpenAL = false;
 		File gogInstallPackage = null;
+		File steamInstallLocation = null;
 		String rootVPHash = null;
 		
-		File destinationDir = configuration.getApplicationDir();
+		final File destinationDir = configuration.getApplicationDir();
 		
 		logger.info("Checking for read access...");
 		
@@ -179,10 +182,10 @@ class DirectoryTask implements Callable<Void>
 			// if it doesn't exist, we need to do something about that
 			if (!exists)
 			{
-				int result = ThreadSafeJOptionPane.showCustomOptionDialog(activeFrame, XSTR.getString("retailFS2NotFound"), 0, XSTR.getString("optionInstallGOG"), XSTR.getString("optionWrongDirectory"), XSTR.getString("optionContinueAnyway"));
+				int result = ThreadSafeJOptionPane.showCustomOptionDialog(activeFrame, XSTR.getString("retailFS2NotFound"), 0, XSTR.getString("optionInstallGOG"), XSTR.getString("optionInstallSteam"), XSTR.getString("optionWrongDirectory"), XSTR.getString("optionContinueAnyway"));
 				
 				// find out what was decided
-				if ((result < 0) || (result == 1))
+				if (result < 0 || result == 2)
 				{
 					// this is basically a cancel; go back and change the dir
 					return null;
@@ -192,6 +195,58 @@ class DirectoryTask implements Callable<Void>
 				{
 					// figure out where we're installing from (we will add the actual "mod" in InstallPage)
 					gogInstallPackage = SwingUtils.promptForFile(activeFrame, XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), "exe", XSTR.getString("exeFilesFilter"));
+				}
+				// add the Steam copy "mod"
+				else if (result == 1)
+				{
+					// figure out where we're copying from (we will add the actual "mod" in InstallPage)
+					final AtomicReference<File> fileResult = new AtomicReference<File>(null);
+promptForSteamFS2:	while (true)
+					{
+						SwingUtils.invokeAndWait(new Runnable()
+						{
+							public void run()
+							{
+								// create a file chooser
+								JDirectoryChooser chooser = new JDirectoryChooser();
+								chooser.setCurrentDirectory(destinationDir);
+								chooser.setDialogTitle(XSTR.getString("chooseDirTitle"));
+								chooser.setShowingCreateDirectory(false);
+								
+								// display it
+								int result = chooser.showDialog(activeFrame, XSTR.getString("OK"));
+								if (result == JDirectoryChooser.APPROVE_OPTION)
+									fileResult.set(chooser.getSelectedFile());
+							}
+						});
+						steamInstallLocation = fileResult.get();
+						if (steamInstallLocation == null)
+							break promptForSteamFS2;
+						
+						// check that we can read from this directory: steamContents will be null if an I/O error occurred
+						File[] steamContents = steamInstallLocation.listFiles();
+						if (steamContents == null)
+						{
+							ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("readCheckFailed2"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+						}
+						else
+						{
+							for (File file: steamContents)
+							{
+								if (file.isDirectory())
+									continue;
+								
+								String name = file.getName();
+								if (name.equalsIgnoreCase("root_fs2.vp"))
+									break promptForSteamFS2;
+							}
+						}
+						
+						// FS2 not found in this location, so loop again
+						ThreadSafeJOptionPane.showMessageDialog(activeFrame, XSTR.getString("copyFS2NotFound"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.ERROR_MESSAGE);
+						fileResult.set(null);
+						steamInstallLocation = null;
+					}
 				}
 				// continue anyway = no special treatment
 			}
@@ -244,6 +299,7 @@ class DirectoryTask implements Callable<Void>
 		
 		final boolean _installOpenAL = installOpenAL;
 		final File _gogInstallPackage = gogInstallPackage;
+		final File _steamInstallLocation = steamInstallLocation;
 		final String _rootVPHash = rootVPHash;
 		
 		// directory is good to go, so save our settings
@@ -260,6 +316,9 @@ class DirectoryTask implements Callable<Void>
 				
 				if (_gogInstallPackage != null)
 					settings.put(Configuration.GOG_INSTALL_PACKAGE_KEY, _gogInstallPackage);
+				
+				if (_steamInstallLocation != null)
+					settings.put(Configuration.STEAM_INSTALL_LOCATION_KEY, _steamInstallLocation);
 				
 				if (_rootVPHash != null)
 					settings.put(Configuration.ROOT_FS2_VP_HASH_KEY, _rootVPHash);

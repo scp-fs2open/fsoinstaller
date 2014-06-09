@@ -374,6 +374,26 @@ public class InstallItem extends JPanel
 								return null;
 							}
 						}
+						// if this is the Steam copy node, run the copy task
+						else if (node.getName().equals(XSTR.getString("copyInstallationName")))
+						{
+							CopyInstallationTask task = new CopyInstallationTask(InstallItem.this);
+							try
+							{
+								success = task.call();
+							}
+							catch (Exception e)
+							{
+								modLogger.error("Unhandled exception copying installation!", e);
+								success = false;
+							}
+							
+							if (!success || Thread.currentThread().isInterrupted())
+							{
+								failInstallTree();
+								return null;
+							}
+						}
 						
 						// *********************************************
 						
