@@ -150,7 +150,6 @@ public class InstallerUtils
 			{
 				steam = new InstallerNode(XSTR.getString("copyInstallationName"));
 				steam.setDescription(XSTR.getString("copyInstallationDesc"));
-				steam.setFolder(UUID());
 				steam.setVersion(versionUUID());
 				
 				// nothing to do until we actually need to copy things
