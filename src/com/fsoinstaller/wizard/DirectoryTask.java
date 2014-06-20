@@ -182,10 +182,10 @@ class DirectoryTask implements Callable<Void>
 			// if it doesn't exist, we need to do something about that
 			if (!exists)
 			{
-				int result = ThreadSafeJOptionPane.showCustomOptionDialog(activeFrame, XSTR.getString("retailFS2NotFound"), 0, XSTR.getString("optionInstallGOG"), XSTR.getString("optionInstallSteam"), XSTR.getString("optionWrongDirectory"), XSTR.getString("optionContinueAnyway"));
+				int result = ThreadSafeJOptionPane.showCustomOptionDialog(activeFrame, XSTR.getString("retailFS2NotFound"), 0, XSTR.getString("optionInstallGOG"), XSTR.getString("optionWrongDirectory"), XSTR.getString("optionContinueAnyway"));
 				
 				// find out what was decided
-				if (result < 0 || result == 2)
+				if (result < 0 || result == 1)
 				{
 					// this is basically a cancel; go back and change the dir
 					return null;
@@ -197,7 +197,8 @@ class DirectoryTask implements Callable<Void>
 					gogInstallPackage = SwingUtils.promptForFile(activeFrame, XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), "exe", XSTR.getString("exeFilesFilter"));
 				}
 				// add the Steam copy "mod"
-				else if (result == 1)
+				// (this is now disabled)
+				else if (result == 1000)
 				{
 					// figure out where we're copying from (we will add the actual "mod" in InstallPage)
 					final AtomicReference<File> fileResult = new AtomicReference<File>(null);
