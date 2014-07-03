@@ -172,7 +172,7 @@ public class Configuration
 		
 		// must always have a non-null default
 		if (dir == null)
-			dir = applicationProperties.getProperty("application.defaultdir", "C:\\Games\\FreeSpace2");
+			dir = applicationProperties.getProperty("application.defaultdir", "/Games/FreeSpace2");
 		
 		dir = dir.trim();
 		
