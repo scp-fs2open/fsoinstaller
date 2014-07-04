@@ -454,12 +454,10 @@ public class Downloader
 		IArchiveExtractCallback callback = null;
 		try
 		{
-			logger.debug("Opening connection...");
-			URLConnection connection = connector.openConnection(sourceURL);
-			totalBytes = connection.getContentLength();
+			totalBytes = connector.getContentLength(sourceURL);
 			
 			logger.debug("Opening archive...");
-			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL, connection), totalBytes);
+			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL), totalBytes);
 			archive = SevenZip.openInArchive(format, inStream);
 			int numItems = archive.getNumberOfItems();
 			
@@ -572,16 +570,13 @@ public class Downloader
 		return new BufferedOutputStream(new FileOutputStream(file));
 	}
 	
-	protected InputStreamSource getInputStreamSource(Connector connector, URL sourceURL, URLConnection firstConnection)
+	protected InputStreamSource getInputStreamSource(Connector connector, URL sourceURL)
 	{
 		final Connector _connector = connector;
 		final URL _sourceURL = sourceURL;
-		final URLConnection _firstConnection = firstConnection;
 		
 		return new InputStreamSource()
 		{
-			private boolean ever_recycled = false;
-			
 			public InputStream recycleInputStream(InputStream oldInputStream) throws IOException
 			{
 				if (oldInputStream != null)
@@ -597,19 +592,7 @@ public class Downloader
 					}
 				}
 				
-				// this is because we need to open the connection once, before recycling,
-				// to get the length in bytes
-				URLConnection connection;
-				if (ever_recycled)
-				{
-					logger.debug("Opening connection...");
-					connection = _connector.openConnection(_sourceURL);
-				}
-				else
-				{
-					connection = _firstConnection;
-					ever_recycled = true;
-				}
+				URLConnection connection = _connector.openConnection(_sourceURL);
 				
 				logger.debug("Opening new input stream...");
 				return connection.getInputStream();

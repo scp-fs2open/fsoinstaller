@@ -21,6 +21,7 @@ package com.fsoinstaller.internet;
 
 import java.io.IOException;
 import java.net.Authenticator;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
@@ -218,7 +219,7 @@ public class Connector
 		return true;
 	}
 	
-	public URLConnection openConnection(URL url) throws IOException
+	public HttpURLConnection openConnection(URL url) throws IOException
 	{
 		logger.debug("Opening connection to URL: " + url);
 		
@@ -232,7 +233,21 @@ public class Connector
 		// set the timeout (before we actually use it to connect)
 		conn.setConnectTimeout(connectionTimeout);
 		
-		return conn;
+		// ensure that we don't end up with an unexpected subclass
+		if (!(conn instanceof HttpURLConnection))
+			throw new IllegalArgumentException("URL " + url + " does not return an HttpURLConnection!");
+		
+		return (HttpURLConnection) conn;
+	}
+	
+	public int getContentLength(URL url) throws IOException
+	{
+		HttpURLConnection conn = openConnection(url);
+		conn.setRequestMethod("HEAD");
+		int length = conn.getContentLength();
+		conn.disconnect();
+		
+		return length;
 	}
 	
 	/**
