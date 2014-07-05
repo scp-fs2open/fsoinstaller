@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -457,7 +458,7 @@ public class Downloader
 			totalBytes = connector.getContentLength(sourceURL);
 			
 			logger.debug("Opening archive...");
-			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL), totalBytes);
+			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL, totalBytes), totalBytes);
 			archive = SevenZip.openInArchive(format, inStream);
 			int numItems = archive.getNumberOfItems();
 			
@@ -570,15 +571,21 @@ public class Downloader
 		return new BufferedOutputStream(new FileOutputStream(file));
 	}
 	
-	protected InputStreamSource getInputStreamSource(Connector connector, URL sourceURL)
+	protected InputStreamSource getInputStreamSource(Connector connector, URL sourceURL, long totalBytes)
 	{
 		final Connector _connector = connector;
 		final URL _sourceURL = sourceURL;
+		final long _totalBytes = totalBytes;
 		
 		return new InputStreamSource()
 		{
-			public InputStream recycleInputStream(InputStream oldInputStream) throws IOException
+			public InputStream recycleInputStream(InputStream oldInputStream, long position) throws IOException, IndexOutOfBoundsException
 			{
+				if (position < 0)
+					throw new IndexOutOfBoundsException("Position cannot be negative!");
+				if (position >= _totalBytes)
+					throw new IndexOutOfBoundsException("Position is beyond the end of the stream!");
+				
 				if (oldInputStream != null)
 				{
 					try
@@ -592,7 +599,11 @@ public class Downloader
 					}
 				}
 				
-				URLConnection connection = _connector.openConnection(_sourceURL);
+				// open a new stream at the correct position
+				// (the implementations of HttpURLConnection will cache and pool connections as needed)
+				HttpURLConnection connection = _connector.openConnection(_sourceURL);
+				if (position > 0)
+					connection.setRequestProperty("Range", "bytes=" + position + "-");
 				
 				logger.debug("Opening new input stream...");
 				return connection.getInputStream();

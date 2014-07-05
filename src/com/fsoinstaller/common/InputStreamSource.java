@@ -41,13 +41,20 @@ public interface InputStreamSource
 	 * current one, so long as the stream pointer has been reset to the
 	 * beginning.
 	 * <p>
-	 * The <tt>oldInputStream</tt> parameter will contain the stream that is
-	 * to be recycled. If it is not possible for the stream's pointer to be
-	 * reset, then the implementing class should close the old stream and open a
-	 * new one. A null <tt>oldInputStream</tt> indicates that the stream is
-	 * being requested for the first time.
+	 * The <tt>oldInputStream</tt> parameter will contain the stream that is to
+	 * be recycled. If it is not possible for the stream's pointer to be reset,
+	 * then the implementing class should close the old stream and open a new
+	 * one. A null <tt>oldInputStream</tt> indicates that the stream is being
+	 * requested for the first time.
+	 * <p>
+	 * The <tt>position</tt> parameter indicates the byte index at which the new
+	 * stream should begin returning data. If the stream supports random access,
+	 * the source should open the stream at the proper position; if not, the
+	 * source should seek forward to the position before returning the stream.
+	 * Invalid positions should throw an IndexOutOfBoundsException.
 	 * 
 	 * @throws IOException if there is a problem creating a new InputStream
+	 * @throws IndexOutOfBoundsException if the position is out of range
 	 */
-	public InputStream recycleInputStream(InputStream oldInputStream) throws IOException;
+	public InputStream recycleInputStream(InputStream oldInputStream, long position) throws IOException, IndexOutOfBoundsException;
 }

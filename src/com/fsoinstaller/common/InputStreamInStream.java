@@ -76,8 +76,7 @@ public class InputStreamInStream implements IInStream
 		if (bufferPos < 0)
 		{
 			// get to the correct stream position
-			currentInputStream = inputStreamSource.recycleInputStream(currentInputStream);
-			seekForward(overallPos);
+			currentInputStream = inputStreamSource.recycleInputStream(currentInputStream, overallPos);
 			
 			// reset the buffer
 			bufferPos = 0;
@@ -109,7 +108,7 @@ public class InputStreamInStream implements IInStream
 				else
 				{
 					// seek, then read the whole buffer
-					seekForward(offset);
+					seekForward(offset, overallCount - buffer.length);
 					readFully(buffer, 0, buffer.length);
 				}
 				
@@ -120,7 +119,7 @@ public class InputStreamInStream implements IInStream
 			}
 			
 			// get to the correct stream position
-			seekForward(bufferPos - bufferCount);
+			seekForward(bufferPos - bufferCount, overallPos);
 			
 			// reset the buffer
 			bufferPos = 0;
@@ -136,7 +135,7 @@ public class InputStreamInStream implements IInStream
 		}
 		
 		if (currentInputStream == null)
-			currentInputStream = inputStreamSource.recycleInputStream(null);
+			currentInputStream = inputStreamSource.recycleInputStream(null, 0);
 		
 		// try to read the rest of the buffer
 		int bytesRead = currentInputStream.read(buffer, bufferCount, buffer.length - bufferCount);
@@ -144,7 +143,7 @@ public class InputStreamInStream implements IInStream
 			bufferCount += bytesRead;
 	}
 	
-	private void seekForward(long offset) throws IOException
+	private void seekForward(long offset, long absolute) throws IOException
 	{
 		int tries;
 		
@@ -153,30 +152,39 @@ public class InputStreamInStream implements IInStream
 		else if (offset < 0)
 			throw new IllegalArgumentException("This method is only for seeking forward");
 		
-		// try skip-seek
-		tries = 0;
-		while (offset > 0 && tries < MAX_SEEK_TRIES)
+		// use a heuristic to determine whether we should seek by using the stream's seek method or by relocating the stream
+		if (offset < defaultBufferSize)
 		{
-			long skipped = currentInputStream.skip(offset);
-			if (skipped > 0)
-				offset -= skipped;
-			else
-				tries++;
+			// try skip-seek
+			tries = 0;
+			while (offset > 0 && tries < MAX_SEEK_TRIES)
+			{
+				long skipped = currentInputStream.skip(offset);
+				if (skipped > 0)
+					offset -= skipped;
+				else
+					tries++;
+			}
+			
+			// try read-seek
+			tries = 0;
+			while (offset > 0 && tries < MAX_SEEK_TRIES)
+			{
+				long read = currentInputStream.read(buffer, 0, (offset < buffer.length) ? (int) offset : buffer.length);
+				if (read > 0)
+					offset -= read;
+				else
+					tries++;
+			}
+			
+			if (offset > 0)
+				throw new IOException("Number of seek attempts exceeded MAX_SEEK_TRIES");
 		}
-		
-		// try read-seek
-		tries = 0;
-		while (offset > 0 && tries < MAX_SEEK_TRIES)
+		// reload the stream at the new position
+		else
 		{
-			long read = currentInputStream.read(buffer, 0, (offset < buffer.length) ? (int) offset : buffer.length);
-			if (read > 0)
-				offset -= read;
-			else
-				tries++;
+			currentInputStream = inputStreamSource.recycleInputStream(currentInputStream, absolute);
 		}
-		
-		if (offset > 0)
-			throw new IOException("Number of seek attempts exceeded MAX_SEEK_TRIES");
 	}
 	
 	private void readFully(byte[] array, int start, int length) throws IOException
