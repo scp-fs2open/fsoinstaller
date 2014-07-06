@@ -607,7 +607,12 @@ public class Downloader
 					connection.setRequestProperty("Range", "bytes=" + position + "-");
 				
 				logger.debug("Opening new input stream...");
-				return connection.getInputStream();
+				InputStream is = connection.getInputStream();
+				
+				if (position > 0 && connection.getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
+					throw new IOException("The site at " + _sourceURL + " does not support returning partial content!");
+				
+				return is;
 			}
 		};
 	}
