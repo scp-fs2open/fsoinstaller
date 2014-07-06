@@ -457,20 +457,20 @@ class SuperValidationTask implements Callable<Void>
 				boolean success = configuration.saveUserProperties();
 				
 				// delete the file, since we don't need it any more
-				if (success)
-					installedversions.delete();
+				if (success && !installedversions.delete())
+					logger.warn("Could not delete legacy file '" + installedversions.getAbsolutePath() + "'!");
 			}
 			
 			// delete other old files and the folder
 			File latest = new File(oldInstallerInfoDir, "latest.txt");
-			if (latest.exists())
-				latest.delete();
+			if (latest.exists() && !latest.delete())
+				logger.warn("Could not delete legacy file '" + latest.getAbsolutePath() + "'!");
 			File version = new File(oldInstallerInfoDir, "version.txt");
-			if (version.exists())
-				version.delete();
+			if (version.exists() && !version.delete())
+				logger.warn("Could not delete legacy file '" + version.getAbsolutePath() + "'!");
 			File[] filesLeft = oldInstallerInfoDir.listFiles();
-			if (filesLeft != null && filesLeft.length == 0)
-				oldInstallerInfoDir.delete();
+			if (filesLeft != null && filesLeft.length == 0 && !oldInstallerInfoDir.delete())
+				logger.warn("Could not delete legacy directory '" + oldInstallerInfoDir.getAbsolutePath() + "'!");
 		}
 		
 		// final interruption check for this task

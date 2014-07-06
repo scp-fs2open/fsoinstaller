@@ -316,8 +316,8 @@ public class Downloader
 			logger.debug("Closing output stream...");
 			outputStream.close();
 			outputStream = null;
-			if (lastModified > 0)
-				destinationFile.setLastModified(lastModified);
+			if (lastModified > 0 && !destinationFile.setLastModified(lastModified))
+				logger.warn("Could not set file modification time for '" + destinationFile.getAbsolutePath() + "'!");
 			
 			logger.debug("Closing input stream...");
 			inputStream.close();
@@ -341,7 +341,8 @@ public class Downloader
 			cleanup(inputStream, outputStream);
 			inputStream = null;
 			outputStream = null;
-			destinationFile.delete();
+			if (!destinationFile.delete())
+				logger.warn("Could not delete incompletely downloaded file '" + destinationFile.getAbsolutePath() + "'!");
 			
 			// restore interrupt and exit
 			Thread.currentThread().interrupt();
@@ -403,8 +404,8 @@ public class Downloader
 				logger.debug("Closing output stream...");
 				outputStream.close();
 				outputStream = null;
-				if (lastModified > 0)
-					destinationFile.setLastModified(lastModified);
+				if (lastModified > 0 && !destinationFile.setLastModified(lastModified))
+					logger.warn("Could not set file modification time for '" + destinationFile.getAbsolutePath() + "'!");
 				
 				zipInputStream.closeEntry();
 			}
@@ -431,8 +432,8 @@ public class Downloader
 			cleanup(zipInputStream, outputStream);
 			zipInputStream = null;
 			outputStream = null;
-			if (destinationFile != null)
-				destinationFile.delete();
+			if (destinationFile != null && !destinationFile.delete())
+				logger.warn("Could not delete incompletely downloaded file '" + destinationFile.getAbsolutePath() + "'!");
 			
 			// restore interrupt and exit
 			Thread.currentThread().interrupt();
@@ -716,8 +717,8 @@ public class Downloader
 					{
 						logger.debug("Closing output stream...");
 						currentOutStream.close();
-						if (_archiveModifiedTimes[currentIndex] > 0)
-							currentFile.setLastModified(_archiveModifiedTimes[currentIndex]);
+						if (_archiveModifiedTimes[currentIndex] > 0 && !currentFile.setLastModified(_archiveModifiedTimes[currentIndex]))
+							logger.warn("Could not set file modification time for '" + currentFile.getAbsolutePath() + "'!");
 					}
 					catch (IOException ioe)
 					{
