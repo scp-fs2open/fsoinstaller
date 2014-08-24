@@ -213,7 +213,7 @@ public class Downloader
 						result = downloadFromArchive(sourceURL, destinationDirectory, format);
 						
 						// if we ended up with a tar archive, extract that too
-						if (result && periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
+						if (result.booleanValue() && periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
 						{
 							File tarFile = new File(destinationDirectory, fileName.substring(0, periodPos));
 							if (tarFile.exists())
@@ -221,7 +221,8 @@ public class Downloader
 								try
 								{
 									result = downloadFromArchive(tarFile.toURI().toURL(), destinationDirectory, ArchiveFormat.TAR);
-									if (result && !tarFile.delete())
+									
+									if (result.booleanValue() && !tarFile.delete())
 										logger.warn("TAR file was not deleted...");
 								}
 								catch (MalformedURLException murle)
@@ -255,7 +256,7 @@ public class Downloader
 				stateHolder.set(DownloadState.COMPLETED);
 		}
 		
-		return result;
+		return result.booleanValue();
 	}
 	
 	public void cancel()
