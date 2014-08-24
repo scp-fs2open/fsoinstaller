@@ -221,15 +221,29 @@ public class MiscUtils
 		ProcessBuilder builder = new ProcessBuilder(shell, param, command);
 		builder.directory(runDirectory);
 		
+		// set the PATH to include the working directory, because Linux is dumb
+		if (os != OperatingSystem.WINDOWS)
+		{
+			String path = builder.environment().get("PATH");
+			if (path != null)
+			{
+				path = path + File.pathSeparator + runDirectory.getAbsolutePath();
+				builder.environment().put("PATH", path);
+			}
+		}
+		
 		return builder;
 	}
 	
 	public static int runExecCommand(File runDirectory, String command) throws IOException, InterruptedException
 	{
-		String loggingPreamble = runDirectory.getAbsolutePath() + File.separator + command;
+		StringBuilder loggingPreamble = new StringBuilder("In ");
+		loggingPreamble.append(runDirectory.getAbsolutePath());
+		loggingPreamble.append(": ");
+		loggingPreamble.append(command);
 		
 		ProcessBuilder builder = buildExecCommand(runDirectory, command);
-		return runProcess(builder, loggingPreamble);
+		return runProcess(builder, loggingPreamble.toString());
 	}
 	
 	private static final Object execMutex = new Object();
