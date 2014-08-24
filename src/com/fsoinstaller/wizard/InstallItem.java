@@ -511,7 +511,7 @@ public class InstallItem extends JPanel
 			for (InstallItem child: childItems)
 				child.cancel();
 			
-			// don't  fire a redundant completion event
+			// don't fire a redundant completion event
 			if (oldState != InstallItemState.CANCELLED && oldState != InstallItemState.COMPLETED)
 			{
 				// if no children, we are done
