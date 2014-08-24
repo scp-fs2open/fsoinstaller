@@ -211,14 +211,20 @@ public class MiscUtils
 			
 			default:
 			{
-				shell = "/bin/sh";
-				param = "-c";
+				shell = null;
+				param = null;
 			}
 		}
 		
 		// build the process, but don't start it yet
 		logger.info("Command to run: " + command);
-		ProcessBuilder builder = new ProcessBuilder(shell, param, command);
+		ProcessBuilder builder;
+		if (shell == null)
+			builder = new ProcessBuilder(command);
+		else if (param == null)
+			builder = new ProcessBuilder(shell, command);
+		else
+			builder = new ProcessBuilder(shell, param, command);
 		builder.directory(runDirectory);
 		
 		// set the PATH to include the working directory, because Linux is dumb
