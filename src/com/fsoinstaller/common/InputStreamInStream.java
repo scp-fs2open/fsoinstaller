@@ -54,6 +54,9 @@ public class InputStreamInStream implements IInStream
 	
 	public InputStreamInStream(InputStreamSource inputStreamSource, long totalBytes, int bufferSize)
 	{
+		if (totalBytes >= Integer.MAX_VALUE)
+			throw new IllegalArgumentException("InputStreamInStream has not been tested for sizes above Integer.MAX_VALUE (size = " + totalBytes + ")");
+		
 		if (inputStreamSource == null)
 			throw new NullPointerException("InputStreamSource must not be null!");
 		if (bufferSize <= 1)
