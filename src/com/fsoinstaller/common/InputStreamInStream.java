@@ -59,8 +59,10 @@ public class InputStreamInStream implements IInStream
 		
 		if (inputStreamSource == null)
 			throw new NullPointerException("InputStreamSource must not be null!");
+		if (totalBytes < 0)
+			throw new IllegalArgumentException("Overall size must not be negative!");
 		if (bufferSize <= 1)
-			throw new IllegalArgumentException("Buffer size must be greater than 1");
+			throw new IllegalArgumentException("Buffer size must be greater than 1!");
 		
 		this.inputStreamSource = inputStreamSource;
 		this.currentInputStream = null;
