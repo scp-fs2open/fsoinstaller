@@ -245,9 +245,31 @@ public class Connector
 		HttpURLConnection conn = openConnection(url);
 		conn.setRequestMethod("HEAD");
 		int length = conn.getContentLength();
-		conn.disconnect();
+		
+		// check response
+		int response = conn.getResponseCode();
+		if (response / 100 == 4 || response / 100 == 5)
+			throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+		
+		// check length for validity
+		if (length < 0)
+			throw new IOException("Server returned invalid Content-Length value of " + length);
 		
 		return length;
+	}
+	
+	public long getLastModified(URL url) throws IOException
+	{
+		HttpURLConnection conn = openConnection(url);
+		conn.setRequestMethod("HEAD");
+		long lastModified = conn.getLastModified();
+		
+		// check response
+		int response = conn.getResponseCode();
+		if (response / 100 == 4 || response / 100 == 5)
+			throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+		
+		return lastModified;
 	}
 	
 	/**

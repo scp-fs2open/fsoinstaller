@@ -296,10 +296,11 @@ public class Downloader
 		OutputStream outputStream = null;
 		try
 		{
-			logger.debug("Opening connection...");
+			totalBytes = connector.getContentLength(sourceURL);
+			lastModified = connector.getLastModified(sourceURL);
+			
+			logger.debug("Opening connection to file...");
 			URLConnection connection = connector.openConnection(sourceURL);
-			totalBytes = connection.getContentLength();
-			lastModified = connection.getLastModified();
 			
 			logger.debug("Checking if the file is up to date...");
 			if (uptodate(destinationFile, totalBytes))
@@ -367,11 +368,10 @@ public class Downloader
 		File destinationFile = null;
 		try
 		{
-			logger.debug("Opening connection...");
-			URLConnection connection = connector.openConnection(sourceURL);
-			totalBytes = connection.getContentLength();
+			totalBytes = connector.getContentLength(sourceURL);
 			
-			logger.debug("Opening input stream...");
+			logger.debug("Opening connection to zip archive...");
+			URLConnection connection = connector.openConnection(sourceURL);
 			zipInputStream = new ZipInputStream(new BufferedInputStream(connection.getInputStream()));
 			
 			ZipEntry entry;
@@ -459,7 +459,7 @@ public class Downloader
 		{
 			totalBytes = connector.getContentLength(sourceURL);
 			
-			logger.debug("Opening archive...");
+			logger.debug("Opening connection to 7zip-supported archive...");
 			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL, totalBytes), totalBytes);
 			archive = SevenZip.openInArchive(format, inStream);
 			int numItems = archive.getNumberOfItems();
