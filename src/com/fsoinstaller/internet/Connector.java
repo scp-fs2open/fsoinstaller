@@ -233,6 +233,9 @@ public class Connector
 		// set the timeout (before we actually use it to connect)
 		conn.setConnectTimeout(connectionTimeout);
 		
+		// send a fake user agent to prevent 403 Forbidden errors on certain servers
+		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/28.0");
+		
 		// ensure that we don't end up with an unexpected subclass
 		if (!(conn instanceof HttpURLConnection))
 			throw new IllegalArgumentException("URL " + url + " does not return an HttpURLConnection!");
