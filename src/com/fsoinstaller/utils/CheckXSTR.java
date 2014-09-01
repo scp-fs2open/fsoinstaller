@@ -75,7 +75,8 @@ public class CheckXSTR
 	{
 		// get all keys from XSTR
 		Properties XSTR = PropertiesUtils.loadPropertiesFromFile(propertiesFile);
-		Set<String> XSTRkeys = XSTR.stringPropertyNames();
+		@SuppressWarnings("unchecked")
+		Set<String> XSTRkeys = (Set<String>) XSTR.propertyNames();
 		
 		// find the differences
 		Set<String> javaKeysNotInXSTR = new HashSet<String>();

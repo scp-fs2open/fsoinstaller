@@ -51,7 +51,9 @@ public class ResourceBundleManager
 		}
 		catch (MissingResourceException mre)
 		{
-			throw new AssertionError("Could not load an XSTR resource bundle!", mre);
+			AssertionError ae = new AssertionError("Could not load an XSTR resource bundle!");
+			ae.initCause(mre);
+			throw ae;
 		}
 		
 		logger.info("Locale to use: " + toString(XSTR.getLocale()));
