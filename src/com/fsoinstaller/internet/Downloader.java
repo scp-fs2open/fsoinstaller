@@ -500,16 +500,19 @@ public class Downloader
 				}
 				
 				// open a new stream at the correct position
-				// (the implementations of HttpURLConnection will cache and pool connections as needed)
-				HttpURLConnection connection = _connector.openConnection(_sourceURL);
+				// (the implementations of URLConnection will cache and pool connections as needed)
+				URLConnection connection = _connector.openConnection(_sourceURL);
 				if (position > 0)
 					connection.setRequestProperty("Range", "bytes=" + position + "-");
 				
 				logger.debug("Opening new input stream...");
 				InputStream newInputStream = connection.getInputStream();
 				
-				if (position > 0 && connection.getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
-					throw new IOException("The site at " + _sourceURL + " does not support returning partial content!");
+				if (connection instanceof HttpURLConnection)
+				{
+					if (position > 0 && ((HttpURLConnection) connection).getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
+						throw new IOException("The site at " + _sourceURL + " does not support returning partial content!");
+				}
 				
 				return newInputStream;
 			}

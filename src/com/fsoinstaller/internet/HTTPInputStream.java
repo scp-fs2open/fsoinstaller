@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 import com.fsoinstaller.utils.Logger;
 
@@ -308,15 +309,18 @@ public class HTTPInputStream extends InputStream
 		
 		// open a new stream at the correct position
 		// (the implementations of HttpURLConnection will cache and pool connections as needed)
-		HttpURLConnection connection = connector.openConnection(sourceURL);
+		URLConnection connection = connector.openConnection(sourceURL);
 		if (position > 0)
 			connection.setRequestProperty("Range", "bytes=" + position + "-");
 		
 		logger.debug("Opening new input stream...");
 		InputStream newInputStream = connection.getInputStream();
 		
-		if (position > 0 && connection.getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
-			throw new IOException("The site at " + sourceURL + " does not support returning partial content!");
+		if (connection instanceof HttpURLConnection)
+		{
+			if (position > 0 && ((HttpURLConnection) connection).getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
+				throw new IOException("The site at " + sourceURL + " does not support returning partial content!");
+		}
 		
 		return newInputStream;
 	}

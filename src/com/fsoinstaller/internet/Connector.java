@@ -219,7 +219,7 @@ public class Connector
 		return true;
 	}
 	
-	public HttpURLConnection openConnection(URL url) throws IOException
+	public URLConnection openConnection(URL url) throws IOException
 	{
 		logger.debug("Opening connection to URL: " + url);
 		
@@ -236,23 +236,23 @@ public class Connector
 		// send a fake user agent to prevent 403 Forbidden errors on certain servers
 		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/28.0");
 		
-		// ensure that we don't end up with an unexpected subclass
-		if (!(conn instanceof HttpURLConnection))
-			throw new IllegalArgumentException("URL " + url + " does not return an HttpURLConnection!");
-		
-		return (HttpURLConnection) conn;
+		return conn;
 	}
 	
 	public int getContentLength(URL url) throws IOException
 	{
-		HttpURLConnection conn = openConnection(url);
-		conn.setRequestMethod("HEAD");
+		URLConnection conn = openConnection(url);
+		if (conn instanceof HttpURLConnection)
+			((HttpURLConnection) conn).setRequestMethod("HEAD");
 		int length = conn.getContentLength();
 		
 		// check response
-		int response = conn.getResponseCode();
-		if (response / 100 == 4 || response / 100 == 5)
-			throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+		if (conn instanceof HttpURLConnection)
+		{
+			int response = ((HttpURLConnection) conn).getResponseCode();
+			if (response / 100 == 4 || response / 100 == 5)
+				throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+		}
 		
 		// check length for validity
 		if (length < 0)
@@ -263,14 +263,18 @@ public class Connector
 	
 	public long getLastModified(URL url) throws IOException
 	{
-		HttpURLConnection conn = openConnection(url);
-		conn.setRequestMethod("HEAD");
+		URLConnection conn = openConnection(url);
+		if (conn instanceof HttpURLConnection)
+			((HttpURLConnection) conn).setRequestMethod("HEAD");
 		long lastModified = conn.getLastModified();
 		
 		// check response
-		int response = conn.getResponseCode();
-		if (response / 100 == 4 || response / 100 == 5)
-			throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+		if (conn instanceof HttpURLConnection)
+		{
+			int response = ((HttpURLConnection) conn).getResponseCode();
+			if (response / 100 == 4 || response / 100 == 5)
+				throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+		}
 		
 		return lastModified;
 	}
