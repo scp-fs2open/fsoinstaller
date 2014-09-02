@@ -222,13 +222,12 @@ class InnoExtractTask implements Callable<Boolean>
 		
 		// put together the args to list the files
 		List<String> commands = new ArrayList<String>();
-		commands.add(innoExtractExecutable.getName());
 		commands.add("--quiet");
 		commands.add("--list");
 		commands.add(MiscUtils.maybeQuotePath(gogInstallPackage.getAbsolutePath()));
 		
 		// build and start the process
-		ProcessBuilder builder = MiscUtils.buildExecCommand(innoExtractExecutable.getParentFile(), commands);
+		ProcessBuilder builder = MiscUtils.buildExecCommand(innoExtractExecutable.getParentFile(), innoExtractExecutable, commands);
 		Process process = builder.start();
 		
 		// get the output
@@ -250,12 +249,11 @@ class InnoExtractTask implements Callable<Boolean>
 		// put together the args to extract the files
 		// NOTE: we are working around a bug in InnoExtract by setting the working directory to be the extract directory, rather than using the output-dir option
 		List<String> commands = new ArrayList<String>();
-		commands.add(innoExtractExecutable.getAbsolutePath());
 		commands.add("--quiet");
 		commands.add(MiscUtils.maybeQuotePath(gogInstallPackage.getAbsolutePath()));
 		
 		// build and start the process
-		ProcessBuilder builder = MiscUtils.buildExecCommand(extractDir, commands);
+		ProcessBuilder builder = MiscUtils.buildExecCommand(extractDir, innoExtractExecutable, commands);
 		Process process = builder.start();
 		
 		// get the output

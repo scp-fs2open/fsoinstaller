@@ -88,6 +88,11 @@ public class MiscUtils
 			return o1.equals(o2);
 	}
 	
+	public static boolean isEmpty(String str)
+	{
+		return str == null || str.trim().equals("");
+	}
+	
 	public static File validateApplicationDir(String dirName)
 	{
 		if (dirName == null || dirName.length() == 0)
@@ -161,7 +166,7 @@ public class MiscUtils
 		return result;
 	}
 	
-	public static ProcessBuilder buildExecCommand(File runDirectory, List<String> commands)
+	public static ProcessBuilder buildExecCommand(File runDirectory, File runBinary, List<String> commands)
 	{
 		StringBuilder str = new StringBuilder();
 		boolean first = true;
@@ -174,26 +179,29 @@ public class MiscUtils
 			str.append(command);
 		}
 		
-		return buildExecCommand(runDirectory, str.toString());
+		return buildExecCommand(runDirectory, runBinary, str.toString());
 	}
 	
-	public static ProcessBuilder buildExecCommand(File runDirectory, String command)
+	public static ProcessBuilder buildExecCommand(File runDirectory, File runBinary, String command)
 	{
-		if (!runDirectory.isDirectory())
+		if (runDirectory == null || !runDirectory.isDirectory())
 			throw new IllegalArgumentException("Run directory must exist and be a directory!");
-		if (command == null || command.equals(""))
+		if (runBinary != null && runBinary.isDirectory())
+			throw new IllegalArgumentException("Run binary must not be a directory!");
+		if (runBinary == null && isEmpty(command))
 			throw new IllegalArgumentException("Command must not be null or blank!");
 		
-		String shell = null;
-		String param = null;
+		String[] builderCommands;
 		
-		// determine the shell command
+		// determine the invocation command
 		OperatingSystem os = OperatingSystem.getHostOS();
 		switch (os)
 		{
 			case WINDOWS:
 			{
+				String shell, param;
 				String os_name_lcase = System.getProperty("os.name").toLowerCase();
+				
 				if (os_name_lcase.contains("windows 95") || os_name_lcase.contains("windows 98") || os_name_lcase.contains("windows me"))
 				{
 					logger.debug("Detected Windows 9X/ME; using COMMAND.COM...");
@@ -206,37 +214,41 @@ public class MiscUtils
 					shell = "cmd";
 					param = "/C";
 				}
+				
+				if (runBinary != null)
+				{
+					if (isEmpty(command))
+						builderCommands = new String[] { shell, param, runBinary.getName() };
+					else
+						builderCommands = new String[] { shell, param, runBinary.getName() + " " + command };
+				}
+				else
+					builderCommands = new String[] { shell, param, command };
+				
 				break;
 			}
 			
 			default:
 			{
-				shell = null;
-				param = null;
+				if (runBinary != null)
+				{
+					if (isEmpty(command))
+						builderCommands = new String[] { runBinary.getAbsolutePath() };
+					else
+						builderCommands = new String[] { runBinary.getAbsolutePath() + " " + command };
+				}
+				else
+					builderCommands = new String[] { command };
 			}
 		}
+		
+		logger.info("ProcessBuilder commands:");
+		for (String builderCommand: builderCommands)
+			logger.info(builderCommand);
 		
 		// build the process, but don't start it yet
-		logger.info("Command to run: " + command);
-		ProcessBuilder builder;
-		if (shell == null)
-			builder = new ProcessBuilder(command);
-		else if (param == null)
-			builder = new ProcessBuilder(shell, command);
-		else
-			builder = new ProcessBuilder(shell, param, command);
+		ProcessBuilder builder = new ProcessBuilder(builderCommands);
 		builder.directory(runDirectory);
-		
-		// set the PATH to include the working directory, because Linux is dumb
-		if (os != OperatingSystem.WINDOWS)
-		{
-			String path = builder.environment().get("PATH");
-			if (path != null)
-			{
-				path = path + File.pathSeparator + runDirectory.getAbsolutePath();
-				builder.environment().put("PATH", path);
-			}
-		}
 		
 		return builder;
 	}
@@ -248,7 +260,7 @@ public class MiscUtils
 		loggingPreamble.append(": ");
 		loggingPreamble.append(command);
 		
-		ProcessBuilder builder = buildExecCommand(runDirectory, command);
+		ProcessBuilder builder = buildExecCommand(runDirectory, null, command);
 		return runProcess(builder, loggingPreamble.toString());
 	}
 	
