@@ -166,7 +166,7 @@ public class MiscUtils
 		return result;
 	}
 	
-	public static ProcessBuilder buildExecCommand(File runDirectory, File runBinary, List<String> commands)
+	public static ProcessBuilder buildExecCommand(File runDirectory, File runFile, List<String> commands)
 	{
 		StringBuilder str = new StringBuilder();
 		boolean first = true;
@@ -179,16 +179,16 @@ public class MiscUtils
 			str.append(command);
 		}
 		
-		return buildExecCommand(runDirectory, runBinary, str.toString());
+		return buildExecCommand(runDirectory, runFile, str.toString());
 	}
 	
-	public static ProcessBuilder buildExecCommand(File runDirectory, File runBinary, String command)
+	public static ProcessBuilder buildExecCommand(File runDirectory, File runFile, String command)
 	{
 		if (runDirectory == null || !runDirectory.isDirectory())
 			throw new IllegalArgumentException("Run directory must exist and be a directory!");
-		if (runBinary != null && runBinary.isDirectory())
+		if (runFile != null && runFile.isDirectory())
 			throw new IllegalArgumentException("Run binary must not be a directory!");
-		if (runBinary == null && isEmpty(command))
+		if (runFile == null && isEmpty(command))
 			throw new IllegalArgumentException("Command must not be null or blank!");
 		
 		String[] builderCommands;
@@ -215,12 +215,12 @@ public class MiscUtils
 					param = "/C";
 				}
 				
-				if (runBinary != null)
+				if (runFile != null)
 				{
 					if (isEmpty(command))
-						builderCommands = new String[] { shell, param, runBinary.getName() };
+						builderCommands = new String[] { shell, param, runFile.getName() };
 					else
-						builderCommands = new String[] { shell, param, runBinary.getName() + " " + command };
+						builderCommands = new String[] { shell, param, runFile.getName() + " " + command };
 				}
 				else
 					builderCommands = new String[] { shell, param, command };
@@ -230,12 +230,12 @@ public class MiscUtils
 			
 			default:
 			{
-				if (runBinary != null)
+				if (runFile != null)
 				{
 					if (isEmpty(command))
-						builderCommands = new String[] { runBinary.getAbsolutePath() };
+						builderCommands = new String[] { runFile.getAbsolutePath() };
 					else
-						builderCommands = new String[] { runBinary.getAbsolutePath() + " " + command };
+						builderCommands = new String[] { runFile.getAbsolutePath() + " " + command };
 				}
 				else
 					builderCommands = new String[] { command };
@@ -243,6 +243,8 @@ public class MiscUtils
 		}
 		
 		logger.info("Working directory: " + runDirectory.getAbsolutePath());
+		if (runFile != null)
+			logger.info("File to run: " + runFile.getAbsolutePath());
 		logger.info("ProcessBuilder commands:");
 		for (String builderCommand: builderCommands)
 			logger.info(builderCommand);
