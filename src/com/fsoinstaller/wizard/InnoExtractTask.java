@@ -113,6 +113,22 @@ class InnoExtractTask implements Callable<Boolean>
 		List<String> filesToBeExtracted;
 		try
 		{
+			// the zeroth thing we do is make the thing executable (at least on Linux)
+			if (OperatingSystem.getHostOS() != OperatingSystem.WINDOWS)
+			{
+				// run chmod
+				String cmd = "chmod a+x " + innoExtractExecutable.getName();
+				int exitVal = MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), cmd);
+				
+				// process completed "successfully" but returned an error code
+				if (exitVal != 0)
+				{
+					logger.error("The command '" + cmd + "' exited with error code " + exitVal + "!");
+					item.logInstallError(XSTR.getString("innoExtractCountingFilesFailed"));
+					return false;
+				}
+			}
+			
 			filesToBeExtracted = innoExtractListFiles(innoExtractExecutable);
 		}
 		catch (InterruptedException ie)
