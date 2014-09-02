@@ -117,7 +117,7 @@ class InnoExtractTask implements Callable<Boolean>
 			if (OperatingSystem.getHostOS() != OperatingSystem.WINDOWS)
 			{
 				// run chmod
-				String cmd = "chmod a+x " + innoExtractExecutable.getName();
+				String cmd = "/bin/chmod a+x " + innoExtractExecutable.getName();
 				int exitVal = MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), cmd);
 				
 				// process completed "successfully" but returned an error code
