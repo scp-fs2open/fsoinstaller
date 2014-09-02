@@ -252,7 +252,9 @@ public class HTTPInputStream extends InputStream
 			}
 			catch (IOException ioe)
 			{
-				throw new IOException("Error reading input stream", ioe);
+				IOException ioe2 = new IOException("Error reading input stream");
+				ioe2.initCause(ioe);
+				throw ioe2;
 			}
 			
 			// unable to read more bytes
