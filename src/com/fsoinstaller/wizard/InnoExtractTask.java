@@ -117,16 +117,8 @@ class InnoExtractTask implements Callable<Boolean>
 			if (OperatingSystem.getHostOS() != OperatingSystem.WINDOWS)
 			{
 				// run chmod
-				String cmd = "chmod a+x " + MiscUtils.maybeQuotePath(innoExtractExecutable.getAbsolutePath());
-				int exitVal = MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), cmd);
-				
-				// process completed "successfully" but returned an error code
-				if (exitVal != 0)
-				{
-					logger.error("The command '" + cmd + "' exited with error code " + exitVal + "!");
-					item.logInstallError(XSTR.getString("innoExtractCountingFilesFailed"));
-					return false;
-				}
+				MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), "chmod a+x innoextract");
+				MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), "chmod a+x bin/*/innoextract");
 			}
 			
 			filesToBeExtracted = innoExtractListFiles(innoExtractExecutable);
