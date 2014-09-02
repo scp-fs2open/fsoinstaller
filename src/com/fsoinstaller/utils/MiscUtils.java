@@ -218,9 +218,9 @@ public class MiscUtils
 				if (runFile != null)
 				{
 					if (isEmpty(command))
-						builderCommands = new String[] { shell, param, runFile.getName() };
+						builderCommands = new String[] { shell, param, maybeQuotePath(runFile.getAbsolutePath()) };
 					else
-						builderCommands = new String[] { shell, param, runFile.getName() + " " + command };
+						builderCommands = new String[] { shell, param, maybeQuotePath(runFile.getAbsolutePath()) + " " + command };
 				}
 				else
 					builderCommands = new String[] { shell, param, command };
@@ -233,9 +233,9 @@ public class MiscUtils
 				if (runFile != null)
 				{
 					if (isEmpty(command))
-						builderCommands = new String[] { runFile.getAbsolutePath() };
+						builderCommands = new String[] { maybeQuotePath(runFile.getAbsolutePath()) };
 					else
-						builderCommands = new String[] { runFile.getAbsolutePath() + " " + command };
+						builderCommands = new String[] { maybeQuotePath(runFile.getAbsolutePath()) + " " + command };
 				}
 				else
 					builderCommands = new String[] { command };
