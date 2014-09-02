@@ -58,6 +58,7 @@ public class ReaderLogger implements Runnable, Callable<Void>
 		
 		try
 		{
+			// don't write the preamble unless we have other data to write as well: this prevents false positives when checking to see if any output was written
 			boolean writtenPreamble = false;
 			
 			String line;

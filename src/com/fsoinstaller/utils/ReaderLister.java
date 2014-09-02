@@ -47,19 +47,18 @@ public class ReaderLister implements Runnable, Callable<Void>
 	
 	protected final Reader reader;
 	protected final List<String> list;
+	protected final List<String> preamble;
 	
 	public ReaderLister(Reader reader)
 	{
 		this(reader, null);
 	}
 	
-	public ReaderLister(Reader reader, List<String> listPreamble)
+	public ReaderLister(Reader reader, List<String> preamble)
 	{
 		this.reader = reader;
 		this.list = Collections.synchronizedList(new ArrayList<String>());
-		
-		if (listPreamble != null)
-			list.addAll(listPreamble);
+		this.preamble = preamble;
 		
 		this.payloadListeners = new CopyOnWriteArrayList<PayloadListener>();
 	}
@@ -112,9 +111,18 @@ public class ReaderLister implements Runnable, Callable<Void>
 		
 		try
 		{
+			// don't write the preamble unless we have other data to write as well: this prevents false positives when checking to see if any output was written
+			boolean writtenPreamble = false;
+			
 			String line;
 			while ((line = br.readLine()) != null)
 			{
+				if (!writtenPreamble)
+				{
+					if (preamble != null)
+						list.addAll(preamble);
+					writtenPreamble = true;
+				}
 				list.add(line);
 				firePayloadEvent(line);
 			}
