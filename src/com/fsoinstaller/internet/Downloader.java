@@ -20,7 +20,6 @@
 package com.fsoinstaller.internet;
 
 import java.awt.EventQueue;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,8 +35,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Semaphore;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import net.sf.sevenzipjbinding.ArchiveFormat;
 import net.sf.sevenzipjbinding.ExtractAskMode;
@@ -194,53 +191,44 @@ public class Downloader
 			if (extension.equalsIgnoreCase("bz2"))
 				extension = "bzip2";
 			
-			// download a zip
-			if (extension.equalsIgnoreCase("zip"))
+			// make sure 7zip is ready to go
+			MiscUtils.initSevenZip();
+			
+			// see if this file is a 7zip-supported archive, including .zip
+			for (ArchiveFormat format: ArchiveFormat.values())
 			{
-				result = downloadFromZip(sourceURL, destinationDirectory);
-			}
-			// not a zip...
-			else
-			{
-				// make sure 7zip is ready to go
-				MiscUtils.initSevenZip();
-				
-				// download another supported archive
-				for (ArchiveFormat format: ArchiveFormat.values())
+				if (format.getMethodName().equalsIgnoreCase(extension))
 				{
-					if (format.getMethodName().equalsIgnoreCase(extension))
+					result = downloadFromArchive(sourceURL, destinationDirectory, format);
+					
+					// if we ended up with a tar archive, extract that too
+					if (result.booleanValue() && periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
 					{
-						result = downloadFromArchive(sourceURL, destinationDirectory, format);
-						
-						// if we ended up with a tar archive, extract that too
-						if (result.booleanValue() && periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
+						File tarFile = new File(destinationDirectory, fileName.substring(0, periodPos));
+						if (tarFile.exists())
 						{
-							File tarFile = new File(destinationDirectory, fileName.substring(0, periodPos));
-							if (tarFile.exists())
+							try
 							{
-								try
-								{
-									result = downloadFromArchive(tarFile.toURI().toURL(), destinationDirectory, ArchiveFormat.TAR);
-									
-									if (result.booleanValue() && !tarFile.delete())
-										logger.warn("TAR file was not deleted...");
-								}
-								catch (MalformedURLException murle)
-								{
-									logger.error("Could not extract from '" + tarFile.getName() + "'!");
-								}
+								result = downloadFromArchive(tarFile.toURI().toURL(), destinationDirectory, ArchiveFormat.TAR);
+								
+								if (result.booleanValue() && !tarFile.delete())
+									logger.warn("TAR file was not deleted...");
+							}
+							catch (MalformedURLException murle)
+							{
+								logger.error("Could not extract from '" + tarFile.getName() + "'!");
 							}
 						}
-						
-						// this extension matched: no need to check any other extensions
-						break;
 					}
+					
+					// this extension matched: no need to check any other extensions
+					break;
 				}
-				
-				// download as a standard file
-				if (result == null)
-					result = downloadFile(sourceURL, new File(destinationDirectory, fileName));
 			}
+			
+			// not an archive (or an archive that 7zip knows how to extract), so download as a standard file
+			if (result == null)
+				result = downloadFile(sourceURL, new File(destinationDirectory, fileName));
 		}
 		// if downloading to a file, copy the source file and use the destination name
 		else
@@ -356,96 +344,6 @@ public class Downloader
 		}
 	}
 	
-	protected boolean downloadFromZip(URL sourceURL, File destinationDirectory)
-	{
-		logger.info("Downloading and extracting from " + sourceURL + " to local directory " + destinationDirectory);
-		
-		String currentEntry = "";
-		long totalBytes = 0;
-		long lastModified = -1;
-		ZipInputStream zipInputStream = null;
-		OutputStream outputStream = null;
-		File destinationFile = null;
-		try
-		{
-			totalBytes = connector.getContentLength(sourceURL);
-			
-			logger.debug("Opening connection to zip archive...");
-			URLConnection connection = connector.openConnection(sourceURL);
-			zipInputStream = new ZipInputStream(new BufferedInputStream(connection.getInputStream()));
-			
-			ZipEntry entry;
-			while ((entry = zipInputStream.getNextEntry()) != null)
-			{
-				currentEntry = entry.getName();
-				totalBytes = entry.getSize();
-				lastModified = entry.getTime();
-				
-				logger.debug("Checking entry '" + currentEntry + "'");
-				if (entry.isDirectory())
-				{
-					zipInputStream.closeEntry();
-					continue;
-				}
-				
-				logger.debug("Checking if the file is up to date...");
-				destinationFile = new File(destinationDirectory, currentEntry);
-				if (uptodate(destinationFile, totalBytes))
-				{
-					fireNoDownloadNecessary(destinationFile.getName(), 0, totalBytes);
-					zipInputStream.closeEntry();
-					continue;
-				}
-				
-				logger.debug("Opening output stream...");
-				outputStream = openOutputStream(destinationFile);
-				
-				downloadUsingStreams(zipInputStream, outputStream, currentEntry, totalBytes);
-				
-				logger.debug("Closing output stream...");
-				outputStream.close();
-				outputStream = null;
-				if (lastModified > 0 && !destinationFile.setLastModified(lastModified))
-					logger.warn("Could not set file modification time for '" + destinationFile.getAbsolutePath() + "'!");
-				
-				zipInputStream.closeEntry();
-			}
-			
-			logger.debug("Closing input stream...");
-			zipInputStream.close();
-			zipInputStream = null;
-			
-			return true;
-		}
-		catch (IOException ioe)
-		{
-			logger.error("An exception was thrown during download!", ioe);
-			fireDownloadFailed(currentEntry, 0, totalBytes, ioe);
-			
-			return false;
-		}
-		catch (InterruptedException ie)
-		{
-			logger.warn("The download was interrupted!", ie);
-			fireDownloadCancelled(currentEntry, 0, totalBytes, ie);
-			
-			// try to delete incomplete file
-			cleanup(zipInputStream, outputStream);
-			zipInputStream = null;
-			outputStream = null;
-			if (destinationFile != null && !destinationFile.delete())
-				logger.warn("Could not delete incompletely downloaded file '" + destinationFile.getAbsolutePath() + "'!");
-			
-			// restore interrupt and exit
-			Thread.currentThread().interrupt();
-			return false;
-		}
-		finally
-		{
-			cleanup(zipInputStream, outputStream);
-		}
-	}
-	
 	protected boolean downloadFromArchive(URL sourceURL, File destinationDirectory, ArchiveFormat format)
 	{
 		logger.info("Downloading and extracting from " + sourceURL + " to local directory " + destinationDirectory);
@@ -459,7 +357,7 @@ public class Downloader
 		{
 			totalBytes = connector.getContentLength(sourceURL);
 			
-			logger.debug("Opening connection to 7zip-supported archive...");
+			logger.debug("Opening connection to archive...");
 			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL, totalBytes), totalBytes);
 			archive = SevenZip.openInArchive(format, inStream);
 			int numItems = archive.getNumberOfItems();
