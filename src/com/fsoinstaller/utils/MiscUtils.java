@@ -242,6 +242,7 @@ public class MiscUtils
 			}
 		}
 		
+		logger.info("Working directory: " + runDirectory.getAbsolutePath());
 		logger.info("ProcessBuilder commands:");
 		for (String builderCommand: builderCommands)
 			logger.info(builderCommand);
