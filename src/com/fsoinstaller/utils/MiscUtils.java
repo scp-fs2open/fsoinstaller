@@ -26,6 +26,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.BreakIterator;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -166,32 +169,37 @@ public class MiscUtils
 		return result;
 	}
 	
-	public static ProcessBuilder buildExecCommand(File runDirectory, File runFile, List<String> commands)
+	private static String concatenateParameters(List<String> parameters)
 	{
 		StringBuilder str = new StringBuilder();
 		boolean first = true;
-		for (String command: commands)
+		for (String parameter: parameters)
 		{
 			if (first)
 				first = false;
 			else
 				str.append(" ");
-			str.append(command);
+			str.append(parameter);
 		}
 		
-		return buildExecCommand(runDirectory, runFile, str.toString());
+		return str.toString();
 	}
 	
-	public static ProcessBuilder buildExecCommand(File runDirectory, File runFile, String command)
+	public static ProcessBuilder buildExecCommand(File runDirectory, File runFile, String ... parameters)
+	{
+		return buildExecCommand(runDirectory, runFile, (parameters == null || parameters.length == 0) ? Collections.<String>emptyList() : Arrays.asList(parameters));
+	}
+	
+	public static ProcessBuilder buildExecCommand(File runDirectory, File runFile, List<String> parameters)
 	{
 		if (runDirectory == null || !runDirectory.isDirectory())
 			throw new IllegalArgumentException("Run directory must exist and be a directory!");
 		if (runFile != null && runFile.isDirectory())
 			throw new IllegalArgumentException("Run binary must not be a directory!");
-		if (runFile == null && isEmpty(command))
-			throw new IllegalArgumentException("Command must not be null or blank!");
+		if (parameters == null || runFile == null && parameters.isEmpty())
+			throw new IllegalArgumentException("Parameterized command must not be null or blank!");
 		
-		String[] builderCommands;
+		List<String> builderCommands = new ArrayList<String>();
 		
 		// determine the invocation command
 		OperatingSystem os = OperatingSystem.getHostOS();
@@ -215,15 +223,17 @@ public class MiscUtils
 					param = "/C";
 				}
 				
+				builderCommands.add(shell);
+				builderCommands.add(param);
 				if (runFile != null)
 				{
-					if (isEmpty(command))
-						builderCommands = new String[] { shell, param, maybeQuotePath(runFile.getAbsolutePath()) };
+					if (parameters.isEmpty())
+						builderCommands.add(maybeQuotePath(runFile.getAbsolutePath()));
 					else
-						builderCommands = new String[] { shell, param, maybeQuotePath(runFile.getAbsolutePath()) + " " + command };
+						builderCommands.add(maybeQuotePath(runFile.getAbsolutePath()) + " " + concatenateParameters(parameters));
 				}
 				else
-					builderCommands = new String[] { shell, param, command };
+					builderCommands.add(concatenateParameters(parameters));
 				
 				break;
 			}
@@ -231,14 +241,8 @@ public class MiscUtils
 			default:
 			{
 				if (runFile != null)
-				{
-					if (isEmpty(command))
-						builderCommands = new String[] { maybeQuotePath(runFile.getAbsolutePath()) };
-					else
-						builderCommands = new String[] { maybeQuotePath(runFile.getAbsolutePath()) + " " + command };
-				}
-				else
-					builderCommands = new String[] { command };
+					builderCommands.add(maybeQuotePath(runFile.getAbsolutePath()));
+				builderCommands.addAll(parameters);
 			}
 		}
 		
@@ -256,15 +260,10 @@ public class MiscUtils
 		return builder;
 	}
 	
-	public static int runExecCommand(File runDirectory, String command) throws IOException, InterruptedException
+	public static int runExecCommand(File runDirectory, String ... commands) throws IOException, InterruptedException
 	{
-		StringBuilder loggingPreamble = new StringBuilder("In ");
-		loggingPreamble.append(runDirectory.getAbsolutePath());
-		loggingPreamble.append(": ");
-		loggingPreamble.append(command);
-		
-		ProcessBuilder builder = buildExecCommand(runDirectory, null, command);
-		return runProcess(builder, loggingPreamble.toString());
+		ProcessBuilder builder = buildExecCommand(runDirectory, null, commands);
+		return runProcess(builder, concatenateParameters(Arrays.asList(commands)));
 	}
 	
 	private static final Object execMutex = new Object();

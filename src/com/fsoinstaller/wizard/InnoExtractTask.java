@@ -63,6 +63,25 @@ class InnoExtractTask implements Callable<Boolean>
 		this.gogInstallPackage = (File) Configuration.getInstance().getSettings().get(Configuration.GOG_INSTALL_PACKAGE_KEY);
 	}
 	
+	/**
+	 * recursively search for all files that have "innoextract" in their name,
+	 * then run chmod on them
+	 */
+	private static void recursiveChMod(File dir) throws IOException, InterruptedException
+	{
+		File[] files = dir.listFiles();
+		if (files == null)
+			return;
+		
+		for (File file: files)
+		{
+			if (file.isDirectory())
+				recursiveChMod(dir);
+			else if (file.getName().toLowerCase().contains("innoextract"))
+				MiscUtils.runExecCommand(dir, "chmod", "a+x", file.getName());
+		}
+	}
+	
 	private Boolean call0() throws InterruptedException
 	{
 		if (!gogInstallPackage.exists())
@@ -116,9 +135,8 @@ class InnoExtractTask implements Callable<Boolean>
 			// the zeroth thing we do is make the thing executable (at least on Linux)
 			if (OperatingSystem.getHostOS() != OperatingSystem.WINDOWS)
 			{
-				// run chmod
-				MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), "chmod a+x innoextract");
-				MiscUtils.runExecCommand(innoExtractExecutable.getParentFile(), "chmod a+x bin/*/innoextract");
+				// recursively search for all files that have "innoextract" in their name, then run chmod on them
+				recursiveChMod(innoExtractExecutable.getParentFile());
 			}
 			
 			filesToBeExtracted = innoExtractListFiles(innoExtractExecutable);
