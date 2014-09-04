@@ -73,12 +73,20 @@ class InnoExtractTask implements Callable<Boolean>
 		if (files == null)
 			return;
 		
+		logger.debug("Examining " + dir.getAbsolutePath());
+		
 		for (File file: files)
 		{
 			if (file.isDirectory())
+			{
 				recursiveChMod(dir);
+			}
 			else if (file.getName().toLowerCase().contains("innoextract"))
+			{
+				logger.debug("Running chmod on " + file.getName());
+				
 				MiscUtils.runExecCommand(dir, "chmod", "a+x", file.getName());
+			}
 		}
 	}
 	
@@ -133,8 +141,10 @@ class InnoExtractTask implements Callable<Boolean>
 		try
 		{
 			// the zeroth thing we do is make the thing executable (at least on Linux)
-			if (OperatingSystem.getHostOS() != OperatingSystem.WINDOWS)
+			if (os != OperatingSystem.WINDOWS)
 			{
+				logger.info("Running recursive chmod...");
+				
 				// recursively search for all files that have "innoextract" in their name, then run chmod on them
 				recursiveChMod(innoExtractExecutable.getParentFile());
 			}

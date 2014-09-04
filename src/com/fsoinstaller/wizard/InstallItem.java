@@ -347,6 +347,8 @@ public class InstallItem extends JPanel
 						// if this is the OpenAL node, re-test for OpenAL
 						if (node.getName().equals(XSTR.getString("installOpenALName")))
 						{
+							modLogger.info("Re-testing for OpenAL");
+							
 							if (!MiscUtils.loadOpenAL())
 							{
 								logInstallError(XSTR.getString("openALError"));
@@ -357,6 +359,8 @@ public class InstallItem extends JPanel
 						// if this is the GOG node, run the GOG task
 						else if (node.getName().equals(XSTR.getString("installGOGName")))
 						{
+							modLogger.info("Launching InnoExtractTask");
+							
 							InnoExtractTask task = new InnoExtractTask(InstallItem.this);
 							try
 							{
@@ -377,6 +381,8 @@ public class InstallItem extends JPanel
 						// if this is the Steam copy node, run the copy task
 						else if (node.getName().equals(XSTR.getString("copyInstallationName")))
 						{
+							modLogger.info("Launching CopyInstallationTask");
+							
 							CopyInstallationTask task = new CopyInstallationTask(InstallItem.this);
 							try
 							{
