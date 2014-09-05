@@ -73,8 +73,6 @@ class InnoExtractTask implements Callable<Boolean>
 		if (files == null)
 			return;
 		
-		logger.debug("Examining " + dir.getAbsolutePath());
-		
 		for (File file: files)
 		{
 			if (file.isDirectory())
