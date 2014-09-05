@@ -215,29 +215,34 @@ public class IOUtils
 	
 	public static boolean deleteDirectoryTree(File directory)
 	{
-		if (directory.isDirectory())
+		try
 		{
-			File[] files = directory.listFiles();
-			// I/O error
-			if (files == null)
-				return false;
-			
-			for (File file: files)
+			(new FileTraverse<Void>(true)
 			{
-				if (file.isDirectory())
+				@Override
+				public Void forDirectory(File dir) throws IOException
 				{
-					if (!deleteDirectoryTree(file))
-						return false;
+					if (!dir.delete())
+						throw new IOException("Unable to delete directory '" + dir.getAbsolutePath() + "'");
+					return null;
 				}
-				else if (!file.delete())
+				
+				@Override
+				public Void forFile(File file) throws IOException
 				{
-					logger.error("Unable to delete file '" + file.getAbsolutePath() + "'");
-					return false;
+					if (!file.delete())
+						throw new IOException("Unable to delete file '" + file.getAbsolutePath() + "'");
+					return null;
 				}
-			}
+			}).on(directory);
+		}
+		catch (IOException ioe)
+		{
+			logger.error("Directory tree could not be deleted!", ioe);
+			return false;
 		}
 		
-		return directory.delete();
+		return true;
 	}
 	
 	/**

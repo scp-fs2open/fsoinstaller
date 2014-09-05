@@ -20,6 +20,7 @@
 package com.fsoinstaller.utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -42,12 +43,22 @@ public class CheckXSTR
 	
 	private static Pattern XSTR_properties = Pattern.compile("XSTR[A-Za-z_]*\\.properties");
 	
-	public static void main(String[] args)
+	public static void main(String[] args) throws IOException
 	{
 		// get all java files
 		File root = new File("src");
-		List<File> javaFiles = new ArrayList<File>();
-		addJavaFilesInTree(root, javaFiles);
+		final List<File> javaFiles = new ArrayList<File>();
+		(new FileTraverse<Void>()
+		{
+			@Override
+			public Void forFile(File file)
+			{
+				if (file.getName().endsWith(".java"))
+					javaFiles.add(file);
+				return null;
+			}
+		}).on(root);
+		
 		// get all keys from them
 		Set<String> javaKeys = new HashSet<String>();
 		for (File file: javaFiles)
@@ -57,10 +68,7 @@ public class CheckXSTR
 		File resourceDir = new File("resources");
 		File[] files = resourceDir.listFiles();
 		if (files == null)
-		{
-			logger.error("I/O error in " + resourceDir.getAbsolutePath());
-			return;
-		}
+			throw new IOException("Failed to list files in: " + resourceDir.getAbsolutePath());
 		for (File file: files)
 		{
 			if (XSTR_properties.matcher(file.getName()).matches())
@@ -113,24 +121,6 @@ public class CheckXSTR
 				for (String key: XSTRKeysNotInJava)
 					logger.info(key);
 			}
-		}
-	}
-	
-	private static void addJavaFilesInTree(File root, List<File> fileList)
-	{
-		if (root.isDirectory())
-		{
-			File[] files = root.listFiles();
-			if (files == null)
-				throw new IllegalStateException("Failed to list files in " + root.getAbsolutePath());
-			
-			for (File file: files)
-				addJavaFilesInTree(file, fileList);
-		}
-		else
-		{
-			if (root.getName().endsWith(".java"))
-				fileList.add(root);
 		}
 	}
 	
