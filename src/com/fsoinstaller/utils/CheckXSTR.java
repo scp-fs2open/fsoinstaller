@@ -21,6 +21,7 @@ package com.fsoinstaller.utils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -75,8 +76,14 @@ public class CheckXSTR
 	{
 		// get all keys from XSTR
 		Properties XSTR = PropertiesUtils.loadPropertiesFromFile(propertiesFile);
-		@SuppressWarnings("unchecked")
-		Set<String> XSTRkeys = (Set<String>) XSTR.propertyNames();
+		Set<String> XSTRkeys = new HashSet<String>();
+		Enumeration<?> xstrEnum = XSTR.propertyNames();
+		while (xstrEnum.hasMoreElements())
+		{
+			Object next = xstrEnum.nextElement();
+			if (next instanceof String)
+				XSTRkeys.add((String) next);
+		}
 		
 		// find the differences
 		Set<String> javaKeysNotInXSTR = new HashSet<String>();
