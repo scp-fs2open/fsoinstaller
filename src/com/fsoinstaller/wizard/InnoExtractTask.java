@@ -79,12 +79,11 @@ class InnoExtractTask implements Callable<Boolean>
 		{
 			if (file.isDirectory())
 			{
-				recursiveChMod(dir);
+				recursiveChMod(file);
 			}
 			else if (file.getName().toLowerCase().contains("innoextract"))
 			{
 				logger.debug("Running chmod on " + file.getName());
-				
 				MiscUtils.runExecCommand(dir, "chmod", "a+x", file.getName());
 			}
 		}
