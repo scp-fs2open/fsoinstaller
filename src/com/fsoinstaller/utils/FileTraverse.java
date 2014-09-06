@@ -55,6 +55,13 @@ public abstract class FileTraverse<T>
 		if (files == null)
 			throw new IOException("Failed to list files in directory: " + startingDir);
 		
+		if (!traverseBeforeFunction)
+		{
+			T result = forDirectory(startingDir);
+			if (result != null)
+				return result;
+		}
+		
 		for (File file: files)
 		{
 			if (file.isDirectory())
@@ -77,6 +84,13 @@ public abstract class FileTraverse<T>
 			}
 			else
 				throw new IOException("File system entry '" + file + "' is neither a file nor a directory!");
+		}
+		
+		if (traverseBeforeFunction)
+		{
+			T result = forDirectory(startingDir);
+			if (result != null)
+				return result;
 		}
 		
 		return null;
