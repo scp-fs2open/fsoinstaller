@@ -66,15 +66,7 @@ public abstract class FileTraverse<T>
 		{
 			if (file.isDirectory())
 			{
-				if (traverseBeforeFunction)
-					on(file);
-				
-				T result = forDirectory(file);
-				if (result != null)
-					return result;
-				
-				if (!traverseBeforeFunction)
-					on(file);
+				on(file);
 			}
 			else if (file.isFile())
 			{
