@@ -32,6 +32,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.fsoinstaller.common.InstallerNode;
@@ -300,6 +301,10 @@ public class IOUtils
 		return null;
 	}
 	
+	/**
+	 * Retrieve a directory listing of all files in the directory, but with the
+	 * file names converted to lower-case.
+	 */
 	public static List<String> getLowerCaseFiles(File directory)
 	{
 		if (!directory.isDirectory())
@@ -316,5 +321,40 @@ public class IOUtils
 		}
 		
 		return fileNames;
+	}
+	
+	/**
+	 * Adjust the complete path of the specified file to include any path
+	 * elements (folders or filename) which may differ from the provided file
+	 * only by letter case.
+	 */
+	public static File syncFileLetterCase(File file)
+	{
+		// Windows is already case-insensitive 
+		if (OperatingSystem.getHostOS() == OperatingSystem.WINDOWS)
+			return file;
+		
+		// get all the path elements up to the root
+		LinkedList<String> pathElements = new LinkedList<String>();
+		do {
+			pathElements.addFirst(file.getName());
+			file = file.getParentFile();
+		} while (file.getParentFile() != null);
+		
+		// we are now at the root, so reconstruct the path using case-insensitive elements
+		for (String str: pathElements)
+		{
+			String[] children = file.list();
+			for (String child: children)
+			{
+				if (str.equalsIgnoreCase(child))
+				{
+					file = new File(file, child);
+					break;
+				}
+			}
+		}
+		
+		return file;
 	}
 }

@@ -49,6 +49,7 @@ import net.sf.sevenzipjbinding.SevenZipException;
 import com.fsoinstaller.common.InputStreamInStream;
 import com.fsoinstaller.common.InputStreamSource;
 import com.fsoinstaller.common.OutputStreamSequentialOutStream;
+import com.fsoinstaller.utils.IOUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.ObjectHolder;
@@ -397,7 +398,7 @@ public class Downloader
 				}
 				
 				logger.debug("Checking if the file is up to date...");
-				File destinationFile = new File(destinationDirectory, currentEntry);
+				File destinationFile = IOUtils.syncFileLetterCase(new File(destinationDirectory, currentEntry));
 				if (uptodate(destinationFile, totalBytes))
 				{
 					fireNoDownloadNecessary(destinationFile.getName(), 0, totalBytes);
@@ -550,7 +551,7 @@ public class Downloader
 							logger.debug("Opening output stream...");
 							currentIndex = index;
 							currentCompletionValue = 0;
-							currentFile = new File(_destinationDirectory, _archiveEntries[index]);
+							currentFile = IOUtils.syncFileLetterCase(new File(_destinationDirectory, _archiveEntries[index]));
 							currentOutStream = new OutputStreamSequentialOutStream(openOutputStream(currentFile));
 						}
 						catch (IOException ioe)
