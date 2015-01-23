@@ -342,17 +342,21 @@ public class IOUtils
 		} while (file.getParentFile() != null);
 		
 		// we are now at the root, so reconstruct the path using case-insensitive elements
-		for (String str: pathElements)
+		for (String pathElement: pathElements)
 		{
+			// if we have an existing version of this element, ignoring case, use that instead
 			String[] children = file.list();
 			for (String child: children)
 			{
-				if (str.equalsIgnoreCase(child))
+				if (pathElement.equalsIgnoreCase(child))
 				{
-					file = new File(file, child);
+					pathElement = child;
 					break;
 				}
 			}
+			
+			// keep reconstructing the path
+			file = new File(file, pathElement);
 		}
 		
 		return file;
