@@ -308,17 +308,33 @@ public class InstallerNodeFactory
 	 */
 	private static String readLine(Reader reader) throws IOException
 	{
-		StringBuilder builder = new StringBuilder();
+		// read lines until we find one without a comment
 		while (true)
 		{
-			int ch = reader.read();
-			if (ch < 0)
-				return builder.length() > 0 ? builder.toString().trim() : null;
-			else if (ch == '\n')
-				break;
-			builder.append((char) ch);
+			StringBuilder builder = new StringBuilder();
+			
+			// read characters until EOF or EOL
+			while (true)
+			{
+				int ch = reader.read();
+				if (ch < 0)
+				{
+					if (builder.length() == 0)
+						return null;
+					break;
+				}
+				else if (ch == '\n')
+					break;
+				builder.append((char) ch);
+			}
+			
+			// trim whitespace
+			String line = builder.toString().trim();
+			
+			// # indicates comment
+			if (!line.startsWith("#"))
+				return line;
 		}
-		return builder.toString().trim();
 	}
 	
 	public static void writeNode(Writer writer, InstallerNode node) throws IOException
