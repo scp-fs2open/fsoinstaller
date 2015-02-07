@@ -21,6 +21,12 @@ package com.fsoinstaller.wizard;
 
 import java.awt.CardLayout;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -33,28 +39,45 @@ public class InstallerGUI extends JFrame
 {
 	private static final BufferedImage app_icon = GraphicsUtils.getResourceImage("installer_icon.png");
 	
-	protected final WizardPage[] pages;
+	protected final List<WizardPage> pageList;
 	protected final CardLayout layout;
 	
 	protected WizardPage activePage;
-	protected int activePageIndex;
+	protected Map<WizardPage, WizardPage> backMap;
+	protected Map<WizardPage, WizardPage> nextMap;
 	
 	public InstallerGUI()
 	{
-		setName("InstallerGUI");
-		layout = new CardLayout();
-		
 		// instantiate all the pages we'll be using
-		pages = new WizardPage[]
+		this(Arrays.asList(new WizardPage[]
 		{
 			new ConfigPage(),
 			new ChoicePage(),
 			new ModSelectPage(),
 			new InstallPage(),
 			new FinishedPage()
-		};
-		activePageIndex = 0;
-		activePage = pages[activePageIndex];
+		}));
+	}
+	
+	public InstallerGUI(Collection<? extends WizardPage> pages)
+	{
+		setName("InstallerGUI");
+		layout = new CardLayout();
+		
+		pageList = new ArrayList<WizardPage>(pages);
+		if (pageList.isEmpty())
+			throw new IllegalArgumentException("No pages provided!");
+		
+		activePage = pageList.get(0);
+		backMap = new HashMap<WizardPage, WizardPage>();
+		nextMap = new HashMap<WizardPage, WizardPage>();
+		
+		// establish page links
+		for (int i = 0; i < pageList.size(); i++)
+		{
+			backMap.put(pageList.get(i), i > 0 ? pageList.get(i - 1) : null);
+			nextMap.put(pageList.get(i), i < pageList.size() - 1 ? pageList.get(i + 1) : null);
+		}
 	}
 	
 	/**
@@ -70,7 +93,7 @@ public class InstallerGUI extends JFrame
 		
 		// add pages to layout
 		contentPane.removeAll();
-		for (WizardPage page: pages)
+		for (WizardPage page: pageList)
 		{
 			page.setGUI(this);
 			page.buildUI();
@@ -93,23 +116,50 @@ public class InstallerGUI extends JFrame
 	
 	public void moveBack()
 	{
-		if (activePageIndex == 0)
+		WizardPage backPage = backMap.get(activePage);
+		if (backPage == null)
 			return;
 		
-		activePageIndex--;
-		activePage = pages[activePageIndex];
+		activePage = backPage;
 		activePage.prepareForDisplay();
-		layout.previous(getContentPane());
+		layout.show(getContentPane(), activePage.getName());
 	}
 	
 	public void moveNext()
 	{
-		if (activePageIndex == pages.length - 1)
+		WizardPage nextPage = nextMap.get(activePage);
+		if (nextPage == null)
 			return;
 		
-		activePageIndex++;
-		activePage = pages[activePageIndex];
+		activePage = nextPage;
 		activePage.prepareForDisplay();
-		layout.next(getContentPane());
+		layout.show(getContentPane(), activePage.getName());
+	}
+	
+	public void skip(Class<? extends WizardPage> pageClass)
+	{
+		// skip over all pages that have this class
+		for (WizardPage page: pageList)
+		{
+			if (page.getClass() == pageClass)
+				skip(page);
+		}
+	}
+	
+	public void skip(WizardPage page)
+	{
+		// for all pages which go back to this page, have them go back one more step
+		for (Map.Entry<WizardPage, WizardPage> backEntry: backMap.entrySet())
+		{
+			if (backEntry.getValue() == page)
+				backEntry.setValue(backMap.get(page));
+		}
+		
+		// for all pages which go next to this page, have them go next one more step
+		for (Map.Entry<WizardPage, WizardPage> nextEntry: nextMap.entrySet())
+		{
+			if (nextEntry.getValue() == page)
+				nextEntry.setValue(nextMap.get(page));
+		}
 	}
 }

@@ -338,8 +338,16 @@ class SuperValidationTask implements Callable<Void>
 		if (Thread.currentThread().isInterrupted())
 			return cleanupPhaseA();
 		
+		// if we are overriding our mod nodes, don't download them from the repository
+		if (settings.containsKey(Configuration.OVERRIDE_INSTALL_MOD_NODES_KEY))
+		{
+			settings.put(Configuration.MOD_NODES_KEY, settings.get(Configuration.OVERRIDE_INSTALL_MOD_NODES_KEY));
+			
+			// also skip over ChoicePage
+			((InstallerGUI) activeFrame).skip(ChoicePage.class);
+		}
 		// only check for mod information if we haven't checked already
-		if (!settings.containsKey(Configuration.MOD_NODES_KEY))
+		else if (!settings.containsKey(Configuration.MOD_NODES_KEY))
 		{
 			logger.info("Downloading mod information...");
 			

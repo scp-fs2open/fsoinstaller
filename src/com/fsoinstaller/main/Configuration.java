@@ -79,6 +79,7 @@ public class Configuration
 	public static final String STEAM_INSTALL_LOCATION_KEY = "STEAM-INSTALL-LOCATION";
 	public static final String ADD_OPENAL_INSTALL_KEY = "ADD-OPENAL-INSTALL";
 	public static final String DONT_SHORT_CIRCUIT_INSTALLATION_KEY = "DON'T-SHORT-CIRCUIT-INSTALLATION";
+	public static final String OVERRIDE_INSTALL_MOD_NODES_KEY = "OVERRIDE-INSTALL-MOD-FILE";
 	
 	/**
 	 * Use the Initialization On Demand Holder idiom for thread-safe

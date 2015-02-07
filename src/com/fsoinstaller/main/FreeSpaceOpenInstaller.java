@@ -40,7 +40,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -52,7 +51,6 @@ import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.SwingUtils;
-import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
@@ -282,19 +280,28 @@ public class FreeSpaceOpenInstaller
 			}
 		});
 		
-		String command = args.length == 0 ? null : args[0];
+		// we might launch different utilities depending on the command-line argument
+		String command = args.length == 0 ? "" : args[0];
 		
 		// first custom command is validating install config files
-		if (command != null && command.equals("validate"))
+		if (command.equals("validate"))
 		{
 			selectAndValidateModFile(args);
 		}
 		// we can also generate hashes
-		else if (command != null && command.equals("hash"))
+		else if (command.equals("hash"))
 		{
 			selectAndHashFile(args);
 		}
-		// later we'll evaluate the runtime args to launch the txtfile builder, etc.
+		// test out a mod file by piggybacking an installer session on the results of validation
+		else if (command.equals("test"))
+		{
+			if (selectAndValidateModFile(args))
+			{
+				FreeSpaceOpenInstaller installer = getInstance();
+				installer.launchWizard();
+			}
+		}
 		// default command is the standard wizard installation
 		else
 		{
@@ -303,36 +310,33 @@ public class FreeSpaceOpenInstaller
 		}
 	}
 	
-	private static void selectAndValidateModFile(String[] args)
+	private static boolean selectAndValidateModFile(String[] args)
 	{
 		final Configuration config = Configuration.getInstance();
 		File modFile;
-		boolean useGUI;
 		
 		// see if the user supplied an argument
 		if (args.length > 1)
 		{
 			modFile = new File(args[1]);
-			useGUI = false;
 		}
 		// if not, prompt for it
 		else
 		{
 			modFile = SwingUtils.promptForFile(null, XSTR.getString("chooseModConfigTitle"), config.getApplicationDir(), "txt", XSTR.getString("textFilesFilter"));
 			if (modFile == null)
-				return;
-			useGUI = true;
+				return false;
 		}
 		
 		if (!modFile.exists())
 		{
 			logger.warn("The file '" + modFile.getAbsolutePath() + "' does not exist!");
-			return;
+			return false;
 		}
 		else if (modFile.isDirectory())
 		{
 			logger.warn("The file '" + modFile.getAbsolutePath() + "' is a directory!");
-			return;
+			return false;
 		}
 		
 		// parse it
@@ -342,23 +346,28 @@ public class FreeSpaceOpenInstaller
 			for (InstallerNode node: nodes)
 				logger.info("Successfully parsed " + node.getName());
 			
-			if (useGUI)
-				ThreadSafeJOptionPane.showMessageDialog(null, XSTR.getString("allNodesParsedSuccessfully"), config.getApplicationTitle(), JOptionPane.INFORMATION_MESSAGE);
-			else
-				logger.info(XSTR.getString("allNodesParsedSuccessfully"));
+			logger.info(XSTR.getString("allNodesParsedSuccessfully"));
+			
+			// since this was successful, save it to the configuration
+			config.getSettings().put(Configuration.OVERRIDE_INSTALL_MOD_NODES_KEY, nodes);
 		}
 		catch (FileNotFoundException fnfe)
 		{
 			logger.error("The file could not be found!", fnfe);
+			return false;
 		}
 		catch (IOException ioe)
 		{
 			logger.error("There was an error reading the file!", ioe);
+			return false;
 		}
 		catch (InstallerNodeParseException inpe)
 		{
 			logger.warn("There was an error parsing the mod file!", inpe);
+			return false;
 		}
+		
+		return true;
 	}
 	
 	private static void selectAndHashFile(String[] args)
