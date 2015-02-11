@@ -54,6 +54,8 @@ import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.ObjectHolder;
 
+import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
+
 
 /**
  * A utility for downloading installation files from the Internet, either
@@ -531,13 +533,13 @@ public class Downloader
 	{
 		final File _destinationDirectory = destinationDirectory;
 		final String[] _archiveEntries = archiveEntries;
-		final long[] _archiveSizes = archiveSizes;
+		//final long[] _archiveSizes = archiveSizes;
 		final long[] _archiveModifiedTimes = archiveModifiedTimes;
 		
 		return new IArchiveExtractCallback()
 		{
-			private long currentCompletionValue = 0;
-			private long oldCompletionValue = 0;
+			private long archiveCompletionValue = 0;
+			private long archiveTotalValue = 0;
 			
 			private int currentIndex = -1;
 			private ExtractAskMode currentExtractMode;
@@ -547,7 +549,6 @@ public class Downloader
 			
 			public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException
 			{
-				currentCompletionValue = 0;
 				currentIndex = index;
 				currentExtractMode = extractAskMode;
 				
@@ -586,7 +587,11 @@ public class Downloader
 				if (extractAskMode == ExtractAskMode.EXTRACT)
 				{
 					logger.debug("Downloading...");
-					fireAboutToStart(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex]);
+					fireAboutToStart(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue);
+				}
+				else if (extractAskMode == ExtractAskMode.SKIP)
+				{
+					logger.debug("Skipping...");
 				}
 			}
 			
@@ -601,30 +606,29 @@ public class Downloader
 						if (currentExtractMode == ExtractAskMode.EXTRACT)
 						{
 							logger.debug("Download complete");
-							fireDownloadComplete(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex]);
+							fireDownloadComplete(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue);
 						}
-						oldCompletionValue = currentCompletionValue;
 						break;
 					
 					case UNSUPPORTEDMETHOD:
 						logger.warn("Extraction failed due to unknown compression method!");
 						exception = new SevenZipException("Unknown compression method");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex], exception);
+							fireDownloadFailed(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue, exception);
 						break;
 					
 					case DATAERROR:
 						logger.warn("Extraction failed due to data error!");
 						exception = new SevenZipException("Data error");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex], exception);
+							fireDownloadFailed(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue, exception);
 						break;
 					
 					case CRCERROR:
 						logger.warn("Extraction failed due to CRC error!");
 						exception = new SevenZipException("CRC error");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex], exception);
+							fireDownloadFailed(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue, exception);
 						break;
 					
 					default:
@@ -657,15 +661,16 @@ public class Downloader
 			
 			public void setCompleted(long completeValue) throws SevenZipException
 			{
+				archiveCompletionValue = completeValue;
 				if (currentExtractMode == ExtractAskMode.EXTRACT)
-				{
-					currentCompletionValue = completeValue;
-					fireProgressReport(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex]);
-				}
+					fireProgressReport(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue);
+				else
+					fireProgressReport(XSTR.getString("progressBarWorking2"), archiveCompletionValue, archiveTotalValue);
 			}
 			
 			public void setTotal(long total) throws SevenZipException
 			{
+				archiveTotalValue = total;
 			}
 		};
 	}
