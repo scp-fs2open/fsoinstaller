@@ -536,21 +536,27 @@ public class Downloader
 		
 		return new IArchiveExtractCallback()
 		{
-			private int currentIndex = -1;
 			private long currentCompletionValue = 0;
+			private long oldCompletionValue = 0;
+			
+			private int currentIndex = -1;
+			private ExtractAskMode currentExtractMode;
+			
 			private File currentFile = null;
 			private OutputStreamSequentialOutStream currentOutStream = null;
 			
 			public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException
 			{
+				currentCompletionValue = 0;
+				currentIndex = index;
+				currentExtractMode = extractAskMode;
+				
 				switch (extractAskMode)
 				{
 					case EXTRACT:
 						try
 						{
 							logger.debug("Opening output stream...");
-							currentIndex = index;
-							currentCompletionValue = 0;
 							currentFile = IOUtils.syncFileLetterCase(new File(_destinationDirectory, _archiveEntries[index]));
 							currentOutStream = new OutputStreamSequentialOutStream(openOutputStream(currentFile));
 						}
@@ -564,8 +570,6 @@ public class Downloader
 						throw new UnsupportedOperationException("Testing of archives not supported");
 						
 					case SKIP:
-						currentIndex = -1;
-						currentCompletionValue = 0;
 						currentFile = null;
 						currentOutStream = null;
 						break;
@@ -582,7 +586,7 @@ public class Downloader
 				if (extractAskMode == ExtractAskMode.EXTRACT)
 				{
 					logger.debug("Downloading...");
-					fireAboutToStart(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex]);
+					fireAboutToStart(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex]);
 				}
 			}
 			
@@ -594,39 +598,40 @@ public class Downloader
 				switch (extractOperationResult)
 				{
 					case OK:
-						if (currentIndex >= 0)
+						if (currentExtractMode == ExtractAskMode.EXTRACT)
 						{
 							logger.debug("Download complete");
-							fireDownloadComplete(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex]);
+							fireDownloadComplete(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex]);
 						}
+						oldCompletionValue = currentCompletionValue;
 						break;
 					
 					case UNSUPPORTEDMETHOD:
 						logger.warn("Extraction failed due to unknown compression method!");
 						exception = new SevenZipException("Unknown compression method");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], exception);
+							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex], exception);
 						break;
 					
 					case DATAERROR:
 						logger.warn("Extraction failed due to data error!");
 						exception = new SevenZipException("Data error");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], exception);
+							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex], exception);
 						break;
 					
 					case CRCERROR:
 						logger.warn("Extraction failed due to CRC error!");
 						exception = new SevenZipException("CRC error");
 						if (currentIndex >= 0)
-							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex], exception);
+							fireDownloadFailed(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex], exception);
 						break;
 					
 					default:
 						exception = new SevenZipException("Unknown operation result: " + extractOperationResult.name());
 				}
 				
-				if (currentIndex >= 0)
+				if (currentOutStream != null)
 				{
 					try
 					{
@@ -641,8 +646,6 @@ public class Downloader
 					}
 					finally
 					{
-						currentIndex = -1;
-						currentCompletionValue = 0;
 						currentFile = null;
 						currentOutStream = null;
 					}
@@ -654,20 +657,15 @@ public class Downloader
 			
 			public void setCompleted(long completeValue) throws SevenZipException
 			{
-				if (currentIndex >= 0)
+				if (currentExtractMode == ExtractAskMode.EXTRACT)
 				{
 					currentCompletionValue = completeValue;
-					fireProgressReport(_archiveEntries[currentIndex], currentCompletionValue, _archiveSizes[currentIndex]);
+					fireProgressReport(_archiveEntries[currentIndex], currentCompletionValue - oldCompletionValue, _archiveSizes[currentIndex]);
 				}
 			}
 			
 			public void setTotal(long total) throws SevenZipException
 			{
-				if (currentIndex >= 0)
-				{
-					if (total != _archiveSizes[currentIndex])
-						logger.error("Callback total of " + total + " does not agree with entry size of " + _archiveSizes[currentIndex] + "!");
-				}
 			}
 		};
 	}
