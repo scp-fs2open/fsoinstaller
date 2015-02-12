@@ -206,6 +206,10 @@ public class ModSelectPage extends WizardPage
 				{
 					logger.debug("Not selecting '" + node.getTreePath() + "' as a COMPLETE mod because it has the " + InstallerNode.EXCLUDE_FROM_COMPLETE + " flag");
 				}
+				else if (!hostOS.isModValidForOS(node.getName()))
+				{
+					logger.debug("Not selecting '" + node.getTreePath() + "' as a COMPLETE mod because it isn't valid for the host operating system");
+				}
 				else
 				{
 					logger.debug("Selecting '" + node.getTreePath() + "' as a COMPLETE mod");
