@@ -323,6 +323,8 @@ public class InstallerNode
 		if (flag == null)
 			throw new NullPointerException("Cannot add a null flag!");
 		
+		flag = flag.toUpperCase();
+		
 		if (!ALL_FLAGS.contains(flag))
 			logger.warn("Tried to add flag '" + flag + "' that is not recognized as an allowed flag!");
 		else if (!flagList.contains(flag))
