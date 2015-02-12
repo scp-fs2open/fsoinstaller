@@ -229,6 +229,7 @@ public class InstallerNodeFactory
 			case ENDDESC:
 			case ENDMULTI:
 			case ENDNOTE:
+			case ENDDEPENDENCIES:
 				throw new InstallerNodeParseException("Unexpected token '" + token + "' found!");
 				
 			case NAME:
