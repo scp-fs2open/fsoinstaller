@@ -202,9 +202,9 @@ public class ModSelectPage extends WizardPage
 		{
 			for (InstallerNode node: modNodeTreeWalk)
 			{
-				if (node.getFlagList().contains(InstallerNode.EXCLUDE_FROM_COMPLETE))
+				if (node.getFlagList().contains(InstallerNode.EXCLUDE_FROM_COMPLETE_INSTALLATION))
 				{
-					logger.debug("Not selecting '" + node.getTreePath() + "' as a COMPLETE mod because it has the " + InstallerNode.EXCLUDE_FROM_COMPLETE + " flag");
+					logger.debug("Not selecting '" + node.getTreePath() + "' as a COMPLETE mod because it has the " + InstallerNode.EXCLUDE_FROM_COMPLETE_INSTALLATION + " flag");
 				}
 				else if (!hostOS.isModValidForOS(node.getName()))
 				{

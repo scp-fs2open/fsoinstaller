@@ -38,8 +38,8 @@ public class InstallerNode
 	private static final Logger logger = Logger.getLogger(InstallerNode.class);
 	
 	// possible flags for flag list
-	public static final String EXCLUDE_FROM_COMPLETE = "EXCLUDE-FROM-COMPLETE";
-	public static final List<String> ALL_FLAGS = Collections.unmodifiableList(Arrays.asList(EXCLUDE_FROM_COMPLETE));
+	public static final String EXCLUDE_FROM_COMPLETE_INSTALLATION = "EXCLUDE-FROM-COMPLETE-INSTALLATION";
+	public static final List<String> ALL_FLAGS = Collections.unmodifiableList(Arrays.asList(EXCLUDE_FROM_COMPLETE_INSTALLATION));
 	
 	protected String name;
 	protected String description;
