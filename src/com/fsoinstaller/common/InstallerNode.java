@@ -20,8 +20,11 @@
 package com.fsoinstaller.common;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import com.fsoinstaller.utils.Logger;
 
 
 /**
@@ -32,6 +35,12 @@ import java.util.List;
  */
 public class InstallerNode
 {
+	private static final Logger logger = Logger.getLogger(InstallerNode.class);
+	
+	// possible flags for flag list
+	public static final String EXCLUDE_FROM_COMPLETE = "EXCLUDE-FROM-COMPLETE";
+	public static final List<String> ALL_FLAGS = Collections.unmodifiableList(Arrays.asList(EXCLUDE_FROM_COMPLETE));
+	
 	protected String name;
 	protected String description;
 	protected String folder;
@@ -47,6 +56,7 @@ public class InstallerNode
 	protected final List<HashTriple> hashList;
 	protected final List<String> cmdList;
 	protected final List<String> dependencyList;
+	protected final List<String> flagList;
 	
 	protected InstallerNode parent;
 	protected final List<InstallerNode> children;
@@ -71,6 +81,7 @@ public class InstallerNode
 		this.hashList = new ArrayList<HashTriple>();
 		this.cmdList = new ArrayList<String>();
 		this.dependencyList = new ArrayList<String>();
+		this.flagList = new ArrayList<String>();
 		
 		this.parent = null;
 		this.children = new ArrayList<InstallerNode>();
@@ -196,6 +207,11 @@ public class InstallerNode
 		return Collections.unmodifiableList(dependencyList);
 	}
 	
+	public List<String> getFlagList()
+	{
+		return Collections.unmodifiableList(flagList);
+	}
+	
 	public List<InstallerNode> getChildren()
 	{
 		return Collections.unmodifiableList(children);
@@ -300,6 +316,22 @@ public class InstallerNode
 	public void removeDependency(String dependency)
 	{
 		dependencyList.remove(dependency);
+	}
+	
+	public void addFlag(String flag)
+	{
+		if (flag == null)
+			throw new NullPointerException("Cannot add a null flag!");
+		
+		if (!ALL_FLAGS.contains(flag))
+			logger.warn("Tried to add flag '" + flag + "' that is not recognized as an allowed flag!");
+		else if (!flagList.contains(flag))
+			flagList.add(flag);
+	}
+	
+	public void removeFlag(String flag)
+	{
+		flagList.remove(flag);
 	}
 	
 	public void addChild(InstallerNode installerNode)

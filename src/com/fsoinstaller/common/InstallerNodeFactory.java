@@ -221,6 +221,12 @@ public class InstallerNodeFactory
 					node.addDependency(dependency);
 				break;
 			
+			case FLAGS:
+				List<String> flags = readStringsUntilEndToken(reader, InstallerNodeToken.ENDFLAGS);
+				for (String flag: flags)
+					node.addFlag(flag);
+				break;
+			
 			case VERSION:
 				String version = readString(reader);
 				node.setVersion(version);
@@ -230,6 +236,7 @@ public class InstallerNodeFactory
 			case ENDMULTI:
 			case ENDNOTE:
 			case ENDDEPENDENCIES:
+			case ENDFLAGS:
 				throw new InstallerNodeParseException("Unexpected token '" + token + "' found!");
 				
 			case NAME:
@@ -399,6 +406,14 @@ public class InstallerNodeFactory
 			for (String dependency: node.getDependencyList())
 				writeLine(indent, writer, dependency);
 			writeLine(indent, writer, InstallerNodeToken.ENDDEPENDENCIES);
+		}
+		
+		if (!node.getFlagList().isEmpty())
+		{
+			writeLine(indent, writer, InstallerNodeToken.FLAGS);
+			for (String flag: node.getFlagList())
+				writeLine(indent, writer, flag);
+			writeLine(indent, writer, InstallerNodeToken.ENDFLAGS);
 		}
 		
 		if (node.getVersion() != null)
