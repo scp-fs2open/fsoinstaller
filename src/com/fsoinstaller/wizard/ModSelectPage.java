@@ -189,13 +189,11 @@ public class ModSelectPage extends WizardPage
 			
 			for (InstallerNode node: modNodeTreeWalk)
 			{
-				if (basicMods.contains(node.getTreePath()) && hostOS.isModValidForOS(node.getName()))
-				{
-					logger.debug("Selecting '" + node.getTreePath() + "' as a BASIC mod");
-					((SingleModPanel) node.getUserObject()).setSelected(true);
-				}
-				else
-					((SingleModPanel) node.getUserObject()).setSelected(false);
+				if (!basicMods.contains(node.getTreePath()) || !hostOS.isModValidForOS(node.getName()))
+					continue;
+				
+				logger.debug("Selecting '" + node.getTreePath() + "' as a BASIC mod");
+				((SingleModPanel) node.getUserObject()).setSelected(true);
 			}
 		}
 		else if (choice == InstallChoice.COMPLETE)
@@ -205,16 +203,13 @@ public class ModSelectPage extends WizardPage
 				if (node.getFlagList().contains(InstallerNode.EXCLUDE_FROM_COMPLETE_INSTALLATION))
 				{
 					logger.debug("Not selecting '" + node.getTreePath() + "' as a COMPLETE mod because it has the " + InstallerNode.EXCLUDE_FROM_COMPLETE_INSTALLATION + " flag");
+					continue;
 				}
 				else if (!hostOS.isModValidForOS(node.getName()))
-				{
-					logger.debug("Not selecting '" + node.getTreePath() + "' as a COMPLETE mod because it isn't valid for the host operating system");
-				}
-				else
-				{
-					logger.debug("Selecting '" + node.getTreePath() + "' as a COMPLETE mod");
-					((SingleModPanel) node.getUserObject()).setSelected(hostOS.isModValidForOS(node.getName()));
-				}
+					continue;
+				
+				logger.debug("Selecting '" + node.getTreePath() + "' as a COMPLETE mod");
+				((SingleModPanel) node.getUserObject()).setSelected(true);
 			}
 		}
 		
