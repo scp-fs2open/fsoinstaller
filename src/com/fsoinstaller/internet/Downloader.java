@@ -482,6 +482,8 @@ public class Downloader
 		
 		return new InputStreamSource()
 		{
+			private static final int MAX_SKIP_TRIES = 10;
+			
 			public InputStream recycleInputStream(InputStream oldInputStream, long position) throws IOException, IndexOutOfBoundsException
 			{
 				if (position < 0)
@@ -514,14 +516,27 @@ public class Downloader
 				logger.debug("Opening new input stream...");
 				InputStream newInputStream = connection.getInputStream();
 				
+				// see if we got to the position we wanted to
 				if (connection instanceof HttpURLConnection)
 				{
 					if (position > 0 && ((HttpURLConnection) connection).getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
 						throw new IOException("The site at " + _sourceURL + " does not support returning partial content!");
 				}
+				// we couldn't open the stream right at the place we wanted, but let's see if we can jump to it
 				else
 				{
-					newInputStream.skip(position);
+					long offset = position;
+					
+					// try skip-seek
+					int tries = 0;
+					while (offset > 0 && tries < MAX_SKIP_TRIES)
+					{
+						long skipped = newInputStream.skip(offset);
+						if (skipped > 0)
+							offset -= skipped;
+						else
+							tries++;
+					}
 				}
 				
 				return newInputStream;
@@ -569,7 +584,7 @@ public class Downloader
 					
 					case TEST:
 						throw new UnsupportedOperationException("Testing of archives not supported");
-						
+					
 					case SKIP:
 						currentFile = null;
 						currentOutStream = null;
