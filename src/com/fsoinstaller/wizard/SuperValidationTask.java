@@ -188,7 +188,9 @@ class SuperValidationTask implements Callable<Void>
 		settings.put(Configuration.CONNECTOR_KEY, connector);
 		
 		// only check for the installer version if we haven't checked already
-		if (!settings.containsKey(Configuration.REMOTE_VERSION_KEY))
+		// and also skip the check if we're overriding mod nodes, since this will allow offline installations in the future
+		if ( !settings.containsKey(Configuration.REMOTE_VERSION_KEY)
+			&& !settings.containsKey(Configuration.OVERRIDE_INSTALL_MOD_NODES_KEY) )
 		{
 			logger.info("Checking installer version...");
 			logger.info("This version is " + FreeSpaceOpenInstaller.INSTALLER_VERSION);
