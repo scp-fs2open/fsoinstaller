@@ -44,6 +44,7 @@ public class InstallerNode
 	protected String name;
 	protected String description;
 	protected String folder;
+	protected String radioButtonGroup;
 	protected String version;
 	protected String note;
 	
@@ -71,6 +72,7 @@ public class InstallerNode
 		this.name = name;
 		this.description = null;
 		this.folder = null;
+		this.radioButtonGroup = null;
 		this.version = null;
 		this.note = null;
 		
@@ -150,6 +152,16 @@ public class InstallerNode
 	public void setFolder(String folder)
 	{
 		this.folder = folder;
+	}
+	
+	public String getRadioButtonGroup()
+	{
+		return radioButtonGroup;
+	}
+	
+	public void setRadioButtonGroup(String group)
+	{
+		this.radioButtonGroup = group;
 	}
 	
 	public String getVersion()

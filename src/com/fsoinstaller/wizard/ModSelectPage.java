@@ -26,6 +26,8 @@ import java.awt.FontMetrics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -459,6 +461,9 @@ public class ModSelectPage extends WizardPage
 		runWhenReady.run();
 	}
 	
+	// all SingleModPanels which belong to nodes with radio button groups will register themselves with this map
+	private static final Map<String, List<SingleModPanel>> radioButtonGroups = new HashMap<String, List<SingleModPanel>>();
+	
 	private static class SingleModPanel extends JPanel
 	{
 		private final InstallerNode node;
@@ -488,9 +493,22 @@ public class ModSelectPage extends WizardPage
 				checkBox.setBackground(backgroundColor);
 				button.setBackground(backgroundColor);
 			}
+			
+			// maybe register this panel as a radiobutton group
+			if (node.getRadioButtonGroup() != null)
+			{
+				List<SingleModPanel> list;
+				if (radioButtonGroups.containsKey(node.getRadioButtonGroup()))
+					list = radioButtonGroups.get(node.getRadioButtonGroup());
+				else
+				{
+					list = new ArrayList<SingleModPanel>();
+					radioButtonGroups.put(node.getRadioButtonGroup(), list);
+				}
+				list.add(this);
+			}
 		}
 		
-		@SuppressWarnings("unused")
 		public InstallerNode getNode()
 		{
 			return node;
@@ -519,6 +537,19 @@ public class ModSelectPage extends WizardPage
 		
 		public void setAlreadyInstalled(boolean installed)
 		{
+			// if this panel is part of a group, set all checkboxes to the same state
+			// (setting the checkbox directly is more convenient than adding a suppressRecursion
+			// flag to the function, but this will need to be changed in the event that
+			// setAlreadyInstalled starts managing other state variables like setSelected does)
+			if (node.getRadioButtonGroup() != null)
+			{
+				for (SingleModPanel panel: radioButtonGroups.get(node.getRadioButtonGroup()))
+				{
+					if (panel != this)
+						panel.checkBox.setEnabled(!installed);
+				}
+			}
+			
 			checkBox.setEnabled(!installed);
 		}
 	}
@@ -536,6 +567,7 @@ public class ModSelectPage extends WizardPage
 				// we want to automatically select or deselect appropriate nodes
 				setSuperTreeState(node, ((JCheckBox) e.getSource()).isSelected());
 				setSubTreeState(node, ((JCheckBox) e.getSource()).isSelected());
+				setRadioButtonState(((JCheckBox) e.getSource()).isSelected());
 				
 				// update check tally for this box only
 				if (((JCheckBox) e.getSource()).isSelected())
@@ -578,6 +610,20 @@ public class ModSelectPage extends WizardPage
 				// iterate through the tree
 				for (InstallerNode child: root.getChildren())
 					setSubTreeState(child, selected);
+			}
+			
+			private void setRadioButtonState(boolean selected)
+			{
+				// this is only if we are selecting a node in a radio button group, so do nothing otherwise
+				if (node.getRadioButtonGroup() == null || !selected)
+					return;
+				
+				// unselect other nodes in the group
+				for (SingleModPanel panel: radioButtonGroups.get(node.getRadioButtonGroup()))
+				{
+					if (panel.getNode() != node && panel.isSelected())
+						panel.setSelected(false);
+				}
 			}
 		});
 		return checkBox;

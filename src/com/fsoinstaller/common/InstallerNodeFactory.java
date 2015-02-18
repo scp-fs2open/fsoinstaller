@@ -227,6 +227,11 @@ public class InstallerNodeFactory
 					node.addFlag(flag);
 				break;
 			
+			case RADIOBUTTON_GROUP:
+				String group = readString(reader);
+				node.setRadioButtonGroup(group);
+				break;
+			
 			case VERSION:
 				String version = readString(reader);
 				node.setVersion(version);
@@ -415,6 +420,9 @@ public class InstallerNodeFactory
 				writeLine(indent, writer, flag);
 			writeLine(indent, writer, InstallerNodeToken.ENDFLAGS);
 		}
+		
+		if (node.getRadioButtonGroup() != null)
+			writeLine(indent, writer, InstallerNodeToken.RADIOBUTTON_GROUP, node.getRadioButtonGroup());
 		
 		if (node.getVersion() != null)
 			writeLine(indent, writer, InstallerNodeToken.VERSION, node.getVersion());
