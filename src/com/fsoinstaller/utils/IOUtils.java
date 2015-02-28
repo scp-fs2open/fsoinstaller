@@ -344,15 +344,30 @@ public class IOUtils
 		// we are now at the root, so reconstruct the path using case-insensitive elements
 		for (String pathElement: pathElements)
 		{
-			// if we have an existing version of this element, ignoring case, use that instead
-			String[] children = file.list();
-			for (String child: children)
+			// we can only check to see if alternatives exist if we have an existing path
+			if (file.exists())
 			{
-				if (pathElement.equalsIgnoreCase(child))
+				// it should be a directory because we haven't added the last path element yet
+				if (file.isDirectory())
 				{
-					pathElement = child;
-					break;
+					String[] children = file.list();
+					if (children != null)
+					{
+						// if we have an existing version of this element, ignoring case, use that instead
+						for (String child: children)
+						{
+							if (pathElement.equalsIgnoreCase(child))
+							{
+								pathElement = child;
+								break;
+							}
+						}
+					}
+					else
+						logger.error("There was an error getting the file listing for '" + file.getAbsolutePath() + "!");
 				}
+				else
+					logger.error("Expected '" + file.getAbsolutePath() + "' to be a directory!");
 			}
 			
 			// keep reconstructing the path
