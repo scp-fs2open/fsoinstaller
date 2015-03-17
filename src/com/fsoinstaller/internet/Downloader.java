@@ -112,6 +112,10 @@ public class Downloader
 	protected final ObjectHolder<DownloadState> stateHolder;
 	protected Thread downloadThread;
 	
+	// these are kept as member variables in the event of failure during 7Zip download
+	protected File extractingFile = null;
+	protected OutputStreamSequentialOutStream extractingOutStream = null;
+	
 	public Downloader(Connector connector, URL sourceURL, File destination)
 	{
 		this.connector = connector;
@@ -435,6 +439,8 @@ public class Downloader
 		}
 		catch (SevenZipException sze)
 		{
+			currentEntry = (extractingFile != null) ? extractingFile.getName() : "";
+			
 			logger.error("An exception was thrown during download!", sze);
 			fireDownloadFailed(currentEntry, 0, totalBytes, sze);
 			
@@ -442,6 +448,8 @@ public class Downloader
 		}
 		catch (IOException ioe)
 		{
+			currentEntry = (extractingFile != null) ? extractingFile.getName() : "";
+			
 			logger.error("An exception was thrown during download!", ioe);
 			fireDownloadFailed(currentEntry, 0, totalBytes, ioe);
 			
@@ -450,6 +458,7 @@ public class Downloader
 		finally
 		{
 			cleanup(archive, inStream);
+			cleanup(extractingOutStream);
 		}
 	}
 	
@@ -559,9 +568,6 @@ public class Downloader
 			private int currentIndex = -1;
 			private ExtractAskMode currentExtractMode;
 			
-			private File currentFile = null;
-			private OutputStreamSequentialOutStream currentOutStream = null;
-			
 			public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException
 			{
 				currentIndex = index;
@@ -573,8 +579,8 @@ public class Downloader
 						try
 						{
 							logger.debug("Opening output stream...");
-							currentFile = IOUtils.syncFileLetterCase(new File(_destinationDirectory, _archiveEntries[index]));
-							currentOutStream = new OutputStreamSequentialOutStream(openOutputStream(currentFile));
+							extractingFile = IOUtils.syncFileLetterCase(new File(_destinationDirectory, _archiveEntries[index]));
+							extractingOutStream = new OutputStreamSequentialOutStream(openOutputStream(extractingFile));
 						}
 						catch (IOException ioe)
 						{
@@ -586,15 +592,15 @@ public class Downloader
 						throw new UnsupportedOperationException("Testing of archives not supported");
 					
 					case SKIP:
-						currentFile = null;
-						currentOutStream = null;
+						extractingFile = null;
+						extractingOutStream = null;
 						break;
 					
 					default:
 						throw new IllegalArgumentException("Unknown ask mode");
 				}
 				
-				return currentOutStream;
+				return extractingOutStream;
 			}
 			
 			public void prepareOperation(ExtractAskMode extractAskMode) throws SevenZipException
@@ -650,14 +656,14 @@ public class Downloader
 						exception = new SevenZipException("Unknown operation result: " + extractOperationResult.name());
 				}
 				
-				if (currentOutStream != null)
+				if (extractingOutStream != null)
 				{
 					try
 					{
 						logger.debug("Closing output stream...");
-						currentOutStream.close();
-						if (_archiveModifiedTimes[currentIndex] > 0 && !currentFile.setLastModified(_archiveModifiedTimes[currentIndex]))
-							logger.warn("Could not set file modification time for '" + currentFile.getAbsolutePath() + "'!");
+						extractingOutStream.close();
+						if (_archiveModifiedTimes[currentIndex] > 0 && !extractingFile.setLastModified(_archiveModifiedTimes[currentIndex]))
+							logger.warn("Could not set file modification time for '" + extractingFile.getAbsolutePath() + "'!");
 					}
 					catch (IOException ioe)
 					{
@@ -665,8 +671,8 @@ public class Downloader
 					}
 					finally
 					{
-						currentFile = null;
-						currentOutStream = null;
+						extractingFile = null;
+						extractingOutStream = null;
 					}
 				}
 				
@@ -773,6 +779,21 @@ public class Downloader
 			catch (IOException ioe)
 			{
 				logger.warn("Could not close download stream!", ioe);
+			}
+		}
+	}
+	
+	protected void cleanup(OutputStreamSequentialOutStream outStream)
+	{
+		if (outStream != null)
+		{
+			try
+			{
+				outStream.close();
+			}
+			catch (IOException ioe)
+			{
+				logger.warn("Could not close output stream!", ioe);
 			}
 		}
 	}
