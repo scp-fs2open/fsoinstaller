@@ -424,7 +424,19 @@ public class Downloader
 				int[] items = new int[extractionIndexes.size()];
 				for (int i = 0; i < extractionIndexes.size(); i++)
 					items[i] = extractionIndexes.get(i);
-				archive.extract(items, false, callback);
+				
+				// do the extraction and watch for InterruptedException since the 7Zip-JBinding API doesn't explicitly declare it
+				try
+				{
+					archive.extract(items, false, callback);
+				}
+				catch (SevenZipException sze)
+				{
+					if (sze.getCause() instanceof InterruptedException)
+						throw (InterruptedException) sze.getCause();
+					else
+						throw sze;
+				}
 			}
 			
 			logger.debug("Closing archive...");
@@ -453,6 +465,26 @@ public class Downloader
 			logger.error("An exception was thrown during download!", ioe);
 			fireDownloadFailed(currentEntry, 0, totalBytes, ioe);
 			
+			return false;
+		}
+		catch (InterruptedException ie)
+		{
+			currentEntry = (extractingFile != null) ? extractingFile.getName() : "";
+			
+			logger.warn("The download was interrupted!", ie);
+			fireDownloadCancelled(currentEntry, 0, totalBytes, ie);
+			
+			// try to delete incomplete file
+			cleanup(archive, inStream);
+			archive = null;
+			inStream = null;
+			cleanup(extractingOutStream);
+			extractingOutStream = null;
+			if (extractingFile != null && !extractingFile.delete())
+				logger.warn("Could not delete incompletely downloaded file '" + extractingFile.getAbsolutePath() + "'!");
+			
+			// restore interrupt and exit
+			Thread.currentThread().interrupt();
 			return false;
 		}
 		finally
@@ -570,6 +602,10 @@ public class Downloader
 			
 			public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException
 			{
+				// check for thread interruption
+				if (Thread.interrupted())
+					throw new SevenZipException(new InterruptedException("Thread was interrupted during 7Zip extraction"));
+				
 				currentIndex = index;
 				currentExtractMode = extractAskMode;
 				
@@ -605,6 +641,10 @@ public class Downloader
 			
 			public void prepareOperation(ExtractAskMode extractAskMode) throws SevenZipException
 			{
+				// check for thread interruption
+				if (Thread.interrupted())
+					throw new SevenZipException(new InterruptedException("Thread was interrupted during 7Zip extraction"));
+				
 				if (extractAskMode == ExtractAskMode.EXTRACT)
 				{
 					logger.debug("Downloading...");
@@ -618,6 +658,10 @@ public class Downloader
 			
 			public void setOperationResult(ExtractOperationResult extractOperationResult) throws SevenZipException
 			{
+				// check for thread interruption
+				if (Thread.interrupted())
+					throw new SevenZipException(new InterruptedException("Thread was interrupted during 7Zip extraction"));
+				
 				// if an entry actually produced an error, we should throw an exception
 				SevenZipException exception = null;
 				
@@ -682,6 +726,10 @@ public class Downloader
 			
 			public void setCompleted(long completeValue) throws SevenZipException
 			{
+				// check for thread interruption
+				if (Thread.interrupted())
+					throw new SevenZipException(new InterruptedException("Thread was interrupted during 7Zip extraction"));
+				
 				archiveCompletionValue = completeValue;
 				if (currentExtractMode == ExtractAskMode.EXTRACT)
 					fireProgressReport(_archiveEntries[currentIndex], archiveCompletionValue, archiveTotalValue);
@@ -691,6 +739,10 @@ public class Downloader
 			
 			public void setTotal(long total) throws SevenZipException
 			{
+				// check for thread interruption
+				if (Thread.interrupted())
+					throw new SevenZipException(new InterruptedException("Thread was interrupted during 7Zip extraction"));
+				
 				archiveTotalValue = total;
 			}
 		};
