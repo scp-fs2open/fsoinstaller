@@ -69,7 +69,7 @@ import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
  */
 public class Downloader
 {
-	private static final Logger logger = Logger.getLogger(Downloader.class);
+	private static final Logger defaultLogger = Logger.getLogger(Downloader.class);
 	
 	protected static final int BUFFER_SIZE = 2048;
 	
@@ -88,18 +88,18 @@ public class Downloader
 		}
 		catch (NumberFormatException nfe)
 		{
-			logger.error("Couldn't parse maxParallelDownloads!", nfe);
+			defaultLogger.error("Couldn't parse maxParallelDownloads!", nfe);
 		}
 		
 		// sanity
 		if (num < 1)
 		{
-			logger.warn("maxParallelDownloads must be at least 1!");
+			defaultLogger.warn("maxParallelDownloads must be at least 1!");
 			num = 1;
 		}
 		
 		// allocate that many permits
-		logger.info("Setting maxParallelDownloads to " + num);
+		defaultLogger.info("Setting maxParallelDownloads to " + num);
 		downloadPermits = new Semaphore(num, true);
 	}
 	
@@ -110,6 +110,7 @@ public class Downloader
 	protected final byte[] downloadBuffer;
 	
 	protected final ObjectHolder<DownloadState> stateHolder;
+	protected final Logger logger;
 	protected Thread downloadThread;
 	
 	// these are kept as member variables in the event of failure during 7Zip download
@@ -118,12 +119,18 @@ public class Downloader
 	
 	public Downloader(Connector connector, URL sourceURL, File destination)
 	{
+		this(connector, sourceURL, destination, null);
+	}
+	
+	public Downloader(Connector connector, URL sourceURL, File destination, String modName)
+	{
 		this.connector = connector;
 		this.sourceURL = sourceURL;
 		this.destination = destination;
 		this.downloadBuffer = new byte[BUFFER_SIZE];
 		
 		this.stateHolder = new ObjectHolder<DownloadState>(DownloadState.INITIALIZED);
+		this.logger = (MiscUtils.isEmpty(modName) ? defaultLogger : Logger.getLogger(Downloader.class, modName));
 		this.downloadThread = null;
 		
 		// woot, CopyOnWriteArrayList is A-1 SUPAR as a listener list;

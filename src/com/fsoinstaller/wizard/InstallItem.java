@@ -1010,7 +1010,7 @@ public class InstallItem extends JPanel
 			}
 			
 			// make a downloader for our panel
-			final Downloader downloader = new Downloader(connector, url, modFolder);
+			final Downloader downloader = new Downloader(connector, url, modFolder, node.getTreePath());
 			EventQueue.invokeLater(new Runnable()
 			{
 				public void run()
