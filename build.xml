@@ -43,6 +43,24 @@
     <java classpathref="runtime.class.path" classname="${main-class}" fork="true"/>
   </target>
 
+  <target name="hash" depends="compile">
+    <java classpathref="runtime.class.path" classname="${main-class}" fork="true">
+      <arg value="hash"/>
+    </java>
+  </target>
+
+  <target name="test" depends="compile">
+    <java classpathref="runtime.class.path" classname="${main-class}" fork="true">
+      <arg value="test"/>
+    </java>
+  </target>
+
+  <target name="validate" depends="compile">
+    <java classpathref="runtime.class.path" classname="${main-class}" fork="true">
+      <arg value="validate"/>
+    </java>
+  </target>
+
   <target name="checkxstr" depends="compile">
     <java classpathref="runtime.class.path" classname="${checkxstr-class}" fork="true"/>
   </target>
