@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -51,6 +52,7 @@ import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.SwingUtils;
+import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
@@ -374,18 +376,30 @@ public class FreeSpaceOpenInstaller
 	{
 		final Configuration config = Configuration.getInstance();
 		File fileToHash;
+		String algorithm;
 		
-		// figure out which algorithm to use
-		if (args.length <= 1)
+		// get the algorithm
+		if (args.length > 1)
 		{
-			logger.warn("No hash algorithm supplied!");
-			return;
+			algorithm = args[1].toUpperCase();
+			if (algorithm.equals("SHA1"))
+				algorithm = "SHA-1";
+			else if (algorithm.equals("SHA256"))
+				algorithm = "SHA-256";
 		}
-		String algorithm = args[1].toUpperCase();
-		if (algorithm.equals("SHA1"))
-			algorithm = "SHA-1";
-		else if (algorithm.equals("SHA256"))
-			algorithm = "SHA-256";
+		// if not, prompt for it
+		else
+		{
+			String[] options = new String[] { "SHA-256", "SHA-1", "MD5" };
+			
+			int result = ThreadSafeJOptionPane.showOptionDialog(null, XSTR.getString("chooseHashAlgorithm"), XSTR.getString("chooseOptionTitle"), JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			if (result < 0)
+			{
+				logger.warn("No hash option selected!");
+				return;
+			}
+			algorithm = options[result];
+		}
 		
 		// get the file
 		if (args.length > 2)
