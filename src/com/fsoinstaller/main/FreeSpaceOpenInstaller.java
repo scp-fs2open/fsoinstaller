@@ -245,6 +245,9 @@ public class FreeSpaceOpenInstaller
 		
 		// since we're logging the locale (when XSTR is invoked), let's log the system information too
 		logger.info("System OS string: " + System.getProperty("os.name"));
+		logger.info("System OS version: " + System.getProperty("os.version"));
+		logger.info("System OS architecture: " + System.getProperty("os.arch"));
+		logger.info("ProgramFiles(x86): " + (System.getenv("ProgramFiles(x86)") != null));
 		logger.info("OS recognized as: " + OperatingSystem.getHostOS().name());
 		
 		// we need to set the button text for any dialogs that appear
