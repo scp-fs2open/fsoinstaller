@@ -296,7 +296,12 @@ public class FreeSpaceOpenInstaller
 		// we can also generate hashes
 		else if (command.equals("hash"))
 		{
-			selectAndHashFile(args);
+			selectAndHashFile(args, false);
+		}
+		// ditto
+		else if (command.equals("hash-stdout"))
+		{
+			selectAndHashFile(args, true);
 		}
 		// test out a mod file by piggybacking an installer session on the results of validation
 		else if (command.equals("test"))
@@ -375,7 +380,7 @@ public class FreeSpaceOpenInstaller
 		return true;
 	}
 	
-	private static void selectAndHashFile(String[] args)
+	private static void selectAndHashFile(String[] args, boolean to_stdout)
 	{
 		final Configuration config = Configuration.getInstance();
 		File fileToHash;
@@ -445,7 +450,16 @@ public class FreeSpaceOpenInstaller
 		{
 			String computedHash = IOUtils.computeHash(digest, fileToHash);
 			logger.info(fileToHash.getAbsolutePath());
-			logger.info(algorithm + " hash: " + computedHash);
+			
+			if (to_stdout)
+			{
+				System.out.println("HASH");
+				System.out.println(algorithm);
+				System.out.println(fileToHash.getName());
+				System.out.println(computedHash);
+			}
+			else
+				logger.info(algorithm + " hash: " + computedHash);
 		}
 		catch (IOException ioe)
 		{
