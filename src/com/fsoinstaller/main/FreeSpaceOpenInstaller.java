@@ -185,6 +185,7 @@ public class FreeSpaceOpenInstaller
 	
 	private void launchWizard()
 	{
+		// build and display the GUI
 		EventQueue.invokeLater(new Runnable()
 		{
 			public void run()

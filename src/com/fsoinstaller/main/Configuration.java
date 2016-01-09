@@ -80,6 +80,8 @@ public class Configuration
 	public static final String ADD_OPENAL_INSTALL_KEY = "ADD-OPENAL-INSTALL";
 	public static final String DONT_SHORT_CIRCUIT_INSTALLATION_KEY = "DON'T-SHORT-CIRCUIT-INSTALLATION";
 	public static final String OVERRIDE_INSTALL_MOD_NODES_KEY = "OVERRIDE-INSTALL-MOD-FILE";
+	public static final String FOUND_APPLICATION_PROPERTIES = "FOUND-APPLICATION-PROPERTIES";
+	public static final String FOUND_FSOINSTALLER_PROPERTIES = "FOUND-FSOINSTALLER-PROPERTIES";
 	
 	/**
 	 * Use the Initialization On Demand Holder idiom for thread-safe
@@ -104,8 +106,13 @@ public class Configuration
 	{
 		Properties temp;
 		
+		// this is always created anew for each run
+		// (since Properties inherits from Hashtable, it is already thread-safe)
+		settings = Collections.synchronizedMap(new HashMap<String, Object>());
+		
 		// this should always be present, but we technically allow it to be absent because we always supply defaults
 		temp = PropertiesUtils.loadProperties("application.properties");
+		settings.put(FOUND_APPLICATION_PROPERTIES, (temp != null));
 		if (temp == null)
 		{
 			logger.error("No application.properties file could be found!");
@@ -116,16 +123,13 @@ public class Configuration
 		// this could be created upon first run but is otherwise persistent
 		String userPropertiesName = applicationProperties.getProperty("application.userproperties", "fsoinstaller.properties");
 		temp = PropertiesUtils.loadProperties(userPropertiesName);
+		settings.put(FOUND_FSOINSTALLER_PROPERTIES, (temp != null));
 		if (temp == null)
 		{
 			logger.info("No " + userPropertiesName + " file could be found; a new one will be created");
 			temp = new Properties();
 		}
 		userProperties = temp;
-		
-		// this is always created anew for each run
-		// (since Properties inherits from Hashtable, it is already thread-safe)
-		settings = Collections.synchronizedMap(new HashMap<String, Object>());
 	}
 	
 	// APPLICATION PROPERTIES ----------
