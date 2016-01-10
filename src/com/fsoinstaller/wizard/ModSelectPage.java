@@ -28,11 +28,14 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -295,8 +298,19 @@ public class ModSelectPage extends WizardPage
 			String path = entry.getKey();
 			InstallerNode node = entry.getValue();
 			
-			for (String dependency: node.getDependencyList())
+			// use a queue so we can keep adding dependencies to the end if we need to
+			Queue<String> dependenciesToCheck = new LinkedList<String>(node.getDependencyList());
+			
+			// this is just to make sure we don't have a cycle
+			Set<String> dependenciesChecked = new HashSet<String>();
+			dependenciesChecked.add(path);
+			
+			// check all dependencies, even ones we may add later
+			while (!dependenciesToCheck.isEmpty())
 			{
+				String dependency = dependenciesToCheck.remove();
+				dependenciesChecked.add(dependency);
+				
 				// do we have a dependency that was not selected?
 				if (!selectedModPaths.containsKey(dependency))
 				{
@@ -314,6 +328,16 @@ public class ModSelectPage extends WizardPage
 						logger.warn("Mod '" + path + "' requires dependency '" + dependency + "' which was not selected...");
 						
 						dependenciesNotSelected.add(dependency);
+						
+						// now look up this dependency and see if *it* has any dependencies as well
+						InstallerNode dependencyNode = allModPaths.get(dependency);
+						for (String grandDependency: dependencyNode.getDependencyList())
+						{
+							if (dependenciesChecked.contains(grandDependency))
+								logger.warn("Dependency cycle detected!  Node '" + grandDependency + "' was already checked!");
+							else
+								dependenciesToCheck.add(grandDependency);
+						}
 					}
 				}
 			}
