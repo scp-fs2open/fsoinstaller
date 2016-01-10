@@ -69,7 +69,10 @@ public class ConfigPage extends WizardPage
 		// load initial directory
 		File dir = configuration.getApplicationDir();
 		if (dir == null)
-			dir = new File(configuration.getDefaultDir());
+		{
+			logger.warn("Application directory should have been assigned by now!");
+			dir = new File(configuration.getDefaultDirList().get(0));
+		}
 		
 		// get canonical path
 		String dirText;

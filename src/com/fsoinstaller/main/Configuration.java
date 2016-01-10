@@ -22,6 +22,7 @@ package com.fsoinstaller.main;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,34 +141,73 @@ public class Configuration
 		return applicationProperties.getProperty("application.title", "FreeSpace Open Installer");
 	}
 	
-	public String getDefaultDir()
+	private static String spruceDir(String dir)
 	{
-		String dir = null;
+		dir = dir.trim();
+		
+		// Java doesn't expand tilde, so let's do it ourselves
+		if (dir.startsWith("~" + File.separator))
+			dir = MiscUtils.getUserHome() + dir.substring(1);
+		
+		return dir;
+	}
+	
+	public List<String> getDefaultDirList(String propertyPrefix)
+	{
+		List<String> list = new ArrayList<String>();
+		
+		// get the value from the prefix by itself
+		String value = applicationProperties.getProperty(propertyPrefix);
+		if (value != null)
+			list.add(spruceDir(value));
+		
+		// go through all properties and find the ones that start with this prefix
+		propertyPrefix += ".";
+		Enumeration<?> propEnum = applicationProperties.propertyNames();
+		while (propEnum.hasMoreElements())
+		{
+			Object propertyName = propEnum.nextElement();
+			if (!(propertyName instanceof String))
+				continue;
+			
+			String stringPropertyName = (String) propertyName;
+			if (!stringPropertyName.startsWith(propertyPrefix))
+				continue;
+			
+			value = applicationProperties.getProperty(stringPropertyName);
+			if (value != null)
+				list.add(spruceDir(value));
+		}
+		
+		return list;
+	}
+	
+	public List<String> getDefaultDirList()
+	{
+		List<String> dirList = new ArrayList<String>();
 		
 		switch (OperatingSystem.getHostOS())
 		{
 			case WINDOWS:
-				dir = applicationProperties.getProperty("application.defaultdir.windows");
+				dirList.addAll(getDefaultDirList("application.defaultdir.windows"));
 				break;
 			
 			case MAC:
-				dir = applicationProperties.getProperty("application.defaultdir.mac");
-				if (dir == null)
-					dir = applicationProperties.getProperty("application.defaultdir.osx");
+				dirList.addAll(getDefaultDirList("application.defaultdir.mac"));
+				dirList.addAll(getDefaultDirList("application.defaultdir.osx"));
 				break;
 			
 			case LINUX:
-				dir = applicationProperties.getProperty("application.defaultdir.linux");
-				if (dir == null)
-					dir = applicationProperties.getProperty("application.defaultdir.unix");
+				dirList.addAll(getDefaultDirList("application.defaultdir.linux"));
+				dirList.addAll(getDefaultDirList("application.defaultdir.unix"));
 				break;
 			
 			case FREEBSD:
-				dir = applicationProperties.getProperty("application.defaultdir.freebsd");
+				dirList.addAll(getDefaultDirList("application.defaultdir.freebsd"));
 				break;
 			
 			case SOLARIS:
-				dir = applicationProperties.getProperty("application.defaultdir.solaris");
+				dirList.addAll(getDefaultDirList("application.defaultdir.solaris"));
 				break;
 			
 			case OTHER:
@@ -176,16 +216,13 @@ public class Configuration
 		}
 		
 		// must always have a non-null default
-		if (dir == null)
-			dir = applicationProperties.getProperty("application.defaultdir", "/Games/FreeSpace2");
+		if (dirList.isEmpty())
+		{
+			String dir = applicationProperties.getProperty("application.defaultdir", "/Games/FreeSpace2");
+			dirList.add(spruceDir(dir));
+		}
 		
-		dir = dir.trim();
-		
-		// Java doesn't expand tilde, so let's do it ourselves
-		if (dir.startsWith("~" + File.separator))
-			dir = MiscUtils.getUserHome() + dir.substring(1);
-		
-		return dir;
+		return dirList;
 	}
 	
 	public boolean requiresFS2()

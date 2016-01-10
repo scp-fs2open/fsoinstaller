@@ -185,6 +185,67 @@ public class FreeSpaceOpenInstaller
 	
 	private void launchWizard()
 	{
+		// before we display the GUI, let's set the application directory
+		Configuration config = Configuration.getInstance();
+		if (config.getApplicationDir() == null)
+		{
+			logger.info("No application directory supplied in configuration");
+			String applicationDir = null;
+			List<String> dirList = config.getDefaultDirList();
+			
+			// only search for FS2 if we require it
+			// (we will do a more thorough check using hashes and such later, but this should be sufficient to choose which default to use) 
+			if (config.requiresFS2())
+			{
+				File[] roots = File.listRoots();
+				
+				// test all roots and all default dirs
+rootLoop:		for (File root: roots)
+				{
+					for (String dir: dirList)
+					{
+						try
+						{
+							File fs2Dir = new File(root, dir);
+							if (fs2Dir.exists() && fs2Dir.isDirectory())
+							{
+								// we found an existing directory, so look for root_fs2.vp
+								String[] names = fs2Dir.list();
+								if (names == null)
+								{
+									logger.warn("Could not obtain directory listing for " + dir);
+								}
+								else
+								{
+									for (String name: names)
+									{
+										if (name.equalsIgnoreCase("root_fs2.vp"))
+										{
+											applicationDir = fs2Dir.getAbsolutePath();
+											logger.info("Found root_fs2.vp in " + applicationDir);
+											break rootLoop;
+										}
+									}
+								}
+							}
+						}
+						catch (SecurityException se)
+						{
+							logger.error("Checking the directory " + dir + " caused a SecurityException to be thrown!", se);
+						}
+					}
+				}
+			}
+			
+			// if we didn't find a directory any other way, use the first item in the default dir list (at least one will exist)
+			if (applicationDir == null)
+				applicationDir = dirList.get(0);
+			
+			// log it and set it
+			logger.info("Setting application directory to " + applicationDir);
+			config.setApplicationDir(new File(applicationDir));
+		}
+
 		// build and display the GUI
 		EventQueue.invokeLater(new Runnable()
 		{
