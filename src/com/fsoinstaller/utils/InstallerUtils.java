@@ -113,8 +113,8 @@ public class InstallerUtils
 				OperatingSystem os = OperatingSystem.getHostOS();
 				if (os == OperatingSystem.WINDOWS)
 				{
-					installUnit.addFile("innoextract-1.4-windows-r2.zip");
-					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-windows-r2" + File.separator + "innoextract.exe", "426536da6b3accfd329197949be56c609dec37e7"));
+					installUnit.addFile("innoextract-1.5-windows.zip");
+					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.5-windows" + File.separator + "innoextract.exe", "fc9bcde1c08f0d2219b70a2e7988b818cc40ddde"));
 				}
 				else if (os == OperatingSystem.MAC)
 				{
