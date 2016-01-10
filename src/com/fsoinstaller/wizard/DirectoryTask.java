@@ -175,6 +175,7 @@ class DirectoryTask implements Callable<Void>
 					
 					// we found root_fs2.vp
 					exists = true;
+					logger.debug("MD5 hash for root_fs2.vp: " + rootVPHash);
 					break;
 				}
 			}
@@ -182,7 +183,9 @@ class DirectoryTask implements Callable<Void>
 			// if it doesn't exist, we need to do something about that
 			if (!exists)
 			{
+				logger.debug("Showing retailFS2NotFound prompt");
 				int result = ThreadSafeJOptionPane.showCustomOptionDialog(activeFrame, XSTR.getString("retailFS2NotFound"), 0, XSTR.getString("optionInstallGOG"), XSTR.getString("optionWrongDirectory"), XSTR.getString("optionContinueAnyway"));
+				logger.debug("User selected " + result);
 				
 				// find out what was decided
 				if (result < 0 || result == 1)
@@ -195,6 +198,7 @@ class DirectoryTask implements Callable<Void>
 				{
 					// figure out where we're installing from (we will add the actual "mod" in InstallPage)
 					gogInstallPackage = SwingUtils.promptForFile(activeFrame, XSTR.getString("chooseGOGPackageTitle"), configuration.getApplicationDir(), "exe", XSTR.getString("exeFilesFilter"));
+					logger.debug("GOG install package: " + gogInstallPackage.getAbsolutePath());
 				}
 				// add the Steam copy "mod"
 				// (this is now disabled)
@@ -287,8 +291,13 @@ promptForSteamFS2:	while (true)
 			if (!name.endsWith(".vp"))
 				continue;
 			
-			if (!allowedVPs.contains(name.toLowerCase()))
+			if (allowedVPs.contains(name.toLowerCase()))
+				logger.debug("ALLOWED: " + name);
+			else
+			{
 				extraVPs.add(name);
+				logger.debug("DISALLOWED: " + name);
+			}
 		}
 		
 		if (!extraVPs.isEmpty())
