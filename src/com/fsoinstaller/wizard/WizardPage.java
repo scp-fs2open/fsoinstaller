@@ -169,7 +169,7 @@ public abstract class WizardPage extends JPanel
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setBorder(BorderFactory.createEmptyBorder(GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN, GUIConstants.DEFAULT_MARGIN));
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-		buttonPanel.add(new JLabel("\u00A9 2006-2015 The FreeSpace 2 Source Code Project"));
+		buttonPanel.add(new JLabel("\u00A9 2006-2016 The FreeSpace 2 Source Code Project"));
 		buttonPanel.add(Box.createHorizontalGlue());
 		buttonPanel.add(backButton);
 		buttonPanel.add(nextButton);
