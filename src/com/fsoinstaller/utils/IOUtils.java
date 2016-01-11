@@ -172,13 +172,19 @@ public class IOUtils
 	
 	public static void copy(File from, File to) throws IOException
 	{
+		FileInputStream fromStream = null;
+		FileOutputStream toStream = null;
+		
 		FileChannel fromChannel = null;
 		FileChannel toChannel = null;
 		
 		try
 		{
-			fromChannel = new FileInputStream(from).getChannel();
-			toChannel = new FileOutputStream(to).getChannel();
+			fromStream = new FileInputStream(from);
+			toStream = new FileOutputStream(to);
+			
+			fromChannel = fromStream.getChannel();
+			toChannel = toStream.getChannel();
 			
 			toChannel.transferFrom(fromChannel, 0, fromChannel.size());
 		}
@@ -202,6 +208,28 @@ public class IOUtils
 				try
 				{
 					toChannel.close();
+				}
+				catch (IOException ioe)
+				{
+					closeException = ioe;
+				}
+			}
+			if (fromStream != null)
+			{
+				try
+				{
+					fromStream.close();
+				}
+				catch (IOException ioe)
+				{
+					closeException = ioe;
+				}
+			}
+			if (toStream != null)
+			{
+				try
+				{
+					toStream.close();
 				}
 				catch (IOException ioe)
 				{
