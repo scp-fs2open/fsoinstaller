@@ -40,8 +40,8 @@ import net.sf.sevenzipjbinding.ArchiveFormat;
 import net.sf.sevenzipjbinding.ExtractAskMode;
 import net.sf.sevenzipjbinding.ExtractOperationResult;
 import net.sf.sevenzipjbinding.IArchiveExtractCallback;
+import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.ISequentialOutStream;
-import net.sf.sevenzipjbinding.ISevenZipInArchive;
 import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipException;
@@ -364,7 +364,7 @@ public class Downloader
 		
 		String currentEntry = "";
 		long totalBytes = 0;
-		ISevenZipInArchive archive = null;
+		IInArchive archive = null;
 		InputStreamInStream inStream = null;
 		IArchiveExtractCallback callback = null;
 		try
@@ -400,7 +400,7 @@ public class Downloader
 					sizeProp = totalBytes;
 				totalBytes = archiveSizes[item] = sizeProp;
 				
-				Date dateProp = (Date) archive.getProperty(item, PropID.LAST_WRITE_TIME);
+				Date dateProp = (Date) archive.getProperty(item, PropID.LAST_MODIFICATION_TIME);
 				archiveModifiedTimes[item] = dateProp == null ? -1 : dateProp.getTime();
 				
 				logger.debug("Checking entry '" + currentEntry + "'");
@@ -815,7 +815,7 @@ public class Downloader
 		}
 	}
 	
-	protected void cleanup(ISevenZipInArchive archive, InputStreamInStream inStream)
+	protected void cleanup(IInArchive archive, InputStreamInStream inStream)
 	{
 		if (archive != null)
 		{
