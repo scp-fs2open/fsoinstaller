@@ -368,6 +368,10 @@ public class InstallItem extends JPanel
 							}
 							catch (Exception e)
 							{
+								// if this is InterruptedException, restore the interrupt
+								if (e instanceof InterruptedException)
+									Thread.currentThread().interrupt();
+								
 								modLogger.error("Unhandled exception running innoextract!", e);
 								success = false;
 							}
@@ -390,6 +394,10 @@ public class InstallItem extends JPanel
 							}
 							catch (Exception e)
 							{
+								// if this is InterruptedException, restore the interrupt
+								if (e instanceof InterruptedException)
+									Thread.currentThread().interrupt();
+								
 								modLogger.error("Unhandled exception copying installation!", e);
 								success = false;
 							}

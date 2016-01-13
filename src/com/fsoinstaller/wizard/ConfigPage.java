@@ -230,6 +230,10 @@ public class ConfigPage extends WizardPage
 				else if (exception instanceof InterruptedException)
 				{
 					ThreadSafeJOptionPane.showMessageDialog(gui, XSTR.getString("validationInterrupted"), FreeSpaceOpenInstaller.INSTALLER_TITLE, JOptionPane.WARNING_MESSAGE);
+					
+					// restore interrupt
+					Thread.currentThread().interrupt();
+					
 					return;
 				}
 				else
