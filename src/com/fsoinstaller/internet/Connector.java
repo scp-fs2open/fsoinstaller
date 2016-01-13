@@ -245,18 +245,19 @@ public class Connector
 		if (conn instanceof HttpURLConnection)
 			((HttpURLConnection) conn).setRequestMethod("HEAD");
 		int length = conn.getContentLength();
+		int response = -1;
 		
 		// check response
 		if (conn instanceof HttpURLConnection)
 		{
-			int response = ((HttpURLConnection) conn).getResponseCode();
+			response = ((HttpURLConnection) conn).getResponseCode();
 			if (response / 100 == 4 || response / 100 == 5)
 				throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
 		}
 		
 		// check length for validity
 		if (length < 0)
-			throw new IOException("Server returned invalid Content-Length value of " + length);
+			throw new IOException("Server returned invalid Content-Length value of " + length + " with HTTP response code " + response);
 		
 		return length;
 	}
