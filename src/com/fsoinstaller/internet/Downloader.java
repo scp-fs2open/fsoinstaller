@@ -390,10 +390,15 @@ public class Downloader
 				// this can happen in formats that only zip a single file
 				if (pathProp == null || pathProp.equals(""))
 				{
+					// use the source URL's filename as the name of the extracted file, but chop off the extension (e.g. .tar.gz => .tar)
 					String path = sourceURL.getPath();
 					int slashPos = path.lastIndexOf('/');
 					int dotPos = path.lastIndexOf('.');
 					pathProp = path.substring(slashPos + 1, (dotPos < 0) ? path.length() : dotPos);
+					
+					// if the extension was .tgz or .tbz2, we chopped off too much, so put .tar back on
+					if (dotPos >= 0 && (path.substring(dotPos + 1).equalsIgnoreCase(".tgz") || path.substring(dotPos + 1).equalsIgnoreCase(".tbz2")))
+						pathProp += ".tar";
 				}
 				currentEntry = archiveEntries[item] = pathProp;
 				
