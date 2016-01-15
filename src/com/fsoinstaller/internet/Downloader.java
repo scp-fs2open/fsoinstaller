@@ -397,7 +397,7 @@ public class Downloader
 					pathProp = path.substring(slashPos + 1, (dotPos < 0) ? path.length() : dotPos);
 					
 					// if the extension was .tgz or .tbz2, we chopped off too much, so put .tar back on
-					if (dotPos >= 0 && (path.substring(dotPos + 1).equalsIgnoreCase(".tgz") || path.substring(dotPos + 1).equalsIgnoreCase(".tbz2")))
+					if (dotPos >= 0 && (path.substring(dotPos).equalsIgnoreCase(".tgz") || path.substring(dotPos).equalsIgnoreCase(".tbz2")))
 						pathProp += ".tar";
 				}
 				currentEntry = archiveEntries[item] = pathProp;
