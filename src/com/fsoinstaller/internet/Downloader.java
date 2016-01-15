@@ -201,9 +201,12 @@ public class Downloader
 			int periodPos = fileName.lastIndexOf('.');
 			String extension = (periodPos >= 0) ? fileName.substring(periodPos + 1) : "";
 			
-			// bz2 is the only extension that doesn't match its algorithm name
+			// bz2 is an extension that doesn't match its algorithm name
 			if (extension.equalsIgnoreCase("bz2"))
 				extension = "bzip2";
+			// gz is gzip, and tgz is a tar inside a gzip
+			else if (extension.equalsIgnoreCase("gz") || extension.equalsIgnoreCase("tgz"))
+				extension = "gzip";
 			
 			// make sure 7zip is ready to go
 			MiscUtils.initSevenZip();
