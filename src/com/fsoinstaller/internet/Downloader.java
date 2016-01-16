@@ -388,11 +388,14 @@ public class Downloader
 				// this can happen in formats that only zip a single file
 				if (pathProp == null || pathProp.equals(""))
 				{
-					// use the source URL's filename as the name of the extracted file, but chop off the extension (e.g. .tar.gzip => .tar)
+					// use the source URL's filename as the name of the extracted file...
 					String path = sourceURL.getPath();
 					int slashPos = path.lastIndexOf('/');
-					int dotPos = path.lastIndexOf('.');
-					pathProp = path.substring(slashPos + 1, (dotPos < 0) ? path.length() : dotPos);
+					// (we'll need to normalize the extension again)
+					String fileName = IOUtils.normalizeFileExtension(path.substring(slashPos + 1));
+					// ...but chop off the extension (e.g. .tar.gzip => .tar)
+					int dotPos = fileName.lastIndexOf('.');
+					pathProp = fileName.substring(0, (dotPos < 0) ? fileName.length() : dotPos);
 				}
 				currentEntry = archiveEntries[item] = pathProp;
 				
