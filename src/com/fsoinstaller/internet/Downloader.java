@@ -198,15 +198,13 @@ public class Downloader
 		{
 			File destinationDirectory = destination;
 			String fileName = new File(sourceURL.getPath()).getName();
+			
+			// normalize any contracted file extension we may have
+			fileName = IOUtils.normalizeFileExtension(fileName);
+			
+			// now grab the extension
 			int periodPos = fileName.lastIndexOf('.');
 			String extension = (periodPos >= 0) ? fileName.substring(periodPos + 1) : "";
-			
-			// bz2 is an extension that doesn't match its algorithm name
-			if (extension.equalsIgnoreCase("bz2"))
-				extension = "bzip2";
-			// gz is gzip, and tgz is a tar inside a gzip
-			else if (extension.equalsIgnoreCase("gz") || extension.equalsIgnoreCase("tgz"))
-				extension = "gzip";
 			
 			// make sure 7zip is ready to go
 			MiscUtils.initSevenZip();
@@ -390,15 +388,11 @@ public class Downloader
 				// this can happen in formats that only zip a single file
 				if (pathProp == null || pathProp.equals(""))
 				{
-					// use the source URL's filename as the name of the extracted file, but chop off the extension (e.g. .tar.gz => .tar)
+					// use the source URL's filename as the name of the extracted file, but chop off the extension (e.g. .tar.gzip => .tar)
 					String path = sourceURL.getPath();
 					int slashPos = path.lastIndexOf('/');
 					int dotPos = path.lastIndexOf('.');
 					pathProp = path.substring(slashPos + 1, (dotPos < 0) ? path.length() : dotPos);
-					
-					// if the extension was .tgz or .tbz2, we chopped off too much, so put .tar back on
-					if (dotPos >= 0 && (path.substring(dotPos).equalsIgnoreCase(".tgz") || path.substring(dotPos).equalsIgnoreCase(".tbz2")))
-						pathProp += ".tar";
 				}
 				currentEntry = archiveEntries[item] = pathProp;
 				

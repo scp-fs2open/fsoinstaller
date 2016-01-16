@@ -32,8 +32,11 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.common.InstallerNodeFactory;
@@ -403,5 +406,46 @@ public class IOUtils
 		}
 		
 		return file;
+	}
+	
+	private static final Map<String, String> extensionMap;
+	static
+	{
+		Map<String, String> map = new HashMap<String, String>();
+		map.put(".tgz", ".tar.gzip");
+		map.put(".gz", ".gzip");
+		map.put(".tbz", ".tar.bzip2");
+		map.put(".tbz2", ".tar.bzip2");
+		map.put(".tb2", ".tar.bzip2");
+		map.put(".bz2", ".bzip2");
+		map.put(".taz", ".tar.z");
+		map.put(".tz", ".tar.z");
+		map.put(".tlz", ".tar.lzma");
+		map.put(".lz", ".lzma");
+		map.put(".txz", ".tar.xz");
+		extensionMap = Collections.unmodifiableMap(map);
+	}
+	
+	/**
+	 * Normalizes certain contracted file extensions to their full form so that
+	 * they can be recognized by the 7Zip algorithm and by the extractor.
+	 * 
+	 * @return the filename with the new extension, e.g. file.tgz =>
+	 *         file.tar.gzip
+	 */
+	public static String normalizeFileExtension(String fileName)
+	{
+		// see if we even have an extension
+		int periodPos = fileName.lastIndexOf('.');
+		if (periodPos < 0)
+			return fileName;
+		
+		// see if that extension is one we should replace
+		String extension = fileName.substring(periodPos).toLowerCase();
+		if (!extensionMap.containsKey(extension))
+			return fileName;
+		
+		// replace it with the new extension in the map
+		return fileName.substring(0, periodPos) + extensionMap.get(extension);
 	}
 }
