@@ -305,6 +305,10 @@ rootLoop:		for (File root: roots)
 			return;
 		}
 		
+		// log app information
+		logger.info(INSTALLER_TITLE);
+		logger.info(INSTALLER_VERSION);
+		
 		// since we're logging the locale (when XSTR is invoked), let's log the system information too
 		logger.info("System OS string: " + System.getProperty("os.name"));
 		logger.info("System OS version: " + System.getProperty("os.version"));
