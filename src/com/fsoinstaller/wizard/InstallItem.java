@@ -1036,6 +1036,10 @@ public class InstallItem extends JPanel
 				// did it work?
 				if (success)
 					return true;
+				
+				// are we interrupted?
+				if (Thread.currentThread().isInterrupted())
+					return false;
 			}
 			catch (RuntimeException re)
 			{
