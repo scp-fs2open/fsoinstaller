@@ -531,7 +531,6 @@ rootLoop:		for (File root: roots)
 		try
 		{
 			String computedHash = IOUtils.computeHash(digest, fileToHash);
-			logger.info(fileToHash.getAbsolutePath());
 			
 			if (to_stdout)
 			{
@@ -541,7 +540,10 @@ rootLoop:		for (File root: roots)
 				System.out.println(computedHash);
 			}
 			else
+			{
+				logger.info(fileToHash.getAbsolutePath());
 				logger.info(algorithm + " hash: " + computedHash);
+			}
 		}
 		catch (IOException ioe)
 		{
