@@ -446,6 +446,8 @@ public class Downloader
 				{
 					if (sze.getCause() instanceof InterruptedException)
 						throw (InterruptedException) sze.getCause();
+					else if (sze.getCause() != null && sze.getCause().getCause() instanceof InterruptedException)
+						throw (InterruptedException) sze.getCause().getCause();
 					else
 						throw sze;
 				}
