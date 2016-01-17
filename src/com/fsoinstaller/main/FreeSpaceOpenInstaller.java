@@ -449,7 +449,7 @@ rootLoop:		for (File root: roots)
 	private static void selectAndHashFile(String[] args, boolean to_stdout)
 	{
 		final Configuration config = Configuration.getInstance();
-		File fileToHash;
+		List<File> filesToHash;
 		String algorithm;
 		
 		// get the algorithm
@@ -475,30 +475,6 @@ rootLoop:		for (File root: roots)
 			algorithm = options[result];
 		}
 		
-		// get the file
-		if (args.length > 2)
-		{
-			fileToHash = new File(args[2]);
-		}
-		// if not, prompt for it
-		else
-		{
-			fileToHash = SwingUtils.promptForFile(null, XSTR.getString("chooseFileTitle"), config.getApplicationDir());
-			if (fileToHash == null)
-				return;
-		}
-		
-		if (!fileToHash.exists())
-		{
-			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' does not exist!");
-			return;
-		}
-		else if (fileToHash.isDirectory())
-		{
-			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' is a directory!");
-			return;
-		}
-		
 		// get the hash processor, provided by Java
 		MessageDigest digest;
 		try
@@ -508,6 +484,46 @@ rootLoop:		for (File root: roots)
 		catch (NoSuchAlgorithmException nsae)
 		{
 			logger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
+			return;
+		}
+		
+		// specified via arguments?
+		if (args.length > 2)
+		{
+			// hash all the files listed
+			for (int i = 2; i < args.length; i++)
+				hashFile(digest, new File(args[i]), algorithm, to_stdout);
+		}
+		// if not, prompt for it
+		else
+		{
+			File dialogDir = config.getApplicationDir();
+			while (true)
+			{
+				// prompt until the user cancels
+				File fileToHash = SwingUtils.promptForFile(null, XSTR.getString("chooseFileTitle"), dialogDir);
+				if (fileToHash == null)
+					break;
+				
+				hashFile(digest, fileToHash, algorithm, to_stdout);
+				
+				// update the directory where the user selects files
+				if (fileToHash.exists() && !fileToHash.isDirectory())
+					dialogDir = fileToHash.getParentFile();
+			}
+		}
+	}
+	
+	private static void hashFile(MessageDigest digest, File fileToHash, String algorithm, boolean to_stdout)
+	{
+		if (!fileToHash.exists())
+		{
+			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' does not exist!");
+			return;
+		}
+		else if (fileToHash.isDirectory())
+		{
+			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' is a directory!");
 			return;
 		}
 		
@@ -521,7 +537,7 @@ rootLoop:		for (File root: roots)
 			{
 				System.out.println("HASH");
 				System.out.println(algorithm);
-				System.out.println(fileToHash.getName());
+				System.out.println(fileToHash.getAbsolutePath());
 				System.out.println(computedHash);
 			}
 			else
@@ -529,7 +545,7 @@ rootLoop:		for (File root: roots)
 		}
 		catch (IOException ioe)
 		{
-			logger.error("There was a problem computing the hash...", ioe);
+			logger.error("There was a problem computing the hash for '" + fileToHash + "'...", ioe);
 		}
 	}
 }
