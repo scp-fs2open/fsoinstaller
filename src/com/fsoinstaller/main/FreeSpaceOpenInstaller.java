@@ -70,7 +70,7 @@ public class FreeSpaceOpenInstaller
 	/**
 	 * Version of the Installer.
 	 */
-	public static final String INSTALLER_VERSION = "2.1.10";
+	public static final String INSTALLER_VERSION = "2.2.0";
 	
 	/**
 	 * URL of the directories where version.txt and filenames.txt reside.
@@ -449,7 +449,6 @@ rootLoop:		for (File root: roots)
 	private static void selectAndHashFile(String[] args, boolean to_stdout)
 	{
 		final Configuration config = Configuration.getInstance();
-		List<File> filesToHash;
 		String algorithm;
 		
 		// get the algorithm
