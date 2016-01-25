@@ -228,7 +228,7 @@ public class InstallerUtils
 		return nodes;
 	}
 	
-	private static String UUID()
+	public static String UUID()
 	{
 		return UUID.randomUUID().toString().replaceAll("-", "");
 	}

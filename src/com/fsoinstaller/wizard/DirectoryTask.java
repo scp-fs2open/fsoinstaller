@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -39,6 +38,7 @@ import javax.swing.JOptionPane;
 import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.IOUtils;
+import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.OperatingSystem;
@@ -103,7 +103,7 @@ class DirectoryTask implements Callable<Void>
 		logger.info("Checking for write and delete access...");
 		
 		// check that we can write to this directory
-		String unique = "installer_" + UUID.randomUUID().toString().replaceAll("-", "") + ".tmp";
+		String unique = "installer_" + InstallerUtils.UUID() + ".tmp";
 		File writingTest = new File(destinationDir, unique);
 		try
 		{
