@@ -50,6 +50,7 @@ import com.fsoinstaller.common.InputStreamInStream;
 import com.fsoinstaller.common.InputStreamSource;
 import com.fsoinstaller.common.OutputStreamSequentialOutStream;
 import com.fsoinstaller.utils.IOUtils;
+import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
 import com.fsoinstaller.utils.ObjectHolder;
@@ -214,17 +215,22 @@ public class Downloader
 			{
 				if (format.getMethodName().equalsIgnoreCase(extension))
 				{
-					result = downloadFromArchive(sourceURL, destinationDirectory, format);
+					// if this is a compressed .tar file, create a holder for the temporary .tar file name
+					ObjectHolder<String> tarResultHolder = null;
+					if (periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
+						tarResultHolder = new ObjectHolder<String>();
+					
+					result = downloadFromArchive(sourceURL, destinationDirectory, format, tarResultHolder);
 					
 					// if we ended up with a tar archive, extract that too
-					if (result.booleanValue() && periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
+					if (result.booleanValue() && tarResultHolder != null && tarResultHolder.get() != null)
 					{
-						File tarFile = new File(destinationDirectory, fileName.substring(0, periodPos));
+						File tarFile = new File(destinationDirectory, tarResultHolder.get());
 						if (tarFile.exists())
 						{
 							try
 							{
-								result = downloadFromArchive(tarFile.toURI().toURL(), destinationDirectory, ArchiveFormat.TAR);
+								result = downloadFromArchive(tarFile.toURI().toURL(), destinationDirectory, ArchiveFormat.TAR, null);
 								
 								if (result.booleanValue() && !tarFile.delete())
 									logger.warn("TAR file was not deleted...");
@@ -359,7 +365,7 @@ public class Downloader
 		}
 	}
 	
-	protected boolean downloadFromArchive(URL sourceURL, File destinationDirectory, ArchiveFormat format)
+	protected boolean downloadFromArchive(URL sourceURL, File destinationDirectory, ArchiveFormat format, ObjectHolder<String> tarResultHolder)
 	{
 		logger.info("Downloading and extracting from " + sourceURL + " to local directory " + destinationDirectory);
 		
@@ -388,14 +394,26 @@ public class Downloader
 				// this can happen in formats that only zip a single file
 				if (pathProp == null || pathProp.equals(""))
 				{
-					// use the source URL's filename as the name of the extracted file...
-					String path = sourceURL.getPath();
-					int slashPos = path.lastIndexOf('/');
-					// (we'll need to normalize the extension again)
-					String fileName = IOUtils.normalizeFileExtension(path.substring(slashPos + 1));
-					// ...but chop off the extension (e.g. .tar.gzip => .tar)
-					int dotPos = fileName.lastIndexOf('.');
-					pathProp = fileName.substring(0, (dotPos < 0) ? fileName.length() : dotPos);
+					logger.debug("Path property of item " + item + " is empty!");
+					
+					// if we're expecting a .tar, create a temporary file name and use that
+					if (tarResultHolder != null)
+					{
+						pathProp = InstallerUtils.UUID() + ".tar";
+						tarResultHolder.set(pathProp);
+					}
+					// we're not expecting a .tar, so this is (e.g.) a gzipped single file
+					else
+					{
+						// use the source URL's filename as the name of the extracted file...
+						String fileName = new File(sourceURL.getPath()).getName();
+						// (we'll need to normalize the extension again)
+						fileName = IOUtils.normalizeFileExtension(fileName);
+						// ...but chop off the extension (we know we have an extension since this was recognized as an archive)
+						pathProp = fileName.substring(0, fileName.lastIndexOf('.'));
+					}
+					
+					logger.debug("Using '" + pathProp + "' as path property");
 				}
 				currentEntry = archiveEntries[item] = pathProp;
 				
