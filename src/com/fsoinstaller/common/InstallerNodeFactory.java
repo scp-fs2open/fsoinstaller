@@ -163,6 +163,13 @@ public class InstallerNodeFactory
 				node.addCopyPair(new InstallerNode.FilePair(copyFrom, copyTo));
 				break;
 			
+			case PATCH:
+				InstallerNode.HashTriple prePatched = readHashTriple(reader);
+				InstallerNode.HashTriple patch = readHashTriple(reader);
+				InstallerNode.HashTriple postPatched = readHashTriple(reader);
+				node.addPatchTriple(new InstallerNode.PatchTriple(prePatched, patch, postPatched));
+				break;
+			
 			case URL:
 				String url = readString(reader);
 				try
@@ -189,25 +196,7 @@ public class InstallerNodeFactory
 				break;
 			
 			case HASH:
-				String line = readString(reader);
-				String type, filename, hash;
-				
-				// could be all on one line or on three lines
-				String[] parts = SPACE_OR_TAB_PATTERN.split(line);
-				if (parts.length == 3)
-				{
-					type = parts[0];
-					filename = MiscUtils.standardizeSlashes(parts[1]);
-					hash = parts[2];
-				}
-				else
-				{
-					type = line;
-					filename = MiscUtils.standardizeSlashes(readString(reader));
-					hash = readString(reader);
-				}
-				
-				node.addHashTriple(new InstallerNode.HashTriple(type, filename, hash));
+				node.addHashTriple(readHashTriple(reader));
 				break;
 			
 			case NOTE:
@@ -262,6 +251,29 @@ public class InstallerNodeFactory
 			throw new InstallerNodeParseException("Expected a plain string; found the token '" + object + "'!");
 		
 		return (String) object;
+	}
+	
+	private static InstallerNode.HashTriple readHashTriple(Reader reader) throws InstallerNodeParseException, IOException
+	{
+		String line = readString(reader);
+		String type, filename, hash;
+		
+		// could be all on one line or on three lines
+		String[] parts = SPACE_OR_TAB_PATTERN.split(line);
+		if (parts.length == 3)
+		{
+			type = parts[0];
+			filename = MiscUtils.standardizeSlashes(parts[1]);
+			hash = parts[2];
+		}
+		else
+		{
+			type = line;
+			filename = MiscUtils.standardizeSlashes(readString(reader));
+			hash = readString(reader);
+		}
+		
+		return new InstallerNode.HashTriple(type, filename, hash);
 	}
 	
 	private static List<String> readStringsUntilEndToken(Reader reader, InstallerNodeToken endToken) throws InstallerNodeParseException, IOException
@@ -373,6 +385,14 @@ public class InstallerNodeFactory
 		
 		for (InstallerNode.FilePair pair: node.getCopyList())
 			writeLine(indent, writer, InstallerNodeToken.COPY, pair.getFrom(), pair.getTo());
+		
+		for (InstallerNode.PatchTriple triple: node.getPatchList())
+		{
+			writeLine(indent, writer, InstallerNodeToken.PATCH);
+			writeLine(indent, writer, triple.getPrePatch().getType(), triple.getPrePatch().getFilename(), triple.getPrePatch().getHash());
+			writeLine(indent, writer, triple.getPatch().getType(), triple.getPatch().getFilename(), triple.getPatch().getHash());
+			writeLine(indent, writer, triple.getPostPatch().getType(), triple.getPostPatch().getFilename(), triple.getPostPatch().getHash());
+		}
 		
 		for (InstallerNode.InstallUnit unit: node.getInstallList())
 		{

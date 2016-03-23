@@ -53,6 +53,7 @@ public class InstallerNode
 	protected final List<String> deleteList;
 	protected final List<FilePair> renameList;
 	protected final List<FilePair> copyList;
+	protected final List<PatchTriple> patchList;
 	protected final List<InstallUnit> installList;
 	protected final List<HashTriple> hashList;
 	protected final List<String> cmdList;
@@ -79,6 +80,7 @@ public class InstallerNode
 		this.deleteList = new ArrayList<String>();
 		this.renameList = new ArrayList<FilePair>();
 		this.copyList = new ArrayList<FilePair>();
+		this.patchList = new ArrayList<PatchTriple>();
 		this.installList = new ArrayList<InstallUnit>();
 		this.hashList = new ArrayList<HashTriple>();
 		this.cmdList = new ArrayList<String>();
@@ -199,6 +201,11 @@ public class InstallerNode
 		return Collections.unmodifiableList(copyList);
 	}
 	
+	public List<PatchTriple> getPatchList()
+	{
+		return Collections.unmodifiableList(patchList);
+	}
+	
 	public List<InstallUnit> getInstallList()
 	{
 		return Collections.unmodifiableList(installList);
@@ -276,6 +283,19 @@ public class InstallerNode
 	public void removeCopyPair(FilePair copyPair)
 	{
 		copyList.remove(copyPair);
+	}
+	
+	public void addPatchTriple(PatchTriple patchTriple)
+	{
+		if (patchTriple == null)
+			throw new NullPointerException("Cannot add a null patch triple!");
+		
+		patchList.add(patchTriple);
+	}
+	
+	public void removePatchTriple(PatchTriple patchTriple)
+	{
+		patchList.remove(patchTriple);
 	}
 	
 	public void addInstall(InstallUnit installUnit)
@@ -505,6 +525,62 @@ public class InstallerNode
 				throw new NullPointerException("The 'hash' field cannot be null!");
 			
 			this.hash = hash;
+		}
+	}
+	
+	public static class PatchTriple
+	{
+		private HashTriple prePatch;
+		private HashTriple patch;
+		private HashTriple postPatch;
+		
+		public PatchTriple(HashTriple prePatch, HashTriple patch, HashTriple postPatch)
+		{
+			if (prePatch == null || patch == null || postPatch == null)
+				throw new NullPointerException("Arguments cannot be null!");
+			
+			this.prePatch = prePatch;
+			this.patch = patch;
+			this.postPatch = postPatch;
+		}
+		
+		public HashTriple getPrePatch()
+		{
+			return prePatch;
+		}
+		
+		public void setPrePatch(HashTriple prePatch)
+		{
+			if (prePatch == null)
+				throw new NullPointerException("The 'prePatch' field cannot be null!");
+			
+			this.prePatch = prePatch;
+		}
+		
+		public HashTriple getPatch()
+		{
+			return patch;
+		}
+		
+		public void setPatch(HashTriple patch)
+		{
+			if (patch == null)
+				throw new NullPointerException("The 'patch' field cannot be null!");
+			
+			this.patch = patch;
+		}
+		
+		public HashTriple getPostPatch()
+		{
+			return postPatch;
+		}
+		
+		public void setPostPatch(HashTriple postPatch)
+		{
+			if (postPatch == null)
+				throw new NullPointerException("The 'postPatch' field cannot be null!");
+			
+			this.postPatch = postPatch;
 		}
 	}
 	

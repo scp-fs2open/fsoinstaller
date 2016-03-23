@@ -34,6 +34,7 @@ public enum InstallerNodeToken
 	DELETE("DELETE"),
 	RENAME("RENAME"),
 	COPY("COPY"),
+	PATCH("PATCH"),
 	URL("URL"),
 	MULTIURL("MULTIURL"),
 	ENDMULTI("ENDMULTI"),
