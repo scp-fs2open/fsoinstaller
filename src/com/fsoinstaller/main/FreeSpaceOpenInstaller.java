@@ -316,6 +316,9 @@ rootLoop:		for (File root: roots)
 		logger.info("ProgramFiles(x86): " + (System.getenv("ProgramFiles(x86)") != null));
 		logger.info("OS recognized as: " + OperatingSystem.getHostOS().name());
 		
+		// and why not log the Java version while we're at it
+		logger.info("Java version: " + System.getProperty("java.version"));
+		
 		// we need to set the button text for any dialogs that appear
 		// (this has the side-effect of initializing XSTR before any Swing stuff, which keeps the flow conceptually untangled)
 		UIManager.put("OptionPane.yesButtonText", XSTR.getString("Yes"));
