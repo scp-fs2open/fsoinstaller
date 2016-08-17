@@ -65,7 +65,7 @@ public class SampleInputStreamSource
 		InputStream newInputStream = connection.getInputStream();
 		
 		if (position > 0 && connection.getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
-			throw new IOException("The site at " + sourceURL + " does not support returning partial content!");
+			throw new IOException("The site at " + sourceURL + " does not support returning partial content!  HTTP response code = " + connection.getResponseCode());
 		
 		return newInputStream;
 	}

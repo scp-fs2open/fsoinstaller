@@ -324,7 +324,7 @@ public class HTTPInputStream extends InputStream
 		if (connection instanceof HttpURLConnection)
 		{
 			if (position > 0 && ((HttpURLConnection) connection).getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
-				throw new IOException("The site at " + sourceURL + " does not support returning partial content!");
+				throw new IOException("The site at " + sourceURL + " does not support returning partial content!  HTTP response code = " + ((HttpURLConnection) connection).getResponseCode());
 		}
 		else
 		{

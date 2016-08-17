@@ -593,7 +593,7 @@ public class Downloader
 				if (connection instanceof HttpURLConnection)
 				{
 					if (position > 0 && ((HttpURLConnection) connection).getResponseCode() != HttpURLConnection.HTTP_PARTIAL)
-						throw new IOException("The site at " + _sourceURL + " does not support returning partial content!");
+						throw new IOException("The site at " + _sourceURL + " does not support returning partial content!  HTTP response code = " + ((HttpURLConnection) connection).getResponseCode());
 				}
 				// we couldn't open the stream right at the place we wanted, but let's see if we can jump to it
 				else
