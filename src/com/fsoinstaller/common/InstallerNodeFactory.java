@@ -164,10 +164,10 @@ public class InstallerNodeFactory
 				break;
 			
 			case PATCH:
-				InstallerNode.HashTriple prePatched = readHashTriple(reader);
+				InstallerNode.HashTriple prePatch = readHashTriple(reader);
 				InstallerNode.HashTriple patch = readHashTriple(reader);
-				InstallerNode.HashTriple postPatched = readHashTriple(reader);
-				node.addPatchTriple(new InstallerNode.PatchTriple(prePatched, patch, postPatched));
+				InstallerNode.HashTriple postPatch = readHashTriple(reader);
+				node.addPatchTriple(new InstallerNode.PatchTriple(prePatch, patch, postPatch));
 				break;
 			
 			case URL:

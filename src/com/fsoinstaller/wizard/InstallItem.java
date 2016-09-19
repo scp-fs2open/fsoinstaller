@@ -314,12 +314,20 @@ public class InstallItem extends JPanel
 						}
 						modLogger.info("Installing to path: " + modFolder.getAbsolutePath());
 						
-						// prepare progress bar for tracking installation units
+						// prepare progress bar for tracking progress
 						setPercentComplete(0);
 						setIndeterminate(false);
+												
+						// ninja the install units: handle patching
+						boolean success = performPatchTasks(modFolder);
+						if (!success || Thread.currentThread().isInterrupted())
+						{
+							failInstallTree();
+							return null;
+						}
 						
 						// now we are about to download stuff
-						boolean success = performInstallTasks(modFolder);
+						success = performInstallTasks(modFolder);
 						if (!success || Thread.currentThread().isInterrupted())
 						{
 							failInstallTree();
@@ -747,6 +755,17 @@ public class InstallItem extends JPanel
 		}
 		
 		return folder;
+	}
+	
+	/**
+	 * Perform patching for this node, if needed.
+	 */
+	private boolean performPatchTasks(final File modFolder)
+	{
+		if (!node.getPatchList().isEmpty())
+		{
+			modLogger.info("Processing PATCH items");
+		}
 	}
 	
 	/**
