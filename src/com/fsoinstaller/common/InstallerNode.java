@@ -53,7 +53,6 @@ public class InstallerNode
 	protected final List<String> deleteList;
 	protected final List<FilePair> renameList;
 	protected final List<FilePair> copyList;
-	protected final List<PatchTriple> patchList;
 	protected final List<InstallUnit> installList;
 	protected final List<HashTriple> hashList;
 	protected final List<String> cmdList;
@@ -80,7 +79,6 @@ public class InstallerNode
 		this.deleteList = new ArrayList<String>();
 		this.renameList = new ArrayList<FilePair>();
 		this.copyList = new ArrayList<FilePair>();
-		this.patchList = new ArrayList<PatchTriple>();
 		this.installList = new ArrayList<InstallUnit>();
 		this.hashList = new ArrayList<HashTriple>();
 		this.cmdList = new ArrayList<String>();
@@ -201,11 +199,6 @@ public class InstallerNode
 		return Collections.unmodifiableList(copyList);
 	}
 	
-	public List<PatchTriple> getPatchList()
-	{
-		return Collections.unmodifiableList(patchList);
-	}
-	
 	public List<InstallUnit> getInstallList()
 	{
 		return Collections.unmodifiableList(installList);
@@ -283,19 +276,6 @@ public class InstallerNode
 	public void removeCopyPair(FilePair copyPair)
 	{
 		copyList.remove(copyPair);
-	}
-	
-	public void addPatchTriple(PatchTriple patchTriple)
-	{
-		if (patchTriple == null)
-			throw new NullPointerException("Cannot add a null patch triple!");
-		
-		patchList.add(patchTriple);
-	}
-	
-	public void removePatchTriple(PatchTriple patchTriple)
-	{
-		patchList.remove(patchTriple);
 	}
 	
 	public void addInstall(InstallUnit installUnit)
@@ -588,11 +568,13 @@ public class InstallerNode
 	{
 		private List<BaseURL> baseURLList;
 		private List<String> fileList;
+		private List<PatchTriple> patchList;
 		
 		public InstallUnit()
 		{
 			this.baseURLList = new ArrayList<BaseURL>();
 			this.fileList = new ArrayList<String>();
+			this.patchList = new ArrayList<PatchTriple>();
 		}
 		
 		public List<BaseURL> getBaseURLList()
@@ -603,6 +585,11 @@ public class InstallerNode
 		public List<String> getFileList()
 		{
 			return Collections.unmodifiableList(fileList);
+		}
+		
+		public List<PatchTriple> getPatchList()
+		{
+			return Collections.unmodifiableList(patchList);
 		}
 		
 		public void addBaseURL(BaseURL baseURL)
@@ -633,6 +620,19 @@ public class InstallerNode
 		public void removeFile(String file)
 		{
 			fileList.remove(file);
+		}
+		
+		public void addPatchTriple(PatchTriple patchTriple)
+		{
+			if (patchTriple == null)
+				throw new NullPointerException("Cannot add a null patch triple!");
+			
+			patchList.add(patchTriple);
+		}
+		
+		public void removePatchTriple(PatchTriple patchTriple)
+		{
+			patchList.remove(patchTriple);
 		}
 	}
 }

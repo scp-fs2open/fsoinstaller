@@ -53,6 +53,7 @@ import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.common.InstallerNode.FilePair;
 import com.fsoinstaller.common.InstallerNode.HashTriple;
 import com.fsoinstaller.common.InstallerNode.InstallUnit;
+import com.fsoinstaller.common.InstallerNode.PatchTriple;
 import com.fsoinstaller.internet.Connector;
 import com.fsoinstaller.internet.Downloader;
 import com.fsoinstaller.main.Configuration;
@@ -318,7 +319,7 @@ public class InstallItem extends JPanel
 						setPercentComplete(0);
 						setIndeterminate(false);
 												
-						// ninja the install units: handle patching
+						// before we download anything, let's see if we can patch it
 						boolean success = performPatchTasks(modFolder);
 						if (!success || Thread.currentThread().isInterrupted())
 						{
@@ -762,10 +763,24 @@ public class InstallItem extends JPanel
 	 */
 	private boolean performPatchTasks(final File modFolder)
 	{
-		if (!node.getPatchList().isEmpty())
+		// count patch items first
+		int patchItems = 0;
+		for (InstallUnit unit: node.getInstallList())
+		{
+			for (InstallerNode.PatchTriple triple: unit.getPatchList())
+				patchItems++;
+		}
+		
+		if (patchItems > 0)
 		{
 			modLogger.info("Processing PATCH items");
+			setText(XSTR.getString("progressBarPatching"));
+			
+			// TODO
 		}
+		
+		// always return true (we don't stop the installation if one of the PATCH items failed)
+		return true;
 	}
 	
 	/**

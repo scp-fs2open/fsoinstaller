@@ -95,6 +95,12 @@ public class InstallerNodeFactory
 					currentInstallUnit = new InstallerNode.InstallUnit();
 					node.addInstall(currentInstallUnit);
 				}
+				// a patch requires a current install unit
+				else if (object == InstallerNodeToken.PATCH)
+				{
+					if (currentInstallUnit == null)
+						throw new InstallerNodeParseException("PATCH token encountered without an active InstallUnit!");
+				}
 				// any other token resets it
 				else
 				{
@@ -163,13 +169,6 @@ public class InstallerNodeFactory
 				node.addCopyPair(new InstallerNode.FilePair(copyFrom, copyTo));
 				break;
 			
-			case PATCH:
-				InstallerNode.HashTriple prePatch = readHashTriple(reader);
-				InstallerNode.HashTriple patch = readHashTriple(reader);
-				InstallerNode.HashTriple postPatch = readHashTriple(reader);
-				node.addPatchTriple(new InstallerNode.PatchTriple(prePatch, patch, postPatch));
-				break;
-			
 			case URL:
 				String url = readString(reader);
 				try
@@ -193,6 +192,13 @@ public class InstallerNodeFactory
 				{
 					throw new InstallerNodeParseException(ibue.getMessage(), ibue);
 				}
+				break;
+			
+			case PATCH:
+				InstallerNode.HashTriple prePatch = readHashTriple(reader);
+				InstallerNode.HashTriple patch = readHashTriple(reader);
+				InstallerNode.HashTriple postPatch = readHashTriple(reader);
+				currentInstallUnit.addPatchTriple(new InstallerNode.PatchTriple(prePatch, patch, postPatch));
 				break;
 			
 			case HASH:
@@ -386,14 +392,6 @@ public class InstallerNodeFactory
 		for (InstallerNode.FilePair pair: node.getCopyList())
 			writeLine(indent, writer, InstallerNodeToken.COPY, pair.getFrom(), pair.getTo());
 		
-		for (InstallerNode.PatchTriple triple: node.getPatchList())
-		{
-			writeLine(indent, writer, InstallerNodeToken.PATCH);
-			writeLine(indent, writer, triple.getPrePatch().getType(), triple.getPrePatch().getFilename(), triple.getPrePatch().getHash());
-			writeLine(indent, writer, triple.getPatch().getType(), triple.getPatch().getFilename(), triple.getPatch().getHash());
-			writeLine(indent, writer, triple.getPostPatch().getType(), triple.getPostPatch().getFilename(), triple.getPostPatch().getHash());
-		}
-		
 		for (InstallerNode.InstallUnit unit: node.getInstallList())
 		{
 			// first URLs
@@ -410,6 +408,15 @@ public class InstallerNodeFactory
 			// then install items
 			for (String install: unit.getFileList())
 				writeLine(indent, writer, install);
+			
+			// then patch items
+			for (InstallerNode.PatchTriple triple: unit.getPatchList())
+			{
+				writeLine(indent, writer, InstallerNodeToken.PATCH);
+				writeLine(indent, writer, triple.getPrePatch().getType(), triple.getPrePatch().getFilename(), triple.getPrePatch().getHash());
+				writeLine(indent, writer, triple.getPatch().getType(), triple.getPatch().getFilename(), triple.getPatch().getHash());
+				writeLine(indent, writer, triple.getPostPatch().getType(), triple.getPostPatch().getFilename(), triple.getPostPatch().getHash());
+			}
 		}
 		
 		for (InstallerNode.HashTriple triple: node.getHashList())
