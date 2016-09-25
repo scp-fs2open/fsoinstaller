@@ -318,6 +318,7 @@ rootLoop:		for (File root: roots)
 		
 		// and why not log the Java version while we're at it
 		logger.info("Java version: " + System.getProperty("java.version"));
+		logger.info("Java JVM bits: " + System.getProperty("sun.arch.data.model"));
 		
 		// we need to set the button text for any dialogs that appear
 		// (this has the side-effect of initializing XSTR before any Swing stuff, which keeps the flow conceptually untangled)
