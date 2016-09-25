@@ -37,6 +37,8 @@ import java.util.regex.Pattern;
 
 import javax.swing.SwingUtilities;
 
+import com.fsoinstaller.main.Configuration;
+
 import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
 
@@ -496,6 +498,34 @@ public class MiscUtils
 		{
 			// do nothing
 		}
+		
+		// try the above, but with the application path
+		File applicationDir = Configuration.getInstance().getApplicationDir();		
+		
+		// Windows
+		try
+		{
+			System.loadLibrary(applicationDir.getAbsolutePath() + File.separator + "OpenAL32");
+			logger.info("Found 'OpenAL32' in " + applicationDir.getAbsolutePath() + "!");
+			return true;
+		}
+		catch (UnsatisfiedLinkError ule)
+		{
+			// do nothing
+		}
+
+		// Linux
+		try
+		{
+			System.loadLibrary(applicationDir.getAbsolutePath() + File.separator + "openal");
+			logger.info("Found 'openal' in " + applicationDir.getAbsolutePath() + "!");
+			return true;
+		}
+		catch (UnsatisfiedLinkError ule2)
+		{
+			// do nothing
+		}
+
 		
 		logger.warn("Neither 'OpenAL32' nor 'openal' could be loaded!");
 		return false;
