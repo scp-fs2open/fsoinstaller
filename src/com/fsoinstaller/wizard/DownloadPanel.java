@@ -21,12 +21,6 @@ package com.fsoinstaller.wizard;
 
 import java.awt.EventQueue;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-
 import com.fsoinstaller.internet.DownloadEvent;
 import com.fsoinstaller.internet.DownloadListener;
 import com.fsoinstaller.internet.Downloader;
@@ -35,29 +29,29 @@ import com.fsoinstaller.utils.MiscUtils;
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
 
-public class DownloadPanel extends JPanel implements DownloadListener
+public class DownloadPanel extends InstallTaskPanel implements DownloadListener
 {
-	private final JProgressBar progressBar;
-	private final StoplightPanel stoplightPanel;
-	private Downloader downloader;
+	protected Downloader downloader = null;
 	
 	public DownloadPanel()
 	{
-		super();
-		
-		this.progressBar = new JProgressBar(0, GUIConstants.BAR_MAXIMUM);
-		progressBar.setStringPainted(true);
-		
-		this.stoplightPanel = new StoplightPanel((int) progressBar.getPreferredSize().getHeight());
-		
-		setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, 0));
-		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-		add(progressBar);
-		add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
-		add(stoplightPanel);
-		
 		// set up the initial GUI display without actually having a downloader yet
-		setDownloader(null);
+		super();
+	}
+	
+	@Override
+	public void cancel()
+	{
+		if (downloader != null)
+			downloader.cancel();
+	}
+	
+	@Override
+	public void preempt()
+	{
+		if (downloader != null)
+			throw new IllegalStateException("The downloader should not have been assigned yet");
+		downloadCancelled(null);
 	}
 	
 	public Downloader getDownloader()
@@ -77,12 +71,6 @@ public class DownloadPanel extends JPanel implements DownloadListener
 		
 		if (this.downloader != null)
 			this.downloader.addDownloadListener(this);
-		
-		progressBar.setString(XSTR.getString("progressBarWaiting"));
-		progressBar.setIndeterminate(true);
-		progressBar.setValue(0);
-		
-		stoplightPanel.setPending();
 	}
 	
 	public void downloadAboutToStart(DownloadEvent event)

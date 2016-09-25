@@ -77,7 +77,10 @@ public class InstallItem extends JPanel
 	
 	private final JProgressBar overallBar;
 	private final StoplightPanel stoplightPanel;
-	private final Map<KeyPair<InstallUnit, String>, DownloadPanel> downloadPanelMap;
+	
+	private final Map<KeyPair<InstallUnit, PatchTriple>, Integer> patchTaskIndexes;
+	private final Map<KeyPair<InstallUnit, String>, Integer> downloadTaskIndexes;
+	private final List<InstallTaskPanel> installTaskPanelList;
 	
 	private final List<InstallItem> childItems;
 	private int remainingChildren;
@@ -148,16 +151,36 @@ public class InstallItem extends JPanel
 		JPanel installPanel = new JPanel();
 		installPanel.setLayout(new BoxLayout(installPanel, BoxLayout.Y_AXIS));
 		
-		// add as many panels as we have install units for
-		Map<KeyPair<InstallUnit, String>, DownloadPanel> tempMap = new HashMap<KeyPair<InstallUnit, String>, DownloadPanel>();
+		// add as many panels as we have install tasks for
+		Map<KeyPair<InstallUnit, PatchTriple>, Integer> tempPatchMap = new HashMap<KeyPair<InstallUnit, PatchTriple>, Integer>();
+		Map<KeyPair<InstallUnit, String>, Integer> tempDownloadMap = new HashMap<KeyPair<InstallUnit, String>, Integer>();
+		List<InstallTaskPanel> tempPanelList = new ArrayList<InstallTaskPanel>();
 		if (!installNotNeeded)
 		{
+			for (InstallUnit install: node.getInstallList())
+			{
+				for (PatchTriple patch: install.getPatchList())
+				{
+					KeyPair<InstallUnit, PatchTriple> key = new KeyPair<InstallUnit, PatchTriple>(install, patch);
+					if (tempPatchMap.containsKey(key))
+					{
+						logger.error("Duplicate patch key found for mod '" + node.getTreePath() + "', patchTriple " + install.getPatchList().indexOf(patch));
+						continue;
+					}
+					
+					DownloadPanel panel = new DownloadPanel();
+					installPanel.add(panel);
+					
+					tempPanelList.add(panel);
+					tempPatchMap.put(key, tempPanelList.size());
+				}
+			}
 			for (InstallUnit install: node.getInstallList())
 			{
 				for (String file: install.getFileList())
 				{
 					KeyPair<InstallUnit, String> key = new KeyPair<InstallUnit, String>(install, file);
-					if (tempMap.containsKey(key))
+					if (tempDownloadMap.containsKey(key))
 					{
 						logger.error("Duplicate key found for mod '" + node.getTreePath() + "', file '" + file + "'!");
 						continue;
@@ -165,11 +188,15 @@ public class InstallItem extends JPanel
 					
 					DownloadPanel panel = new DownloadPanel();
 					installPanel.add(panel);
-					tempMap.put(key, panel);
+					
+					tempPanelList.add(panel);
+					tempDownloadMap.put(key, tempPanelList.size());
 				}
 			}
 		}
-		downloadPanelMap = Collections.unmodifiableMap(tempMap);
+		patchTaskIndexes = Collections.unmodifiableMap(tempPatchMap);
+		downloadTaskIndexes = Collections.unmodifiableMap(tempDownloadMap);
+		installTaskPanelList = Collections.unmodifiableList(tempPanelList);
 		
 		// add as many children as we have
 		for (InstallerNode childNode: node.getChildren())
@@ -505,13 +532,9 @@ public class InstallItem extends JPanel
 			// interrupt the running task
 			overallInstallTask.cancel(true);
 			
-			// cancel all downloads
-			for (DownloadPanel panel: downloadPanelMap.values())
-			{
-				Downloader d = panel.getDownloader();
-				if (d != null)
-					d.cancel();
-			}
+			// cancel all tasks
+			for (InstallTaskPanel panel: installTaskPanelList)
+				panel.cancel();
 		}
 		else if (state == InstallItemState.CANCELLED)
 		{
@@ -600,8 +623,8 @@ public class InstallItem extends JPanel
 			modLogger.info("Parent mod could not be installed; this mod will be skipped!");
 			logInstallError(XSTR.getString("installResultSkipped"));
 			
-			for (DownloadPanel panel: downloadPanelMap.values())
-				panel.downloadCancelled(null);
+			for (InstallTaskPanel panel: installTaskPanelList)
+				panel.preempt();
 		}
 		
 		// fail child items
@@ -766,10 +789,7 @@ public class InstallItem extends JPanel
 		// count patch items first
 		int patchItems = 0;
 		for (InstallUnit unit: node.getInstallList())
-		{
-			for (InstallerNode.PatchTriple triple: unit.getPatchList())
-				patchItems++;
-		}
+			patchItems += unit.getPatchList().size();
 		
 		if (patchItems > 0)
 		{
@@ -788,14 +808,19 @@ public class InstallItem extends JPanel
 	 */
 	private boolean performInstallTasks(final File modFolder)
 	{
-		if (!node.getInstallList().isEmpty())
+		// count download items first
+		int downloadItems = 0;
+		for (InstallUnit unit: node.getInstallList())
+			downloadItems += unit.getFileList().size();
+		
+		if (downloadItems > 0)
 		{
 			modLogger.info("Processing INSTALL items");
 			setText(XSTR.getString("progressBarInstalling"));
 			
 			final Connector connector = (Connector) configuration.getSettings().get(Configuration.CONNECTOR_KEY);
 			
-			final int totalTasks = downloadPanelMap.keySet().size();
+			final int totalTasks = downloadItems;
 			final AtomicInteger successes = new AtomicInteger(0);
 			final AtomicInteger completions = new AtomicInteger(0);
 			final CountDownLatch latch = new CountDownLatch(totalTasks);
@@ -817,7 +842,8 @@ public class InstallItem extends JPanel
 				{
 					modLogger.debug("Submitting download task for '" + file + "'");
 					
-					final DownloadPanel downloadPanel = downloadPanelMap.get(new KeyPair<InstallUnit, String>(install, file));
+					int downloadTaskIndex = downloadTaskIndexes.get(new KeyPair<InstallUnit, String>(install, file));
+					final DownloadPanel downloadPanel = (DownloadPanel) installTaskPanelList.get(downloadTaskIndex);
 					
 					// submit a task for this file
 					FreeSpaceOpenInstaller.getInstance().submitTask(XSTR.getString("downloadTitle") + " " + file, new Callable<Void>()
