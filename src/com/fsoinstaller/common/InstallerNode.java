@@ -506,6 +506,26 @@ public class InstallerNode
 			
 			this.hash = hash;
 		}
+		
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj == null)
+				return false;
+			else if (obj == this)
+				return true;
+			else if (!obj.getClass().equals(getClass()))
+				return false;
+			else
+				// only the filename matters
+				return filename.equals(((HashTriple) obj).filename);
+		}
+		
+		@Override
+		public int hashCode()
+		{
+			return filename.hashCode();
+		}
 	}
 	
 	public static class PatchTriple
@@ -561,6 +581,29 @@ public class InstallerNode
 				throw new NullPointerException("The 'postPatch' field cannot be null!");
 			
 			this.postPatch = postPatch;
+		}
+		
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj == null)
+				return false;
+			else if (obj == this)
+				return true;
+			else if (!obj.getClass().equals(getClass()))
+				return false;
+			else
+				// only the before and after triples matter
+				return prePatch.equals(((PatchTriple) obj).prePatch) && postPatch.equals(((PatchTriple) obj).postPatch);
+		}
+		
+		@Override
+		public int hashCode()
+		{
+			int result = 17;
+			result = 31 * result + prePatch.hashCode();
+			result = 31 * result + postPatch.hashCode();
+			return result;
 		}
 	}
 	
