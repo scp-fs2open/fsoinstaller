@@ -171,8 +171,8 @@ public class InstallItem extends JPanel
 					DownloadPanel panel = new DownloadPanel();
 					installPanel.add(panel);
 					
-					tempPanelList.add(panel);
 					tempPatchMap.put(key, tempPanelList.size());
+					tempPanelList.add(panel);
 				}
 			}
 			for (InstallUnit install: node.getInstallList())
@@ -189,8 +189,8 @@ public class InstallItem extends JPanel
 					DownloadPanel panel = new DownloadPanel();
 					installPanel.add(panel);
 					
-					tempPanelList.add(panel);
 					tempDownloadMap.put(key, tempPanelList.size());
+					tempPanelList.add(panel);
 				}
 			}
 		}
