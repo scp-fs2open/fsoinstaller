@@ -81,12 +81,19 @@ public class BaseURL
 	 */
 	public static boolean validateURL(URI theURL)
 	{
+		if (theURL == null)
+			throw new IllegalArgumentException("The URI cannot be null!");
+		
 		// check protocol
-		if (!theURL.getScheme().toLowerCase().equals("http"))
+		if (theURL.getScheme() == null || !theURL.getScheme().toLowerCase().equals("http"))
+			return false;
+		
+		// check host
+		if (theURL.getAuthority() == null || theURL.getHost() == null)
 			return false;
 
 		// check path
-		if (!theURL.getPath().endsWith("/"))
+		if (theURL.getPath() == null || !theURL.getPath().endsWith("/"))
 			return false;
 
 		// check absolute
