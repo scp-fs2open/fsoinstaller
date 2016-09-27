@@ -786,7 +786,7 @@ public class InstallItem extends JPanel
 	 */
 	private boolean performPatchTasks(final File modFolder)
 	{
-		// count patch items first
+		// count task items first
 		int patchItems = 0;
 		for (InstallUnit unit: node.getInstallList())
 			patchItems += unit.getPatchList().size();
@@ -796,7 +796,75 @@ public class InstallItem extends JPanel
 			modLogger.info("Processing PATCH items");
 			setText(XSTR.getString("progressBarPatching"));
 			
-			// TODO
+			final Connector connector = (Connector) configuration.getSettings().get(Configuration.CONNECTOR_KEY);
+			
+			final int totalTasks = patchItems;
+			final AtomicInteger completions = new AtomicInteger(0);
+			final CountDownLatch latch = new CountDownLatch(totalTasks);
+			
+			for (InstallUnit install: node.getInstallList())
+			{
+				// try mirrors in random order
+				List<BaseURL> tempURLs = install.getBaseURLList();
+				if (tempURLs.size() > 1)
+				{
+					tempURLs = new ArrayList<BaseURL>(tempURLs);
+					Collections.shuffle(tempURLs);
+				}
+				final List<BaseURL> urls = tempURLs;
+				
+				// perform all patches for the unit
+				for (final PatchTriple triple: install.getPatchList())
+				{
+					modLogger.debug("Submitting patch task for " + triple.getPrePatch().getFilename());
+					
+					int patchTaskIndex = patchTaskIndexes.get(new KeyPair<InstallUnit, PatchTriple>(install, triple));
+					final DownloadPanel patchPanel = (DownloadPanel) installTaskPanelList.get(patchTaskIndex);
+					
+					// submit a task for this patch
+					FreeSpaceOpenInstaller.getInstance().submitTask(XSTR.getString("patchTitle") + " " + triple.getPrePatch().getFilename(), new Callable<Void>()
+					{
+						public Void call()
+						{
+							// this technique will attempt to perform the patch,
+							// and then signal its completion via the countdown latch
+							try
+							{
+								// first do the patch
+								patchOne(connector, modFolder, urls, triple, patchPanel);
+								int complete = completions.incrementAndGet();
+								
+								// next update the progress bar
+								setRatioComplete(complete / ((double) totalTasks));
+							}
+							catch (RuntimeException re)
+							{
+								modLogger.error("Unhandled runtime exception!", re);
+								logInstallError(XSTR.getString("installResultUnexpectedRuntimeException"));
+							}
+							finally
+							{
+								latch.countDown();
+							}
+							return null;
+						}
+					});
+				}
+			}
+			
+			// wait until all tasks have finished
+			modLogger.debug("Waiting for all patch tasks to complete...");
+			try
+			{
+				latch.await();
+			}
+			catch (InterruptedException ie)
+			{
+				modLogger.error("Thread was interrupted while waiting for patches to complete!", ie);
+				Thread.currentThread().interrupt();
+				return false;
+			}
+			modLogger.info("All patch tasks have completed!");
 		}
 		
 		// always return true (we don't stop the installation if one of the PATCH items failed)
@@ -808,11 +876,11 @@ public class InstallItem extends JPanel
 	 */
 	private boolean performInstallTasks(final File modFolder)
 	{
-		// count download items first
+		// count task items first
 		int downloadItems = 0;
 		for (InstallUnit unit: node.getInstallList())
 			downloadItems += unit.getFileList().size();
-		
+				
 		if (downloadItems > 0)
 		{
 			modLogger.info("Processing INSTALL items");
@@ -1056,6 +1124,13 @@ public class InstallItem extends JPanel
 		}
 		
 		return true;
+	}
+	
+	private void patchOne(Connector connector, File modFolder, List<BaseURL> baseURLList, PatchTriple triple, final DownloadPanel downloadPanel)
+	{
+		modLogger.info("Patching " + triple.getPrePatch().getFilename());
+		
+		// todo
 	}
 	
 	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)
