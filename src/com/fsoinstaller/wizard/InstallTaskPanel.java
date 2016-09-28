@@ -38,25 +38,43 @@ public class InstallTaskPanel extends JPanel
 		super();
 		
 		this.progressBar = new JProgressBar(0, GUIConstants.BAR_MAXIMUM);
-		progressBar.setStringPainted(true);		
-		progressBar.setString(XSTR.getString("progressBarWaiting"));
-		progressBar.setIndeterminate(true);
-		progressBar.setValue(0);
+		progressBar.setStringPainted(true);
 		
 		this.stoplightPanel = new StoplightPanel((int) progressBar.getPreferredSize().getHeight());
-		stoplightPanel.setPending();
 		
 		setBorder(BorderFactory.createEmptyBorder(GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, GUIConstants.SMALL_MARGIN, 0));
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 		add(progressBar);
 		add(Box.createHorizontalStrut(GUIConstants.SMALL_MARGIN));
 		add(stoplightPanel);
+		
+		// waiting to begin
+		setPending();
 	}
 	
+	/**
+	 * Configures the GUI to await the beginning of a task (illustrate a "waiting" state).
+	 */
+	public void setPending()
+	{
+		progressBar.setString(XSTR.getString("progressBarWaiting"));
+		progressBar.setIndeterminate(true);
+		progressBar.setValue(0);
+		
+		stoplightPanel.setPending();
+	}
+	
+	/**
+	 * Tells the panel that the task in progress has been aborted.
+	 */
 	public void cancel()
 	{
 	}
 	
+	/**
+	 * Tells the panel that the task has been overcome by events and will not be
+	 * performed.
+	 */
 	public void preempt()
 	{
 	}

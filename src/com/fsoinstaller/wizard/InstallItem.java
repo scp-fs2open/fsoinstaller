@@ -1158,6 +1158,7 @@ public class InstallItem extends JPanel
 			{
 				public void run()
 				{
+					downloadPanel.setPending();
 					downloadPanel.setDownloader(downloader);
 				}
 			});
