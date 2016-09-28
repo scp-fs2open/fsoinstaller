@@ -198,14 +198,14 @@ public class Downloader
 		if (destination.isDirectory())
 		{
 			File destinationDirectory = destination;
-			String fileName = new File(sourceURL.getPath()).getName();
+			String sourceFileName = new File(sourceURL.getPath()).getName();
 			
 			// normalize any contracted file extension we may have
-			fileName = IOUtils.normalizeFileExtension(fileName);
+			String normalized = IOUtils.normalizeFileExtension(sourceFileName);
 			
 			// now grab the extension
-			int periodPos = fileName.lastIndexOf('.');
-			String extension = (periodPos >= 0) ? fileName.substring(periodPos + 1) : "";
+			int periodPos = normalized.lastIndexOf('.');
+			String extension = (periodPos >= 0) ? normalized.substring(periodPos + 1) : "";
 			
 			// make sure 7zip is ready to go
 			MiscUtils.initSevenZip();
@@ -217,7 +217,7 @@ public class Downloader
 				{
 					// if this is a compressed .tar file, create a holder for the temporary .tar file name
 					ObjectHolder<String> tarResultHolder = null;
-					if (periodPos >= 0 && fileName.substring(0, periodPos).toLowerCase().endsWith(".tar"))
+					if (periodPos >= 0 && normalized.substring(0, periodPos).toLowerCase().endsWith(".tar"))
 						tarResultHolder = new ObjectHolder<String>();
 					
 					result = downloadFromArchive(sourceURL, destinationDirectory, format, tarResultHolder);
@@ -249,7 +249,7 @@ public class Downloader
 			
 			// not an archive (or an archive that 7zip knows how to extract), so download as a standard file
 			if (result == null)
-				result = downloadFile(sourceURL, new File(destinationDirectory, fileName));
+				result = downloadFile(sourceURL, new File(destinationDirectory, sourceFileName));
 		}
 		// if downloading to a file, copy the source file and use the destination name
 		else
@@ -368,6 +368,7 @@ public class Downloader
 	protected boolean downloadFromArchive(URL sourceURL, File destinationDirectory, ArchiveFormat format, ObjectHolder<String> tarResultHolder)
 	{
 		logger.info("Downloading and extracting from " + sourceURL + " to local directory " + destinationDirectory);
+		String sourceFileName = new File(sourceURL.getPath()).getName();
 		
 		String currentEntry = "";
 		long totalBytes = 0;
@@ -406,11 +407,10 @@ public class Downloader
 					else
 					{
 						// use the source URL's filename as the name of the extracted file...
-						String fileName = new File(sourceURL.getPath()).getName();
 						// (we'll need to normalize the extension again)
-						fileName = IOUtils.normalizeFileExtension(fileName);
+						String normalized = IOUtils.normalizeFileExtension(sourceFileName);
 						// ...but chop off the extension (we know we have an extension since this was recognized as an archive)
-						pathProp = fileName.substring(0, fileName.lastIndexOf('.'));
+						pathProp = normalized.substring(0, normalized.lastIndexOf('.'));
 					}
 					
 					logger.debug("Using '" + pathProp + "' as path property");
@@ -483,7 +483,12 @@ public class Downloader
 		}
 		catch (SevenZipException sze)
 		{
-			currentEntry = (extractingFile != null) ? extractingFile.getName() : "";
+			if (extractingFile != null)
+				currentEntry = extractingFile.getName();
+			else if (sourceFileName != null)
+				currentEntry = sourceFileName;
+			else
+				currentEntry = "";
 			
 			logger.error("An exception was thrown during download!", sze);
 			fireDownloadFailed(currentEntry, 0, totalBytes, sze);
@@ -492,7 +497,12 @@ public class Downloader
 		}
 		catch (IOException ioe)
 		{
-			currentEntry = (extractingFile != null) ? extractingFile.getName() : "";
+			if (extractingFile != null)
+				currentEntry = extractingFile.getName();
+			else if (sourceFileName != null)
+				currentEntry = sourceFileName;
+			else
+				currentEntry = "";
 			
 			logger.error("An exception was thrown during download!", ioe);
 			fireDownloadFailed(currentEntry, 0, totalBytes, ioe);
