@@ -233,9 +233,11 @@ public class ChoicePage extends WizardPage
 	}
 	
 	@Override
-	public void prepareToLeavePage(Runnable runWhenReady)
+	public void prepareToLeavePage(Runnable runWhenReady, boolean progressing)
 	{
+		// if we're moving backward, we'll need the Next button on the new page
 		nextButton.setEnabled(true);
+		
 		runWhenReady.run();
 	}
 }

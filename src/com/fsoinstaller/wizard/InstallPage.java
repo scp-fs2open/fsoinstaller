@@ -168,7 +168,7 @@ public class InstallPage extends WizardPage
 	}
 	
 	@Override
-	public void prepareToLeavePage(Runnable runWhenReady)
+	public void prepareToLeavePage(Runnable runWhenReady, boolean progressing)
 	{
 		runWhenReady.run();
 	}

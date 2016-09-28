@@ -135,8 +135,12 @@ public abstract class WizardPage extends JPanel
 	 * changed. This method should perform any validation necessary, then invoke
 	 * runWhenReady upon validation success. If the page should not be left for
 	 * any reason, do not invoke runWhenReady.
+	 * <p>
+	 * The <tt>progressing</tt> parameter indicates whether we are "leaving" the
+	 * page because we are progressing further into the installation, e.g. by
+	 * clicking Next or Install.
 	 */
-	public abstract void prepareToLeavePage(Runnable runWhenReady);
+	public abstract void prepareToLeavePage(Runnable runWhenReady, boolean progressing);
 	
 	protected void setNextButton(String text, String tooltip)
 	{
@@ -199,7 +203,7 @@ public abstract class WizardPage extends JPanel
 				{
 					gui.moveBack();
 				}
-			});
+			}, false);
 		}
 	}
 	
@@ -219,7 +223,7 @@ public abstract class WizardPage extends JPanel
 				{
 					gui.moveNext();
 				}
-			});
+			}, true);
 		}
 	}
 	

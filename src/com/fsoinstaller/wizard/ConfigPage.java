@@ -196,7 +196,7 @@ public class ConfigPage extends WizardPage
 	}
 	
 	@Override
-	public void prepareToLeavePage(final Runnable runWhenReady)
+	public void prepareToLeavePage(final Runnable runWhenReady, boolean progressing)
 	{
 		// what happens when we're finished validating
 		Runnable toRunNext = runWhenReady;

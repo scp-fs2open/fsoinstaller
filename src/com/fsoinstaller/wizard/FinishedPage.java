@@ -135,8 +135,9 @@ public class FinishedPage extends WizardPage
 	}
 	
 	@Override
-	public void prepareToLeavePage(Runnable runWhenReady)
+	public void prepareToLeavePage(Runnable runWhenReady, boolean progressing)
 	{
+		// we're not going anywhere
 	}
 	
 	private final class FinishAction extends AbstractAction
