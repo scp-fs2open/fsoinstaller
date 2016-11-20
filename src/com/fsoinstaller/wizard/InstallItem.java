@@ -1190,6 +1190,12 @@ public class InstallItem extends JPanel
 				modLogger.error("Encountered a SecurityException when trying to delete '" + triple.getPatch().getFilename() + "'!", se);
 			}
 			
+			// log it
+			if (baleeted)
+				modLogger.error("Patch file deleted!");
+			else
+				modLogger.error("Unable to delete the patch file!");						
+			
 			return;
 		}
 		
