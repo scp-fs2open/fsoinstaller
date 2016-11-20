@@ -195,10 +195,11 @@ public class InstallerNodeFactory
 				break;
 			
 			case PATCH:
+				String patchType = readString(reader);
 				InstallerNode.HashTriple prePatch = readHashTriple(reader);
 				InstallerNode.HashTriple patch = readHashTriple(reader);
 				InstallerNode.HashTriple postPatch = readHashTriple(reader);
-				currentInstallUnit.addPatchTriple(new InstallerNode.PatchTriple(prePatch, patch, postPatch));
+				currentInstallUnit.addPatchTriple(new InstallerNode.PatchTriple(patchType, prePatch, patch, postPatch));
 				break;
 			
 			case HASH:
@@ -413,14 +414,15 @@ public class InstallerNodeFactory
 			for (InstallerNode.PatchTriple triple: unit.getPatchList())
 			{
 				writeLine(indent, writer, InstallerNodeToken.PATCH);
-				writeLine(indent, writer, triple.getPrePatch().getType(), triple.getPrePatch().getFilename(), triple.getPrePatch().getHash());
-				writeLine(indent, writer, triple.getPatch().getType(), triple.getPatch().getFilename(), triple.getPatch().getHash());
-				writeLine(indent, writer, triple.getPostPatch().getType(), triple.getPostPatch().getFilename(), triple.getPostPatch().getHash());
+				writeLine(indent, writer, triple.getPatchType());
+				writeLine(indent, writer, triple.getPrePatch().getAlgorithm(), triple.getPrePatch().getFilename(), triple.getPrePatch().getHash());
+				writeLine(indent, writer, triple.getPatch().getAlgorithm(), triple.getPatch().getFilename(), triple.getPatch().getHash());
+				writeLine(indent, writer, triple.getPostPatch().getAlgorithm(), triple.getPostPatch().getFilename(), triple.getPostPatch().getHash());
 			}
 		}
 		
 		for (InstallerNode.HashTriple triple: node.getHashList())
-			writeLine(indent, writer, InstallerNodeToken.HASH, triple.getType(), triple.getFilename(), triple.getHash());
+			writeLine(indent, writer, InstallerNodeToken.HASH, triple.getAlgorithm(), triple.getFilename(), triple.getHash());
 		
 		if (!node.getChildren().isEmpty())
 		{

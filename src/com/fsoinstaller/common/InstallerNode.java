@@ -454,31 +454,31 @@ public class InstallerNode
 	
 	public static class HashTriple
 	{
-		private String type;
+		private String algorithm;
 		private String filename;
 		private String hash;
 		
-		public HashTriple(String type, String filename, String hash)
+		public HashTriple(String algorithm, String filename, String hash)
 		{
-			if (type == null || filename == null || hash == null)
+			if (algorithm == null || filename == null || hash == null)
 				throw new NullPointerException("Arguments cannot be null!");
 			
-			this.type = type;
+			this.algorithm = algorithm;
 			this.filename = filename;
 			this.hash = hash;
 		}
 		
-		public String getType()
+		public String getAlgorithm()
 		{
-			return type;
+			return algorithm;
 		}
 		
-		public void setType(String type)
+		public void setAlgorithm(String algorithm)
 		{
-			if (type == null)
-				throw new NullPointerException("The 'type' field cannot be null!");
+			if (algorithm == null)
+				throw new NullPointerException("The 'algorithm' field cannot be null!");
 			
-			this.type = type;
+			this.algorithm = algorithm;
 		}
 		
 		public String getFilename()
@@ -530,18 +530,33 @@ public class InstallerNode
 	
 	public static class PatchTriple
 	{
+		private String patchType;
 		private HashTriple prePatch;
 		private HashTriple patch;
 		private HashTriple postPatch;
 		
-		public PatchTriple(HashTriple prePatch, HashTriple patch, HashTriple postPatch)
+		public PatchTriple(String patchType, HashTriple prePatch, HashTriple patch, HashTriple postPatch)
 		{
-			if (prePatch == null || patch == null || postPatch == null)
+			if (patchType == null || prePatch == null || patch == null || postPatch == null)
 				throw new NullPointerException("Arguments cannot be null!");
 			
+			this.patchType = patchType;
 			this.prePatch = prePatch;
 			this.patch = patch;
 			this.postPatch = postPatch;
+		}
+		
+		public String getPatchType()
+		{
+			return patchType;
+		}
+		
+		public void setPatchType(String patchType)
+		{
+			if (prePatch == null)
+				throw new NullPointerException("The 'patchType' field cannot be null!");
+			
+			this.patchType = patchType;
 		}
 		
 		public HashTriple getPrePatch()
@@ -594,13 +609,16 @@ public class InstallerNode
 				return false;
 			else
 				// only the before and after triples matter
-				return prePatch.equals(((PatchTriple) obj).prePatch) && postPatch.equals(((PatchTriple) obj).postPatch);
+				return patchType.equals(((PatchTriple) obj).patchType)
+						&& prePatch.equals(((PatchTriple) obj).prePatch)
+						&& postPatch.equals(((PatchTriple) obj).postPatch);
 		}
 		
 		@Override
 		public int hashCode()
 		{
 			int result = 17;
+			result = 31 * result + patchType.hashCode();
 			result = 31 * result + prePatch.hashCode();
 			result = 31 * result + postPatch.hashCode();
 			return result;

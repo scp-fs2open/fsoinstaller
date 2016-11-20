@@ -923,7 +923,7 @@ public class InstallItem extends JPanel
 							try
 							{
 								// first do the installation
-								boolean success = installOne(connector, modFolder, urls, file, downloadPanel);
+								boolean success = downloadOne(connector, modFolder, urls, file, downloadPanel);
 								if (success)
 									successes.incrementAndGet();
 								// don't mislead the user if we cancelled the file
@@ -978,6 +978,52 @@ public class InstallItem extends JPanel
 		}
 	}
 	
+	private String computeHash(File modFolder, HashTriple hash)
+	{
+		String algorithm = hash.getAlgorithm().toUpperCase();
+		if (algorithm.equals("SHA1"))
+			algorithm = "SHA-1";
+		else if (algorithm.equals("SHA256"))
+			algorithm = "SHA-256";
+		
+		// get the hash processor, provided by Java
+		MessageDigest digest;
+		try
+		{
+			digest = MessageDigest.getInstance(algorithm);
+		}
+		catch (NoSuchAlgorithmException nsae)
+		{
+			modLogger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
+			logInstallError(String.format(XSTR.getString("installResultHashNotComputed"), algorithm));
+			return null;
+		}
+		
+		// find the file to hash
+		File fileToHash = IOUtils.newFileIgnoreCase(modFolder, hash.getFilename());
+		if (!fileToHash.exists())
+		{
+			modLogger.warn("Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
+			return null;
+		}
+		
+		// hash it
+		modLogger.info("Computing a " + algorithm + " hash for '" + hash.getFilename() + "'");
+		String computedHash;
+		try
+		{
+			computedHash = IOUtils.computeHash(digest, fileToHash);
+		}
+		catch (IOException ioe)
+		{
+			modLogger.error("There was a problem computing the hash...", ioe);
+			return null;
+		}
+		
+		// success, hopefully
+		return computedHash;
+	}
+	
 	/**
 	 * Perform hash validation for this node.
 	 */
@@ -992,45 +1038,9 @@ public class InstallItem extends JPanel
 			
 			for (HashTriple hash: node.getHashList())
 			{
-				String algorithm = hash.getType().toUpperCase();
-				if (algorithm.equals("SHA1"))
-					algorithm = "SHA-1";
-				else if (algorithm.equals("SHA256"))
-					algorithm = "SHA-256";
-				
-				// get the hash processor, provided by Java
-				MessageDigest digest;
-				try
-				{
-					digest = MessageDigest.getInstance(algorithm);
-				}
-				catch (NoSuchAlgorithmException nsae)
-				{
-					modLogger.error("Unable to compute hash; '" + algorithm + "' is not a recognized algorithm!", nsae);
-					logInstallError(String.format(XSTR.getString("installResultHashNotComputed"), algorithm));
+				String computedHash = computeHash(modFolder, hash);
+				if (computedHash == null)
 					continue;
-				}
-				
-				// find the file to hash
-				File fileToHash = IOUtils.newFileIgnoreCase(modFolder, hash.getFilename());
-				if (!fileToHash.exists())
-				{
-					modLogger.warn("Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
-					continue;
-				}
-				
-				// hash it
-				modLogger.info("Computing a " + algorithm + " hash for '" + hash.getFilename() + "'");
-				String computedHash;
-				try
-				{
-					computedHash = IOUtils.computeHash(digest, fileToHash);
-				}
-				catch (IOException ioe)
-				{
-					modLogger.error("There was a problem computing the hash...", ioe);
-					continue;
-				}
 				
 				// compare it
 				if (!hash.getHash().equalsIgnoreCase(computedHash))
@@ -1041,7 +1051,7 @@ public class InstallItem extends JPanel
 					boolean baleeted = false;
 					try
 					{
-						baleeted = fileToHash.delete();
+						baleeted = IOUtils.newFileIgnoreCase(modFolder, hash.getFilename()).delete();
 					}
 					catch (SecurityException se)
 					{
@@ -1130,12 +1140,71 @@ public class InstallItem extends JPanel
 	{
 		modLogger.info("Patching " + triple.getPrePatch().getFilename());
 		
+		// see if the file exists
+		File prePatchFile = IOUtils.getFileIgnoreCase(modFolder, triple.getPrePatch().getFilename());
+		if (prePatchFile == null)
+		{
+			modLogger.info("File does not exist; cannot patch it");
+			return;
+		}
+		
+		// see if the hash is what we expect
+		String computedHash = computeHash(modFolder, triple.getPrePatch());
+		if (computedHash == null)
+		{
+			// warning message was already displayed in computeHash()
+			return;
+		}
+		else if (!triple.getPrePatch().getHash().equalsIgnoreCase(computedHash))
+		{
+			modLogger.info("Cannot proceed with patch; computed hash value of " + computedHash + " does not match required hash value of " + triple.getPrePatch().getHash());
+			return;
+		}
+		
+		// we can patch this file, so download the patch!
+		if (!downloadOne(connector, modFolder, baseURLList, triple.getPatch().getFilename(), downloadPanel))
+		{
+			modLogger.warn("Unable to download the patch for '" + triple.getPrePatch().getFilename() + "'!");
+			return;
+		}
+		
+		// hash the patch itself
+		computedHash = computeHash(modFolder, triple.getPatch());
+		if (computedHash == null)
+		{
+			// warning message was already displayed in computeHash()
+			return;
+		}
+		else if (!triple.getPatch().getHash().equalsIgnoreCase(computedHash))
+		{
+			modLogger.warn("Cannot proceed with patch; computed hash value of " + computedHash + " does not match required hash value of " + triple.getPatch().getHash());
+			
+			// delete bad patch file
+			boolean baleeted = false;
+			try
+			{
+				baleeted = IOUtils.newFileIgnoreCase(modFolder, triple.getPatch().getFilename()).delete();
+			}
+			catch (SecurityException se)
+			{
+				modLogger.error("Encountered a SecurityException when trying to delete '" + triple.getPatch().getFilename() + "'!", se);
+			}
+			
+			return;
+		}
+		
+		// we have a good pre-patch file and a good patch file, so perform the patching!
+		
+		
+		
+		
+		
 		// todo
 	}
 	
-	private boolean installOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)
+	private boolean downloadOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)
 	{
-		modLogger.info("Installing '" + file + "'");
+		modLogger.info("Downloading '" + file + "'");
 		
 		// try all URLs supplied
 		for (BaseURL baseURL: baseURLList)
