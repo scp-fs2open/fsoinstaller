@@ -1012,7 +1012,7 @@ public class InstallItem extends JPanel
 				}
 				
 				// find the file to hash
-				File fileToHash = new File(modFolder, hash.getFilename());
+				File fileToHash = IOUtils.newFileIgnoreCase(modFolder, hash.getFilename());
 				if (!fileToHash.exists())
 				{
 					modLogger.warn("Cannot compute hash for '" + hash.getFilename() + "'; it does not exist");
