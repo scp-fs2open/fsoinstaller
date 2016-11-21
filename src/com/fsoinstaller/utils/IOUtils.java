@@ -48,6 +48,7 @@ import io.sigpipe.jbsdiff.DefaultDiffSettings;
 import io.sigpipe.jbsdiff.Diff;
 import io.sigpipe.jbsdiff.DiffSettings;
 import io.sigpipe.jbsdiff.InvalidHeaderException;
+import io.sigpipe.jbsdiff.Patch;
 
 
 public class IOUtils
@@ -225,24 +226,58 @@ public class IOUtils
 	public static void generatePatch(Diff diff, String patchType, File sourceFile, File targetFile, File patchFile) throws IOException
 	{
 		if (!sourceFile.exists() || sourceFile.isDirectory())
-			throw new IllegalArgumentException("Source file must exist and not be a directory!");
+			throw new IllegalArgumentException("Source file must exist and must not be a directory!");
 		if (!targetFile.exists() || targetFile.isDirectory())
-			throw new IllegalArgumentException("Target file must exist and not be a directory!");
+			throw new IllegalArgumentException("Target file must exist and must not be a directory!");
 		if (patchFile.exists())
 			throw new IllegalArgumentException("Patch file must not exist!");
 			
 		DiffSettings settings = new DefaultDiffSettings(patchType);
 		
-		logger.debug("Reading first file...");
-		byte[] firstBytes = IOUtils.readBytes(sourceFile);
-		logger.debug("Reading second file...");
-		byte[] secondBytes = IOUtils.readBytes(targetFile);
+		logger.debug("Reading source file...");
+		byte[] sourceBytes = IOUtils.readBytes(sourceFile);
+		logger.debug("Reading target file...");
+		byte[] targetBytes = IOUtils.readBytes(targetFile);
 		
 		FileOutputStream fos = new FileOutputStream(patchFile);
 		try
 		{
 			logger.debug("Performing file diff...");
-			diff.diff(firstBytes, secondBytes, fos, settings);
+			diff.diff(sourceBytes, targetBytes, fos, settings);
+		}
+		catch (CompressorException ce)
+		{
+			throw new IOException("There was a problem creating the compressor", ce);
+		}
+		catch (InvalidHeaderException ihe)
+		{
+			throw new IOException("Invalid header in patch file", ihe);
+		}
+		finally
+		{
+			fos.close();
+		}
+	}
+	
+	public static void applyPatch(Patch patch, File sourceFile, File patchFile, File targetFile) throws IOException
+	{
+		if (!sourceFile.exists() || sourceFile.isDirectory())
+			throw new IllegalArgumentException("Source file must exist and must not be a directory!");
+		if (!patchFile.exists() || patchFile.isDirectory())
+			throw new IllegalArgumentException("Patch file must exist and must not be a directory!");
+		if (targetFile.exists())
+			throw new IllegalArgumentException("Target file must not exist!");
+		
+		logger.debug("Reading source file...");
+		byte[] sourceBytes = IOUtils.readBytes(sourceFile);
+		logger.debug("Reading patch file...");
+		byte[] patchBytes = IOUtils.readBytes(patchFile);
+		
+		FileOutputStream fos = new FileOutputStream(targetFile);
+		try
+		{
+			logger.debug("Performing file patch...");
+			patch.patch(sourceBytes, patchBytes, fos);
 		}
 		catch (CompressorException ce)
 		{

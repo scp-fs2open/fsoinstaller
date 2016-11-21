@@ -59,6 +59,7 @@ import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
 
 import io.sigpipe.jbsdiff.Diff;
+import io.sigpipe.jbsdiff.Patch;
 import io.sigpipe.jbsdiff.progress.ProgressEvent;
 import io.sigpipe.jbsdiff.progress.ProgressListener;
 
@@ -665,12 +666,78 @@ rootLoop:		for (File root: roots)
 		}
 		catch (IOException ioe)
 		{
-			logger.error("There was a problem generating the patch for '" + sourceFile + "' and '" + targetFile + "'...", ioe);
+			logger.error("There was a problem generating the patch...", ioe);
 		}
 	}
 	
 	private static void selectAndPatchFiles(String[] args)
 	{
-		// TODO
+		final Configuration config = Configuration.getInstance();
+		
+		// get the files to patch
+		File sourceFile;
+		File patchFile;
+		if (args.length > 2)
+		{
+			sourceFile = new File(args[1]);
+			patchFile = new File(args[2]);
+		}
+		// if not, prompt for them
+		else
+		{
+			File dialogDir = config.getApplicationDir();
+			
+			// prompt until the user cancels
+			sourceFile = SwingUtils.promptForFile(null, XSTR.getString("chooseSourceFileTitle"), dialogDir);
+			if (sourceFile == null)
+				return;
+				
+			// update the directory where the user selects files
+			if (sourceFile.exists() && !sourceFile.isDirectory())
+				dialogDir = sourceFile.getParentFile();
+				
+			patchFile = SwingUtils.promptForFile(null, XSTR.getString("choosePatchFileTitle"), dialogDir);
+			if (patchFile == null)
+				return;
+		}
+		
+		// warn if invalid
+		if (!canUse(sourceFile) || !canUse(patchFile))
+			return;
+			
+		// find a destination file
+		File targetFile = new File(sourceFile.getParentFile(), sourceFile.getName() + ".patched");
+		if (targetFile.exists())
+			targetFile = new File(sourceFile.getParentFile(), sourceFile.getName() + "." + InstallerUtils.UUID());
+			
+		// apply patch
+		try
+		{
+			Patch patch = new Patch();
+			patch.addProgressListener(new ProgressListener()
+			{
+				int lastPercent = -1;
+				
+				@Override
+				public void progressMade(ProgressEvent event)
+				{
+					int percent = (int)(((double)event.getCurrent() / (double)event.getTotal()) * 100);
+					if (percent > lastPercent)
+					{
+						lastPercent = percent;
+						logger.debug(event.getCurrent() + " of " + event.getTotal() + " (" + percent + "%)");
+					}
+				}
+			});
+			
+			logger.info("Applying patch file...");
+			IOUtils.applyPatch(patch, sourceFile, patchFile, targetFile);
+			
+			logger.info(targetFile.getAbsolutePath());
+		}
+		catch (IOException ioe)
+		{
+			logger.error("There was a problem applying the patch...", ioe);
+		}
 	}
 }
