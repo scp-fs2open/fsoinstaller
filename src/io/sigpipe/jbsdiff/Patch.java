@@ -28,6 +28,8 @@ package io.sigpipe.jbsdiff;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
+import com.fsoinstaller.utils.IOUtils;
+
 import io.sigpipe.jbsdiff.progress.ProgressEvent;
 import io.sigpipe.jbsdiff.progress.ProgressListener;
 
@@ -172,7 +174,7 @@ public class Patch {
 
             FileInputStream oldStream = new FileInputStream(oldFile);
             byte[] old = new byte[(int) oldFile.length()];
-            oldStream.read(old);
+            IOUtils.readAllBytes(oldStream, old);
             oldStream.close();
 
             OutputStream out = new BufferedOutputStream(new FileOutputStream(newFile));
@@ -244,7 +246,7 @@ public class Patch {
             return;
         }
 
-        int read = in.read(dest, off, len);
+        int read = IOUtils.readAllBytes(in, dest, off, len);
         if (read < len) {
             throw new IOException("Corrupt patch; bytes expected = " + len +
                     " bytes read = " + read);

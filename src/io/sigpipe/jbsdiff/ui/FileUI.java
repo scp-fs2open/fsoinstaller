@@ -33,6 +33,8 @@ import java.io.IOException;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
+import com.fsoinstaller.utils.IOUtils;
+
 import io.sigpipe.jbsdiff.DefaultDiffSettings;
 import io.sigpipe.jbsdiff.Diff;
 import io.sigpipe.jbsdiff.DiffSettings;
@@ -58,12 +60,12 @@ public class FileUI {
     throws CompressorException, InvalidHeaderException, IOException {
         FileInputStream oldIn = new FileInputStream(oldFile);
         byte[] oldBytes = new byte[(int) oldFile.length()];
-        oldIn.read(oldBytes);
+        IOUtils.readAllBytes(oldIn, oldBytes);
         oldIn.close();
 
         FileInputStream newIn = new FileInputStream(newFile);
         byte[] newBytes = new byte[(int) newFile.length()];
-        newIn.read(newBytes);
+        IOUtils.readAllBytes(newIn, newBytes);
         newIn.close();
 
         FileOutputStream out = new FileOutputStream(patchFile);

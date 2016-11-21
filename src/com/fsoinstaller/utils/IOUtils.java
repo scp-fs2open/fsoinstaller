@@ -109,10 +109,14 @@ public class IOUtils
 		return lines;
 	}
 	
-	public static int readBytes(InputStream inputStream, byte[] byteArray) throws IOException
+	public static int readAllBytes(InputStream inputStream, byte[] byteArray) throws IOException
 	{
-		int offset = 0;
-		int length = byteArray.length;
+		return readAllBytes(inputStream, byteArray, 0, byteArray.length);
+	}
+	
+	public static int readAllBytes(InputStream inputStream, byte[] byteArray, int offset, int length) throws IOException
+	{
+		int originalOffset = offset;
 		
 		while (length > 0)
 		{
@@ -124,7 +128,7 @@ public class IOUtils
 			length -= numRead;
 		}
 		
-		return offset;
+		return offset - originalOffset;
 	}
 	
 	public static byte[] readBytes(File file) throws FileNotFoundException, IOException
@@ -136,7 +140,7 @@ public class IOUtils
 		byte[] byteArray = new byte[(int) file.length()];
 		try
 		{
-			int count = readBytes(fis, byteArray);
+			int count = readAllBytes(fis, byteArray);
 			if (count != file.length())
 				throw new IOException("Failed to read entire file!");
 		}
@@ -267,7 +271,7 @@ public class IOUtils
 			throw new IllegalArgumentException("Patch file must exist and must not be a directory!");
 		if (targetFile.exists())
 			throw new IllegalArgumentException("Target file must not exist!");
-		
+			
 		logger.debug("Reading source file...");
 		byte[] sourceBytes = IOUtils.readBytes(sourceFile);
 		logger.debug("Reading patch file...");

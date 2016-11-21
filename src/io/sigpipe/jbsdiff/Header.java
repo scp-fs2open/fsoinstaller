@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.fsoinstaller.utils.IOUtils;
+
 /**
  * Data structure that encapsulates a bsdiff header.  The header is composed of
  * 8-byte fields, starting with the magic number "BSDIFF40."
@@ -69,7 +71,7 @@ class Header {
         InputStream headerIn = new DataInputStream(in);
         byte[] buf = new byte[8];
 
-        headerIn.read(buf);
+        IOUtils.readAllBytes(headerIn, buf);
         magic = new String(buf);
         if (!"BSDIFF40".equals(magic)) {
             throw new InvalidHeaderException("Header missing magic number");

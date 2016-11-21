@@ -59,7 +59,7 @@ public class CompressorStreamFactory
 		is.mark(magic.length);
 		try
 		{
-			readLength = IOUtils.readBytes(is, magic);
+			readLength = IOUtils.readAllBytes(is, magic);
 			is.reset();
 		}
 		catch (IOException ioe)

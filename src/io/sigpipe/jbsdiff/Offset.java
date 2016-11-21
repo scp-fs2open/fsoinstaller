@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.fsoinstaller.utils.IOUtils;
+
 /**
  * bsdiff encodes offsets (represented by the C off_t type) as 64-bit chunks.
  * In this implementation only 32-bit signed integers are supported, but the
@@ -57,7 +59,7 @@ class Offset {
      */
     public static int readOffset(InputStream in) throws IOException {
         byte[] buf = new byte[OFFSET_SIZE];
-        int bytesRead = in.read(buf);
+        int bytesRead = IOUtils.readAllBytes(in, buf);
         if (bytesRead < OFFSET_SIZE) {
             throw new IOException("Could not read offset.");
         }
