@@ -81,11 +81,15 @@ public class Patch {
             extraIn.skip(Header.HEADER_SIZE + header.getControlLength() +
                     header.getDiffLength());
 
-            /* Set up compressed streams */
+            InputStream temp;
             CompressorStreamFactory compressor = new CompressorStreamFactory();
-            controlIn = compressor.createCompressorInputStream(controlIn);
-            dataIn = compressor.createCompressorInputStream(dataIn);
-            extraIn = compressor.createCompressorInputStream(extraIn);
+            /* Set up compressed streams */
+            temp = compressor.createCompressorInputStream(controlIn);
+            controlIn = temp;
+            temp = compressor.createCompressorInputStream(dataIn);
+            dataIn = temp;
+            temp = compressor.createCompressorInputStream(extraIn);
+            extraIn = temp;
 
             /* Start patching */
             int newPointer = 0, oldPointer = 0;
@@ -116,10 +120,14 @@ public class Patch {
 
             out.write(output);
 
-        } finally {
             controlIn.close();
             dataIn.close();
             extraIn.close();
+            
+        } finally {
+            closeQuietly(controlIn);
+            closeQuietly(dataIn);
+            closeQuietly(extraIn);
         }
     }
 
@@ -143,11 +151,15 @@ public class Patch {
             extraIn.skip(Header.HEADER_SIZE + header.getControlLength() +
                     header.getDiffLength());
 
-            /* Set up compressed streams */
+            InputStream temp;
             CompressorStreamFactory compressor = new CompressorStreamFactory();
-            controlIn = compressor.createCompressorInputStream(controlIn);
-            dataIn = compressor.createCompressorInputStream(dataIn);
-            extraIn = compressor.createCompressorInputStream(extraIn);
+            /* Set up compressed streams */
+            temp = compressor.createCompressorInputStream(controlIn);
+            controlIn = temp;
+            temp = compressor.createCompressorInputStream(dataIn);
+            dataIn = temp;
+            temp = compressor.createCompressorInputStream(extraIn);
+            extraIn = temp;
 
             FileInputStream oldStream = new FileInputStream(oldFile);
             byte[] old = new byte[(int) oldFile.length()];
@@ -189,10 +201,14 @@ public class Patch {
 
             out.close();
 
-        } finally {
             controlIn.close();
             dataIn.close();
             extraIn.close();
+            
+        } finally {
+            closeQuietly(controlIn);
+            closeQuietly(dataIn);
+            closeQuietly(extraIn);
         }
     }
 
@@ -221,5 +237,15 @@ public class Patch {
             throw new IOException("Corrupt patch; bytes expected = " + len +
                     " bytes read = " + read);
         }
+    }
+    
+    private static void closeQuietly(InputStream is) {
+    	try {
+    		if (is != null) {
+    			is.close();
+    		}
+    	} catch (IOException ioe) {
+    		// do nothing
+    	}
     }
 }
