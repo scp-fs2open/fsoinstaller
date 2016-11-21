@@ -68,12 +68,12 @@ public class FileUI {
 
         FileOutputStream out = new FileOutputStream(patchFile);
         DiffSettings settings = new DefaultDiffSettings(compression);
-        Diff.diff(oldBytes, newBytes, out, settings);
+        new Diff().diff(oldBytes, newBytes, out, settings);
         out.close();
     }
 
     public static void patch(File oldFile, File newFile, File patchFile)
     throws CompressorException, InvalidHeaderException, IOException {
-        Patch.patch(oldFile, newFile, patchFile);
+        new Patch().patch(oldFile, newFile, patchFile);
     }
 }

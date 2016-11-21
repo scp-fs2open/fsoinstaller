@@ -51,5 +51,17 @@ SwingWorker for Java 1.5
 http://java.net/projects/swingworker
 GNU Lesser General Public License, version 2.1
 
+JBSDiff
+https://github.com/malensek/jbsdiff
+MIT-style license
+
+XZ for Java
+http://tukaani.org/xz/java.html
+Public Domain
+
+Itadaki Jbzip2
+https://code.google.com/archive/p/jbzip2/
+MIT License
+
 Non-FS2SCP-controlled components provide source code at their respective websites.  However, the
 text of all licenses can be found in the FSO Installer jar package.

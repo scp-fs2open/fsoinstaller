@@ -28,6 +28,10 @@ package io.sigpipe.jbsdiff;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
+import io.sigpipe.jbsdiff.progress.ProgressEvent;
+import io.sigpipe.jbsdiff.progress.ProgressListener;
+
+import java.awt.EventQueue;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -37,6 +41,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * This class provides functionality for using an old file and a patch to
@@ -46,8 +52,8 @@ import java.io.OutputStream;
  */
 public class Patch {
 
-    private Patch() { }
-
+	private final List<ProgressListener> progressListeners = new CopyOnWriteArrayList<ProgressListener>();
+	
     /**
      * Using an old file and its accompanying patch, this method generates a new
      * (updated) file and writes it to an {@link OutputStream}.
@@ -61,7 +67,7 @@ public class Patch {
      *     present.
      * @throws IOException when an I/O error occurs
      */
-    public static void patch(byte[] old, byte[] patch, OutputStream out)
+    public void patch(byte[] old, byte[] patch, OutputStream out)
             throws CompressorException, InvalidHeaderException, IOException {
         /* Read bsdiff header */
         InputStream headerIn = new ByteArrayInputStream(patch);
@@ -95,6 +101,7 @@ public class Patch {
             int newPointer = 0, oldPointer = 0;
             byte[] output = new byte[header.getOutputLength()];
             while (newPointer < output.length) {
+            	fireProgress(newPointer, output.length);
 
                 ControlBlock control = new ControlBlock(controlIn);
 
@@ -119,6 +126,8 @@ public class Patch {
             }
 
             out.write(output);
+            
+            fireProgress(output.length, output.length);
 
             controlIn.close();
             dataIn.close();
@@ -131,7 +140,7 @@ public class Patch {
         }
     }
 
-    public static void patch(File oldFile, File newFile, File patchFile)
+    public void patch(File oldFile, File newFile, File patchFile)
             throws CompressorException, InvalidHeaderException, IOException {
         /* Read bsdiff header */
         InputStream headerIn = new FileInputStream(patchFile);
@@ -172,6 +181,7 @@ public class Patch {
             int newPointer = 0, oldPointer = 0;
             int outputLength = header.getOutputLength();
             while (newPointer < outputLength) {
+            	fireProgress(newPointer, outputLength);
 
                 ControlBlock control = new ControlBlock(controlIn);
 
@@ -200,6 +210,8 @@ public class Patch {
             }
 
             out.close();
+            
+        	fireProgress(outputLength, outputLength);
 
             controlIn.close();
             dataIn.close();
@@ -248,4 +260,35 @@ public class Patch {
     		// do nothing
     	}
     }
+    
+	public void addProgressListener(ProgressListener listener)
+	{
+		progressListeners.add(listener);
+	}
+	
+	public void removeProgressListener(ProgressListener listener)
+	{
+		progressListeners.remove(listener);
+	}
+	
+	private void fireProgress(int current, int total)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				ProgressEvent event = null;
+				for (ProgressListener listener: progressListeners)
+				{
+					// lazy instantiation of the event
+					if (event == null)
+						event = new ProgressEvent(Diff.class, current, total);
+					
+					// fire it
+					listener.progressMade(event);
+				}
+			}
+		});
+	}
 }

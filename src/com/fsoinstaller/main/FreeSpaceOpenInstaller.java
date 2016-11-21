@@ -45,15 +45,22 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+import org.apache.commons.compress.compressors.CompressorStreamFactory;
+
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.common.InstallerNodeParseException;
 import com.fsoinstaller.utils.IOUtils;
+import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.OperatingSystem;
 import com.fsoinstaller.utils.SwingUtils;
 import com.fsoinstaller.utils.ThreadSafeJOptionPane;
 import com.fsoinstaller.wizard.InstallerGUI;
+
+import io.sigpipe.jbsdiff.Diff;
+import io.sigpipe.jbsdiff.progress.ProgressEvent;
+import io.sigpipe.jbsdiff.progress.ProgressListener;
 
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
 
@@ -88,6 +95,7 @@ public class FreeSpaceOpenInstaller
 	private static final class InstanceHolder
 	{
 		private static final FreeSpaceOpenInstaller INSTANCE = new FreeSpaceOpenInstaller();
+		
 		static
 		{
 			Thread hook = new Thread()
@@ -240,12 +248,12 @@ rootLoop:		for (File root: roots)
 			// if we didn't find a directory any other way, use the first item in the default dir list (at least one will exist)
 			if (applicationDir == null)
 				applicationDir = dirList.get(0);
-			
+				
 			// log it and set it
 			logger.info("Setting application directory to " + applicationDir);
 			config.setApplicationDir(new File(applicationDir));
 		}
-
+		
 		// build and display the GUI
 		EventQueue.invokeLater(new Runnable()
 		{
@@ -382,12 +390,38 @@ rootLoop:		for (File root: roots)
 				installer.launchWizard();
 			}
 		}
+		// test diffing files
+		else if (command.equals("diff"))
+		{
+			selectAndDiffFiles(args);
+		}
+		// test patching files
+		else if (command.equals("patch"))
+		{
+			selectAndPatchFiles(args);
+		}
 		// default command is the standard wizard installation
 		else
 		{
 			FreeSpaceOpenInstaller installer = getInstance();
 			installer.launchWizard();
 		}
+	}
+	
+	private static boolean canUse(File file)
+	{
+		if (!file.exists())
+		{
+			logger.warn("The file '" + file.getAbsolutePath() + "' does not exist!");
+			return false;
+		}
+		else if (file.isDirectory())
+		{
+			logger.warn("The file '" + file.getAbsolutePath() + "' is a directory!");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private static boolean selectAndValidateModFile(String[] args)
@@ -408,24 +442,17 @@ rootLoop:		for (File root: roots)
 				return false;
 		}
 		
-		if (!modFile.exists())
-		{
-			logger.warn("The file '" + modFile.getAbsolutePath() + "' does not exist!");
+		// warn if invalid
+		if (!canUse(modFile))
 			return false;
-		}
-		else if (modFile.isDirectory())
-		{
-			logger.warn("The file '" + modFile.getAbsolutePath() + "' is a directory!");
-			return false;
-		}
-		
+			
 		// parse it
 		try
 		{
 			List<InstallerNode> nodes = IOUtils.readInstallFile(modFile);
 			for (InstallerNode node: nodes)
 				logger.info("Successfully parsed " + node.getName());
-			
+				
 			logger.info(XSTR.getString("allNodesParsedSuccessfully"));
 			
 			// since this was successful, save it to the configuration
@@ -507,7 +534,7 @@ rootLoop:		for (File root: roots)
 				File fileToHash = SwingUtils.promptForFile(null, XSTR.getString("chooseFileTitle"), dialogDir);
 				if (fileToHash == null)
 					break;
-				
+					
 				hashFile(digest, fileToHash, algorithm, to_stdout);
 				
 				// update the directory where the user selects files
@@ -519,17 +546,10 @@ rootLoop:		for (File root: roots)
 	
 	private static void hashFile(MessageDigest digest, File fileToHash, String algorithm, boolean to_stdout)
 	{
-		if (!fileToHash.exists())
-		{
-			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' does not exist!");
+		// warn if invalid
+		if (!canUse(fileToHash))
 			return;
-		}
-		else if (fileToHash.isDirectory())
-		{
-			logger.warn("The file '" + fileToHash.getAbsolutePath() + "' is a directory!");
-			return;
-		}
-		
+			
 		// hash the file
 		try
 		{
@@ -552,5 +572,105 @@ rootLoop:		for (File root: roots)
 		{
 			logger.error("There was a problem computing the hash for '" + fileToHash + "'...", ioe);
 		}
+	}
+	
+	private static void selectAndDiffFiles(String[] args)
+	{
+		final Configuration config = Configuration.getInstance();
+		String patchType;
+		String[] options = CompressorStreamFactory.SUPPORTED_TYPES;
+		
+		// get the patch type
+		if (args.length > 1)
+		{
+			patchType = args[1];
+			if (!Arrays.asList(options).contains(patchType))
+			{
+				logger.error("Unsupported patch type '" + patchType + "'!");
+				return;
+			}
+		}
+		// if not, prompt for it
+		else
+		{
+			int result = ThreadSafeJOptionPane.showOptionDialog(null, XSTR.getString("choosePatchType"), XSTR.getString("chooseOptionTitle"), JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			if (result < 0)
+			{
+				logger.warn("No patch option selected!");
+				return;
+			}
+			patchType = options[result];
+		}
+		
+		// get the files to patch
+		File sourceFile;
+		File targetFile;
+		if (args.length > 3)
+		{
+			sourceFile = new File(args[2]);
+			targetFile = new File(args[3]);
+		}
+		// if not, prompt for them
+		else
+		{
+			File dialogDir = config.getApplicationDir();
+			
+			// prompt until the user cancels
+			sourceFile = SwingUtils.promptForFile(null, XSTR.getString("chooseSourceFileTitle"), dialogDir);
+			if (sourceFile == null)
+				return;
+				
+			// update the directory where the user selects files
+			if (sourceFile.exists() && !sourceFile.isDirectory())
+				dialogDir = sourceFile.getParentFile();
+				
+			targetFile = SwingUtils.promptForFile(null, XSTR.getString("chooseTargetFileTitle"), dialogDir);
+			if (targetFile == null)
+				return;
+		}
+		
+		// warn if invalid
+		if (!canUse(sourceFile) || !canUse(targetFile))
+			return;
+			
+		// find a destination file
+		File patchFile = new File(sourceFile.getParentFile(), "patchFile." + patchType);
+		if (patchFile.exists())
+			patchFile = new File(sourceFile.getParentFile(), InstallerUtils.UUID() + "." + patchType);
+			
+		// create patch
+		try
+		{
+			Diff diff = new Diff();
+			diff.addProgressListener(new ProgressListener()
+			{
+				int lastPercent = -1;
+				
+				@Override
+				public void progressMade(ProgressEvent event)
+				{
+					int percent = (int)(((double)event.getCurrent() / (double)event.getTotal()) * 100);
+					if (percent > lastPercent)
+					{
+						lastPercent = percent;
+						logger.debug(event.getCurrent() + " of " + event.getTotal() + " (" + percent + "%)");
+					}
+				}
+			});
+			
+			logger.info("Generating patch file...");
+			IOUtils.generatePatch(diff, patchType, sourceFile, targetFile, patchFile);
+			
+			logger.info(patchFile.getAbsolutePath());
+		}
+		catch (IOException ioe)
+		{
+			logger.error("There was a problem generating the patch for '" + sourceFile + "' and '" + targetFile + "'...", ioe);
+		}
+	}
+	
+	private static void selectAndPatchFiles(String[] args)
+	{
+		// TODO
 	}
 }

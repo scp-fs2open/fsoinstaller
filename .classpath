@@ -6,5 +6,7 @@
 	<classpathentry kind="lib" path="lib/sevenzipjbinding.jar"/>
 	<classpathentry kind="lib" path="lib/l2fprod-common-directorychooser.jar"/>
 	<classpathentry kind="lib" path="lib/swingworker_1_5.jar"/>
+	<classpathentry kind="lib" path="lib/bzip2-0.9.1.jar"/>
+	<classpathentry kind="lib" path="lib/xz-1.5.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

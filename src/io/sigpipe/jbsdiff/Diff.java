@@ -25,12 +25,17 @@ software, even if advised of the possibility of such damage.
 
 package io.sigpipe.jbsdiff;
 
+import io.sigpipe.jbsdiff.progress.ProgressEvent;
+import io.sigpipe.jbsdiff.progress.ProgressListener;
 import io.sigpipe.jbsdiff.sort.SearchResult;
 import io.sigpipe.jbsdiff.sort.SuffixSort;
 
+import java.awt.EventQueue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
@@ -45,8 +50,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
  */
 public class Diff {
 
-    private Diff() { }
-
+	private final List<ProgressListener> progressListeners = new CopyOnWriteArrayList<ProgressListener>();
+	
     /**
      * Using two different versions of a file, generate a bsdiff patch that can
      * be applied to the old file to create the new file.  Uses the default
@@ -63,7 +68,7 @@ public class Diff {
      * @throws IOException when an error occurs writing the bsdiff control
      *     blocks.
      */
-    public static void diff(byte[] oldBytes, byte[] newBytes, OutputStream out)
+    public void diff(byte[] oldBytes, byte[] newBytes, OutputStream out)
             throws CompressorException, InvalidHeaderException, IOException {
         diff(oldBytes, newBytes, out, new DefaultDiffSettings());
     }
@@ -86,7 +91,7 @@ public class Diff {
      * @throws IOException when an error occurs writing the bsdiff control
      *     blocks.
      */
-    public static void diff(byte[] oldBytes, byte[] newBytes, OutputStream out,
+    public void diff(byte[] oldBytes, byte[] newBytes, OutputStream out,
                             DiffSettings settings)
             throws CompressorException, InvalidHeaderException, IOException {
         CompressorStreamFactory compressor = new CompressorStreamFactory();
@@ -110,6 +115,8 @@ public class Diff {
         int dblen = 0, eblen = 0;
 
         while (scan < newBytes.length) {
+        	fireProgress(scan, newBytes.length);
+        	
             oldScore = 0;
 
             for (scsc = scan += len; scan < newBytes.length; scan++) {
@@ -238,5 +245,38 @@ public class Diff {
 
         header.write(out);
         out.write(byteOut.toByteArray());
+        
+        fireProgress(newBytes.length, newBytes.length);
     }
+    
+	public void addProgressListener(ProgressListener listener)
+	{
+		progressListeners.add(listener);
+	}
+	
+	public void removeProgressListener(ProgressListener listener)
+	{
+		progressListeners.remove(listener);
+	}
+	
+	private void fireProgress(int current, int total)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				ProgressEvent event = null;
+				for (ProgressListener listener: progressListeners)
+				{
+					// lazy instantiation of the event
+					if (event == null)
+						event = new ProgressEvent(Diff.class, current, total);
+					
+					// fire it
+					listener.progressMade(event);
+				}
+			}
+		});
+	}
 }

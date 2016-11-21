@@ -38,9 +38,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.compress.compressors.CompressorException;
+
 import com.fsoinstaller.common.InstallerNode;
 import com.fsoinstaller.common.InstallerNodeFactory;
 import com.fsoinstaller.common.InstallerNodeParseException;
+
+import io.sigpipe.jbsdiff.DefaultDiffSettings;
+import io.sigpipe.jbsdiff.Diff;
+import io.sigpipe.jbsdiff.DiffSettings;
+import io.sigpipe.jbsdiff.InvalidHeaderException;
 
 
 public class IOUtils
@@ -101,6 +108,45 @@ public class IOUtils
 		return lines;
 	}
 	
+	public static int readBytes(InputStream inputStream, byte[] byteArray) throws IOException
+	{
+		int offset = 0;
+		int length = byteArray.length;
+		
+		while (length > 0)
+		{
+			int numRead = inputStream.read(byteArray, offset, length);
+			if (numRead <= 0)
+				break;
+				
+			offset += numRead;
+			length -= numRead;
+		}
+		
+		return offset;
+	}
+	
+	public static byte[] readBytes(File file) throws FileNotFoundException, IOException
+	{
+		if (file.length() >= (long) Integer.MAX_VALUE)
+			throw new IOException("File is too long to read!");
+			
+		FileInputStream fis = new FileInputStream(file);
+		byte[] byteArray = new byte[(int) file.length()];
+		try
+		{
+			int count = readBytes(fis, byteArray);
+			if (count != file.length())
+				throw new IOException("Failed to read entire file!");
+		}
+		finally
+		{
+			fis.close();
+		}
+		
+		return byteArray;
+	}
+	
 	public static List<InstallerNode> readInstallFile(File inputFile) throws FileNotFoundException, IOException, InstallerNodeParseException
 	{
 		List<InstallerNode> nodes = new ArrayList<InstallerNode>();
@@ -144,6 +190,9 @@ public class IOUtils
 	
 	public static String computeHash(MessageDigest messageDigest, File file) throws FileNotFoundException, IOException
 	{
+		if (!file.exists() || file.isDirectory())
+			throw new IllegalArgumentException("File must exist and not be a directory!");
+			
 		byte[] buffer = new byte[1024];
 		
 		FileInputStream fis = null;
@@ -169,8 +218,44 @@ public class IOUtils
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < hashedBytes.length; i++)
 			sb.append(Integer.toString((hashedBytes[i] & 0xff) + 0x100, 16).substring(1));
-		
+			
 		return sb.toString();
+	}
+	
+	public static void generatePatch(Diff diff, String patchType, File sourceFile, File targetFile, File patchFile) throws IOException
+	{
+		if (!sourceFile.exists() || sourceFile.isDirectory())
+			throw new IllegalArgumentException("Source file must exist and not be a directory!");
+		if (!targetFile.exists() || targetFile.isDirectory())
+			throw new IllegalArgumentException("Target file must exist and not be a directory!");
+		if (patchFile.exists())
+			throw new IllegalArgumentException("Patch file must not exist!");
+			
+		DiffSettings settings = new DefaultDiffSettings(patchType);
+		
+		logger.debug("Reading first file...");
+		byte[] firstBytes = IOUtils.readBytes(sourceFile);
+		logger.debug("Reading second file...");
+		byte[] secondBytes = IOUtils.readBytes(targetFile);
+		
+		FileOutputStream fos = new FileOutputStream(patchFile);
+		try
+		{
+			logger.debug("Performing file diff...");
+			diff.diff(firstBytes, secondBytes, fos, settings);
+		}
+		catch (CompressorException ce)
+		{
+			throw new IOException("There was a problem creating the compressor", ce);
+		}
+		catch (InvalidHeaderException ihe)
+		{
+			throw new IOException("Invalid header in patch file", ihe);
+		}
+		finally
+		{
+			fos.close();
+		}
 	}
 	
 	public static void copy(File from, File to) throws IOException
@@ -297,7 +382,7 @@ public class IOUtils
 		File file = getFileIgnoreCase(directory, fileName);
 		if (file == null)
 			file = new File(directory, fileName);
-		
+			
 		return file;
 	}
 	
@@ -312,11 +397,11 @@ public class IOUtils
 	{
 		if (!directory.isDirectory())
 			throw new IllegalArgumentException("Directory argument must be a directory!");
-		
+			
 		// if it's the root folder, return the directory itself
 		if (isRootFolderName(fileName))
 			return directory;
-		
+			
 		// search the files in the directory
 		File[] files = directory.listFiles();
 		if (files != null)
@@ -340,7 +425,7 @@ public class IOUtils
 	{
 		if (!directory.isDirectory())
 			throw new IllegalArgumentException("Directory argument must be a directory!");
-		
+			
 		List<String> fileNames = new ArrayList<String>();
 		
 		// populate the files in the directory
@@ -364,7 +449,7 @@ public class IOUtils
 		// Windows is already case-insensitive 
 		if (OperatingSystem.getHostOS() == OperatingSystem.WINDOWS)
 			return file;
-		
+			
 		// get all the path elements up to the root
 		LinkedList<String> pathElements = new LinkedList<String>();
 		do {
@@ -409,6 +494,7 @@ public class IOUtils
 	}
 	
 	private static final Map<String, String> extensionMap;
+	
 	static
 	{
 		Map<String, String> map = new HashMap<String, String>();
@@ -439,12 +525,12 @@ public class IOUtils
 		int periodPos = fileName.lastIndexOf('.');
 		if (periodPos < 0)
 			return fileName;
-		
+			
 		// see if that extension is one we should replace
 		String extension = fileName.substring(periodPos).toLowerCase();
 		if (!extensionMap.containsKey(extension))
 			return fileName;
-		
+			
 		// replace it with the new extension in the map
 		return fileName.substring(0, periodPos) + extensionMap.get(extension);
 	}
