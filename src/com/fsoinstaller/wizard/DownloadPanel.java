@@ -85,47 +85,26 @@ public class DownloadPanel extends InstallTaskPanel implements DownloadListener
 	
 	public void downloadProgressReport(DownloadEvent event)
 	{
-		progressBar.setString(String.format(XSTR.getString("progressBarStatus"), event.getDownloadName(),
-				MiscUtils.humanReadableByteCount(event.getDownloadedBytes(), true),
-				MiscUtils.humanReadableByteCount(event.getTotalBytes(), true)));
-
-		progressBar.setIndeterminate(false);
-		progressBar.setValue((int) ((double) event.getDownloadedBytes() / event.getTotalBytes() * GUIConstants.BAR_MAXIMUM));
+		super.setTaskProgress(event.getDownloadName(),  event.getDownloadedBytes(), event.getTotalBytes());
 	}
 	
 	public void downloadNotNecessary(DownloadEvent event)
 	{
-		progressBar.setString(((event == null) ? "" : (event.getDownloadName() + ": ")) + XSTR.getString("progressBarUpToDate"));
-		progressBar.setIndeterminate(false);
-		progressBar.setValue(GUIConstants.BAR_MAXIMUM);
-		
-		stoplightPanel.setSuccess();
+		super.setTaskNotNecessary(event.getDownloadName());
 	}
 	
 	public void downloadComplete(DownloadEvent event)
 	{
-		progressBar.setString(((event == null) ? "" : (event.getDownloadName() + ": ")) + XSTR.getString("progressBarComplete"));
-		progressBar.setIndeterminate(false);
-		progressBar.setValue(GUIConstants.BAR_MAXIMUM);
-		
-		stoplightPanel.setSuccess();
+		super.setTaskComplete(event.getDownloadName());
 	}
 	
 	public void downloadFailed(DownloadEvent event)
 	{
-		progressBar.setString(((event == null) ? "" : (event.getDownloadName() + ": ")) + XSTR.getString("progressBarFailed"));
-		progressBar.setIndeterminate(false);
-		progressBar.setValue(0);
-		
-		stoplightPanel.setFailure();
+		super.setTaskFailed(event.getDownloadName());
 	}
 	
 	public void downloadCancelled(DownloadEvent event)
 	{
-		progressBar.setString(((event == null) ? "" : (event.getDownloadName() + ": ")) + XSTR.getString("progressBarCancelled"));
-		progressBar.setIndeterminate(false);
-		progressBar.setValue(0);
-		
-		stoplightPanel.setFailure();
+		super.setTaskCancelled(event.getDownloadName());
 	}
 }

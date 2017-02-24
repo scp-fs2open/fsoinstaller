@@ -27,6 +27,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
+import com.fsoinstaller.utils.MiscUtils;
+
 
 public class InstallTaskPanel extends JPanel
 {
@@ -77,5 +79,51 @@ public class InstallTaskPanel extends JPanel
 	 */
 	public void preempt()
 	{
+	}
+	
+	public void setTaskProgress(String taskName, long currentBytes, long totalBytes)
+	{
+		progressBar.setString(String.format(XSTR.getString("progressBarStatus"), taskName,
+				MiscUtils.humanReadableByteCount(currentBytes, true),
+				MiscUtils.humanReadableByteCount(totalBytes, true)));
+
+		progressBar.setIndeterminate(false);
+		progressBar.setValue((int) ((double) currentBytes / totalBytes * GUIConstants.BAR_MAXIMUM));
+	}
+	
+	public void setTaskNotNecessary(String taskName)
+	{
+		progressBar.setString((MiscUtils.isEmpty(taskName) ? "" : (taskName + ": ")) + XSTR.getString("progressBarUpToDate"));
+		progressBar.setIndeterminate(false);
+		progressBar.setValue(GUIConstants.BAR_MAXIMUM);
+		
+		stoplightPanel.setSuccess();
+	}
+	
+	public void setTaskComplete(String taskName)
+	{
+		progressBar.setString((MiscUtils.isEmpty(taskName) ? "" : (taskName + ": ")) + XSTR.getString("progressBarComplete"));
+		progressBar.setIndeterminate(false);
+		progressBar.setValue(GUIConstants.BAR_MAXIMUM);
+		
+		stoplightPanel.setSuccess();
+	}
+	
+	public void setTaskFailed(String taskName)
+	{
+		progressBar.setString((MiscUtils.isEmpty(taskName) ? "" : (taskName + ": ")) + XSTR.getString("progressBarFailed"));
+		progressBar.setIndeterminate(false);
+		progressBar.setValue(0);
+		
+		stoplightPanel.setFailure();
+	}
+	
+	public void setTaskCancelled(String taskName)
+	{
+		progressBar.setString((MiscUtils.isEmpty(taskName) ? "" : (taskName + ": ")) + XSTR.getString("progressBarCancelled"));
+		progressBar.setIndeterminate(false);
+		progressBar.setValue(0);
+		
+		stoplightPanel.setFailure();
 	}
 }
