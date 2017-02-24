@@ -60,9 +60,14 @@ import com.fsoinstaller.main.Configuration;
 import com.fsoinstaller.main.FreeSpaceOpenInstaller;
 import com.fsoinstaller.utils.CollapsiblePanel;
 import com.fsoinstaller.utils.IOUtils;
+import com.fsoinstaller.utils.InstallerUtils;
 import com.fsoinstaller.utils.KeyPair;
 import com.fsoinstaller.utils.Logger;
 import com.fsoinstaller.utils.MiscUtils;
+
+import io.sigpipe.jbsdiff.Patch;
+import io.sigpipe.jbsdiff.progress.ProgressEvent;
+import io.sigpipe.jbsdiff.progress.ProgressListener;
 
 import static com.fsoinstaller.wizard.GUIConstants.*;
 import static com.fsoinstaller.main.ResourceBundleManager.XSTR;
@@ -1198,14 +1203,83 @@ public class InstallItem extends JPanel
 			
 			return;
 		}
+		File patchFile = IOUtils.newFileIgnoreCase(modFolder, triple.getPatch().getFilename());
+
+		// create a temporary file as the patch destination
+		String unique = InstallerUtils.UUID() + ".patched";
+		File targetFile = new File(modFolder, unique);
 		
-		// we have a good pre-patch file and a good patch file, so perform the patching!
+		// we have good files, so perform the patching!
+		Patch patch = new Patch();
+		patch.addProgressListener(new ProgressListener()
+		{
+			@Override
+			public void progressMade(ProgressEvent event)
+			{
+				// in the same way we report progress on downloaded files, do so on patched files 
+				downloadPanel.setTaskProgress(prePatchFile.getName(), event.getCurrent(), event.getTotal());
+			}
+		});
+		try
+		{
+			IOUtils.applyPatch(patch, prePatchFile, patchFile, targetFile);
+		}
+		catch (IOException ioe)
+		{
+			downloadPanel.setTaskFailed(prePatchFile.getName());
+			modLogger.warn("Unable to patch " + prePatchFile.getName(), ioe);
+			
+			return;
+		}
 		
+		// now hash the resulting file
+		// (we use a temporary HashTriple here because the target file hasn't yet been replaced by the result of the patch)
+		computedHash = computeHash(modFolder, new InstallerNode.HashTriple(triple.getPostPatch().getAlgorithm(), targetFile.getName(), triple.getPostPatch().getHash()));
+		if (computedHash == null || !triple.getPostPatch().getHash().equalsIgnoreCase(computedHash))
+		{
+			if (computedHash != null)
+				modLogger.warn("Patch was unsuccessful; computed hash value of " + computedHash + " does not match required hash value of " + triple.getPostPatch().getHash());
+			
+			// delete bad patched file
+			boolean baleeted = false;
+			try
+			{
+				baleeted = targetFile.delete();
+			}
+			catch (SecurityException se)
+			{
+				modLogger.error("Encountered a SecurityException when trying to delete '" + targetFile.getName() + "'!", se);
+			}
+			
+			// log it
+			if (baleeted)
+				modLogger.error("Unsuccessfully-patched file deleted!");
+			else
+				modLogger.error("Unable to delete the unsuccessfully-patched file!");
+			
+			return;
+		}
 		
+		// finally, replace the original file with the result		
+		File postPatchFile = IOUtils.getFileIgnoreCase(modFolder, triple.getPostPatch().getFilename());
+		if (postPatchFile.exists())
+		{
+			try
+			{
+				if (!postPatchFile.delete())
+					modLogger.error("Unable to delete the pre-existing post-patch file!");
+			}
+			catch (SecurityException se)
+			{
+				modLogger.error("Encountered a SecurityException when trying to delete '" + postPatchFile.getName() + "'!", se);
+			}
+		}
 		
-		
-		
-		// todo
+		// at this point postPatchFile should not exist
+		if (!targetFile.renameTo(postPatchFile))
+		{
+			modLogger.error("Unable to rename '" + targetFile.getName() + "' to '" + postPatchFile.getName() + "'!");
+		}
 	}
 	
 	private boolean downloadOne(Connector connector, File modFolder, List<BaseURL> baseURLList, String file, final DownloadPanel downloadPanel)
