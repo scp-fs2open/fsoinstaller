@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>false</dontWrapJar>
+  <headerType>gui</headerType>
+  <jar>./dist/FreeSpaceOpenInstaller.jar</jar>
+  <outfile>./dist/FreeSpaceOpenInstaller.exe</outfile>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl>http://java.com/download</downloadUrl>
+  <stayAlive>true</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest>wrapper.manifest</manifest>
+  <icon>./installer_icon.ico</icon>
+  <jre>
+    <bundledJre64Bit>false</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion>1.5.0</minVersion>
+    <jdkPreference>preferJre</jdkPreference>
+    <runtimeBits>64/32</runtimeBits>
+  </jre>
+  <versionInfo>
+    <fileVersion>1.0.0.0</fileVersion>
+    <txtFileVersion>1.0.0.0</txtFileVersion>
+    <fileDescription>Installer for the FreeSpace Open project</fileDescription>
+    <copyright>Copyright © 2006-2017 The FreeSpace 2 Source Code Project</copyright>
+    <productVersion>1.0.0.0</productVersion>
+    <txtProductVersion>1.0.0.0</txtProductVersion>
+    <productName>FreeSpace Open Installer</productName>
+    <companyName>Hard Light Productions</companyName>
+    <internalName>FreeSpaceOpenInstaller</internalName>
+    <originalFilename>FreeSpaceOpenInstaller.exe</originalFilename>
+  </versionInfo>
+</launch4jConfig>
