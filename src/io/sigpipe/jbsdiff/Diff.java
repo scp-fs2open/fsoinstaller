@@ -259,7 +259,7 @@ public class Diff {
 		progressListeners.remove(listener);
 	}
 	
-	private void fireProgress(int current, int total)
+	private void fireProgress(final int current, final int total)
 	{
 		EventQueue.invokeLater(new Runnable()
 		{

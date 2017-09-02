@@ -238,34 +238,71 @@ public class Connector
 		
 		return conn;
 	}
+
+	/**
+	 * Gets the content length of the url and optionally uses HTTP HEAD to avoid downloading the entire resource.
+	 * @param url The URL to check
+	 * @param useHead If true then HTTP HEAD will be used. This may cause errors on some hosts so there should be a
+	 *                fallback with this set to false
+	 * @return The content length.
+	 */
+	private int getContentLengthImpl(URL url, boolean useHead) throws IOException {
+		URLConnection conn = null;
+		try
+		{
+			conn = openConnection(url);
+			if (useHead && conn instanceof HttpURLConnection)
+			{
+				((HttpURLConnection) conn).setRequestMethod("HEAD");
+			}
+			int length = conn.getContentLength();
+			int response = -1;
+
+			// check response
+			if (conn instanceof HttpURLConnection)
+			{
+				response = ((HttpURLConnection) conn).getResponseCode();
+				if (response / 100 == 4 || response / 100 == 5)
+				{
+					throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+				}
+			}
+
+			// check length for validity
+			if (length < 0)
+			{
+				throw new IOException("Server returned invalid Content-Length value of " + length + " with HTTP response code " + response);
+			}
+
+			return length;
+		}
+		finally
+		{
+			// Cleanup resources when we are done
+			if (conn != null && conn instanceof HttpURLConnection) {
+				((HttpURLConnection) conn).disconnect();
+			}
+		}
+	}
 	
 	public int getContentLength(URL url) throws IOException
 	{
-		URLConnection conn = openConnection(url);
-		if (conn instanceof HttpURLConnection)
-			((HttpURLConnection) conn).setRequestMethod("HEAD");
-		int length = conn.getContentLength();
-		int response = -1;
-		
-		// check response
-		if (conn instanceof HttpURLConnection)
+		// First try using HEAD and if that's not supported use GET
+		try
 		{
-			response = ((HttpURLConnection) conn).getResponseCode();
-			if (response / 100 == 4 || response / 100 == 5)
-				throw new IOException("Server returned HTTP response code " + response + " for URL " + url);
+			return getContentLengthImpl(url, true);
 		}
-		
-		// check length for validity
-		if (length < 0)
-			throw new IOException("Server returned invalid Content-Length value of " + length + " with HTTP response code " + response);
-		
-		return length;
+		catch(IOException e)
+		{
+			logger.info("Host failed to retreive content length with HEAD, retrying with GET...", e);
+			return getContentLengthImpl(url, false);
+		}
 	}
 	
-	public long getLastModified(URL url) throws IOException
+	private long getLastModifiedImpl(URL url, boolean useHead) throws IOException
 	{
 		URLConnection conn = openConnection(url);
-		if (conn instanceof HttpURLConnection)
+		if (useHead && conn instanceof HttpURLConnection)
 			((HttpURLConnection) conn).setRequestMethod("HEAD");
 		long lastModified = conn.getLastModified();
 		
@@ -278,6 +315,19 @@ public class Connector
 		}
 		
 		return lastModified;
+	}
+
+	public long getLastModified(URL url) throws IOException {
+		// First try using HEAD and if that's not supported use GET
+		try
+		{
+			return getLastModifiedImpl(url, true);
+		}
+		catch(IOException e)
+		{
+			logger.info("Host failed to retreive last modifies with HEAD, retrying with GET...", e);
+			return getLastModifiedImpl(url, false);
+		}
 	}
 	
 	/**

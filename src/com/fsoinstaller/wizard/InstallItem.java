@@ -1146,7 +1146,7 @@ public class InstallItem extends JPanel
 		modLogger.info("Patching " + triple.getPrePatch().getFilename());
 		
 		// see if the file exists
-		File prePatchFile = IOUtils.getFileIgnoreCase(modFolder, triple.getPrePatch().getFilename());
+		final File prePatchFile = IOUtils.getFileIgnoreCase(modFolder, triple.getPrePatch().getFilename());
 		if (prePatchFile == null)
 		{
 			modLogger.info("File does not exist; cannot patch it");
