@@ -2,10 +2,16 @@
 <project name="fsoinstaller" default="run" basedir=".">
 
   <property name="projectname" value="FreeSpace Open Installer"/>
-  <property name="projectversion" value="v2.0.0"/>
+  <property name="projectversion" value="2.0.0.0"/>
   <property name="main-class" value="com.fsoinstaller.main.FreeSpaceOpenInstaller"/>
   <property name="checkxstr-class" value="com.fsoinstaller.utils.CheckXSTR"/>
   <property name="jar-launcher" value="com.jdotsoft.jarloader.JarLauncher"/>
+
+    <!-- CHange this path to the actual location of Launch4j when using the launch4j task -->
+  <property name="launch4j.dir" location="C:\Program Files (x86)\Launch4j" />
+  <taskdef name="launch4j"
+           classname="net.sf.launch4j.ant.Launch4jTask"
+           classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
 
   <property name="build" value="build"/>
   <property name="dist" value="dist"/>
@@ -94,9 +100,16 @@
         version="true"
         use="true"
         linksource="true"
-        windowtitle="${projectname} ${projectversion}">
-      <doctitle><![CDATA[<h1>${projectname} ${projectversion}<br>API Specification</h1>]]></doctitle>
+        windowtitle="${projectname} v${projectversion}">
+      <doctitle><![CDATA[<h1>${projectname} v${projectversion}<br>API Specification</h1>]]></doctitle>
     </javadoc>
   </target>
+
+    <target name="launch4j" depends="jar">
+        <launch4j configFile="./resources/launch4j.xml" jar="${dist}/FreeSpaceOpenInstaller.jar"
+                  outfile="${dist}/FreeSpaceOpenInstaller.exe" fileVersion="${projectversion}"
+                  txtFileVersion="${projectversion}" productVersion="${projectversion}"
+                  txtProductVersion="${projectversion}"/>
+    </target>
 
 </project>
