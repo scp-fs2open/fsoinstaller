@@ -85,7 +85,10 @@ public class BaseURL
 			throw new IllegalArgumentException("The URI cannot be null!");
 		
 		// check protocol
-		if (theURL.getScheme() == null || !theURL.getScheme().toLowerCase().equals("http"))
+		if (theURL.getScheme() == null)
+			return false;
+
+		if (!theURL.getScheme().toLowerCase().equals("http") && !theURL.getScheme().toLowerCase().equals("https"))
 			return false;
 		
 		// check host
