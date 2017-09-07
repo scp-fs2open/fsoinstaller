@@ -47,12 +47,10 @@ public class DefaultDiffSettings implements DiffSettings {
         this.compression = compression;
     }
 
-    @Override
     public String getCompression() {
         return compression;
     }
 
-    @Override
     public int[] sort(byte[] input) {
 
         int[] I = new int[input.length + 1];

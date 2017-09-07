@@ -647,7 +647,6 @@ rootLoop:		for (File root: roots)
 			{
 				int lastPercent = -1;
 				
-				@Override
 				public void progressMade(ProgressEvent event)
 				{
 					int percent = (int)(((double)event.getCurrent() / (double)event.getTotal()) * 100);
@@ -718,7 +717,6 @@ rootLoop:		for (File root: roots)
 			{
 				int lastPercent = -1;
 				
-				@Override
 				public void progressMade(ProgressEvent event)
 				{
 					int percent = (int)(((double)event.getCurrent() / (double)event.getTotal()) * 100);

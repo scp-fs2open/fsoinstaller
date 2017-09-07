@@ -251,11 +251,15 @@ public class IOUtils
 		}
 		catch (CompressorException ce)
 		{
-			throw new IOException("There was a problem creating the compressor", ce);
+			IOException ioe = new IOException("There was a problem creating the compressor");
+			ioe.initCause(ce);
+			throw ioe;
 		}
 		catch (InvalidHeaderException ihe)
 		{
-			throw new IOException("Invalid header in patch file", ihe);
+			IOException ioe = new IOException("Invalid header in patch file");
+			ioe.initCause(ihe);
+			throw ioe;
 		}
 		finally
 		{
@@ -285,11 +289,15 @@ public class IOUtils
 		}
 		catch (CompressorException ce)
 		{
-			throw new IOException("There was a problem creating the compressor", ce);
+			IOException ioe = new IOException("There was a problem creating the compressor");
+			ioe.initCause(ce);
+			throw ioe;
 		}
 		catch (InvalidHeaderException ihe)
 		{
-			throw new IOException("Invalid header in patch file", ihe);
+			IOException ioe = new IOException("Invalid header in patch file");
+			ioe.initCause(ihe);
+			throw ioe;
 		}
 		finally
 		{

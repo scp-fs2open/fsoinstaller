@@ -277,7 +277,6 @@ public class Patch {
 	{
 		EventQueue.invokeLater(new Runnable()
 		{
-			@Override
 			public void run()
 			{
 				ProgressEvent event = null;
