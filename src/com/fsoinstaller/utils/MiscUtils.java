@@ -19,28 +19,23 @@
 
 package com.fsoinstaller.utils;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
+import com.fsoinstaller.main.Configuration;
+import net.sf.sevenzipjbinding.SevenZip;
+import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.BreakIterator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.swing.SwingUtilities;
-
-import com.fsoinstaller.main.Configuration;
-
-import net.sf.sevenzipjbinding.SevenZip;
-import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
 
 
 /**
@@ -464,6 +459,40 @@ public class MiscUtils
 		
 		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
 	}
+
+	/**
+	 * Runs a command and returns the output in a string. This is not run in a shell so the command must be a valid
+	 * program.
+	 * @param command The command to run
+	 * @return The standard output of the command
+	 * @throws IOException Thrown if an error occured while reading the output of the process
+	 */
+	public static String runCommandWithOutput(String[] command) throws IOException {
+		Runtime rt = Runtime.getRuntime();
+
+		Process proc = rt.exec(command);
+
+		BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+		StringBuilder builder = new StringBuilder();
+		try {
+			char[] buffer = new char[1024];
+			int len;
+			while((len = stdInput.read(buffer)) >= 0) {
+				builder.append(buffer, 0, len);
+			}
+		} finally {
+			stdInput.close();
+		}
+		// Wait until the process is done
+		try {
+			proc.waitFor();
+		} catch (InterruptedException e) {
+			// If we were interrupted then just return what we have so far
+		}
+
+		return builder.toString();
+	}
 	
 	/**
 	 * Checks whether OpenAL is installed on the host system. This is done by
@@ -497,6 +526,46 @@ public class MiscUtils
 		catch (UnsatisfiedLinkError ule2)
 		{
 			// do nothing
+		}
+
+		if (OperatingSystem.getHostOS() == OperatingSystem.LINUX)
+		{
+			// On linux we can use ldconfig -p
+			try
+			{
+				String output = runCommandWithOutput(new String[]{"sh", "-c", "ldconfig -p|grep -i openal"});
+
+				// The command above already only prints the openal lines but this makes sure that it actually found something
+				if (output.toLowerCase().contains("openal"))
+				{
+					// OpenAL found with ldconfig
+					return true;
+				}
+				System.out.println(output);
+			} catch (IOException e)
+			{
+				// Continue with the other rules if there was an exception
+			}
+		}
+		else if (OperatingSystem.getHostOS() == OperatingSystem.FREEBSD)
+		{
+			// FreeBSD uses a similar system as Linux but with a slightly different syntax
+			try
+			{
+				String output = runCommandWithOutput(new String[]{"sh", "-c", "ldconfig -r|grep -i openal"});
+
+				// The command above already only prints the openal lines but this makes sure that it actually found something
+				if (output.toLowerCase().contains("openal"))
+				{
+					// OpenAL found with ldconfig
+					return true;
+				}
+				System.out.println(output);
+			}
+			catch (IOException e)
+			{
+				// Continue with the other rules if there was an exception
+			}
 		}
 		
 		// try the above, but with the application path
