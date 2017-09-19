@@ -541,7 +541,8 @@ public class MiscUtils
 					// OpenAL found with ldconfig
 					return true;
 				}
-				System.out.println(output);
+				
+				logger.warn(output);
 			} catch (IOException e)
 			{
 				// Continue with the other rules if there was an exception
@@ -560,7 +561,8 @@ public class MiscUtils
 					// OpenAL found with ldconfig
 					return true;
 				}
-				System.out.println(output);
+				
+				logger.warn(output);
 			}
 			catch (IOException e)
 			{
