@@ -72,7 +72,8 @@ public class ChoicePage extends WizardPage
 		// keep track of buttons
 		buttons = new LinkedHashMap<InstallChoice, JRadioButton>();
 		buttons.put(InstallChoice.BASIC, basic);
-		buttons.put(InstallChoice.COMPLETE, complete);
+		// Goober5000 9/19/2017 - disable COMPLETE per Axem's advice to lessen the strain on servers
+		//buttons.put(InstallChoice.COMPLETE, complete);
 		buttons.put(InstallChoice.CUSTOM, custom);
 		
 		inited = false;
