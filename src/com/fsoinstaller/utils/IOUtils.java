@@ -56,7 +56,9 @@ public class IOUtils
 	private static final Logger logger = Logger.getLogger(IOUtils.class);
 	
 	public static final String ENDL = System.getProperty("line.separator");
-	
+
+	private static final Object hash_lock = new Object();
+
 	/**
 	 * Prevent instantiation.
 	 */
@@ -199,22 +201,25 @@ public class IOUtils
 			throw new IllegalArgumentException("File must exist and not be a directory!");
 			
 		byte[] buffer = new byte[1024];
-		
-		FileInputStream fis = null;
-		try
+
+		synchronized (hash_lock)
 		{
-			fis = new FileInputStream(file);
-			
-			int len;
-			while ((len = fis.read(buffer)) != -1)
+			FileInputStream fis = null;
+			try
 			{
-				messageDigest.update(buffer, 0, len);
+				fis = new FileInputStream(file);
+
+				int len;
+				while ((len = fis.read(buffer)) != -1)
+				{
+					messageDigest.update(buffer, 0, len);
+				}
 			}
-		}
-		finally
-		{
-			if (fis != null)
-				fis.close();
+			finally
+			{
+				if (fis != null)
+					fis.close();
+			}
 		}
 		
 		byte[] hashedBytes = messageDigest.digest();
