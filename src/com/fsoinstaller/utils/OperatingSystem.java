@@ -3,7 +3,12 @@ package com.fsoinstaller.utils;
 
 public enum OperatingSystem
 {
-	WINDOWS("windows"),
+	WINDOWS("windows", new String[]
+	{
+		"windows",
+		"win32",
+		"win64"
+	}),
 	MAC("mac os", new String[]
 	{
 		"macintosh",
