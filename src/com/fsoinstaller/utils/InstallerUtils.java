@@ -118,8 +118,8 @@ public class InstallerUtils
 				}
 				else if (os == OperatingSystem.MAC)
 				{
-					installUnit.addFile("innoextract-1.4-osx.zip");
-					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.4-osx", "4dc520791c85cf9917b4c9f344458ee920076c35"));
+					installUnit.addFile("innoextract-1.8-osx.zip");
+					gog.addHashTriple(new HashTriple("SHA-1", "innoextract-1.8-osx", "7e52228af027eaab4f5cf04f8b03b4dc2d1591a0"));
 				}
 				else if (os == OperatingSystem.LINUX)
 				{
