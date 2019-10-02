@@ -198,7 +198,7 @@ public class IOUtils
 	public static String computeHash(MessageDigest messageDigest, File file) throws FileNotFoundException, IOException
 	{
 		if (!file.exists() || file.isDirectory())
-			throw new IllegalArgumentException("File must exist and not be a directory!");
+			throw new IllegalArgumentException("File '" + file.getAbsolutePath() + "' must exist and not be a directory!");
 			
 		byte[] buffer = new byte[1024];
 
