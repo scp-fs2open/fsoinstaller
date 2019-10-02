@@ -349,8 +349,7 @@ public class MiscUtils
 	 */
 	public static String maybeQuotePath(String filePath)
 	{
-		// there are unconfirmed reports that OSX will add quotes itself, leading to double-double-quotes
-		if (filePath.contains(" ") && OperatingSystem.getHostOS() == OperatingSystem.MAC)
+		if (filePath.contains(" "))
 		{
 			StringBuilder str = new StringBuilder("\"");
 			str.append(filePath);
