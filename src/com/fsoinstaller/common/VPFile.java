@@ -637,7 +637,9 @@ public class VPFile implements Closeable {
     private void writeString(String s) throws IOException {
         byte[] stringBytes = s.getBytes(VP_CHARSET_NAME);
         if (stringBytes.length != 32) {
-            stringBytes = Arrays.copyOf(stringBytes, 32);
+            byte[] copy = new byte[32];
+            System.arraycopy(stringBytes, 0, copy, 0, Math.min(stringBytes.length, 32));
+            stringBytes = copy;
         }
         // Make sure that the string actually has a null terminator.
         stringBytes[stringBytes.length - 1] = 0;
