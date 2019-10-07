@@ -567,7 +567,6 @@ public class VPFile implements Closeable {
      * 
      * @throws IOException if an I/O error occurs
      */
-    @Override
     public void close() throws IOException {
         if (!isOpen) {
             return;
@@ -794,7 +793,6 @@ public class VPFile implements Closeable {
             return getFullPath();
         }
         
-        @Override
         public int compareTo(VPEntry o) {
             if (this == o) {
                 return 0;
@@ -890,7 +888,6 @@ public class VPFile implements Closeable {
             return path;
         }
         
-        @Override
         public int compareTo(VPFolder o) {
             if (this == o) {
                 return 0;
