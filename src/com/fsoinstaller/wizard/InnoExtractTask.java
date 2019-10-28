@@ -319,6 +319,8 @@ class InnoExtractTask implements Callable<Boolean>
 		// if this is a directory, we iterate over it
 		if (appFile.isDirectory())
 		{
+			logger.info("Moving files from '" + appFile.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'...");
+			
 			File[] files = appFile.listFiles();
 			if (files == null)
 			{
@@ -371,6 +373,8 @@ class InnoExtractTask implements Callable<Boolean>
 					logger.error("Unable to rename '" + appFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "': destination file tree could not be created!");
 					return false;
 				}
+				
+				logger.debug("Renaming from '" + appFile.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'");
 				
 				// try to rename the files
 				if (!appFile.renameTo(installFile))
