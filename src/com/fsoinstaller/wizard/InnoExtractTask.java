@@ -342,7 +342,7 @@ class InnoExtractTask implements Callable<Boolean>
 			
 			for (File file: files)
 			{
-				if (!moveExtractedFiles(file, installDir, excludePrefixes))
+				if (!moveExtractedFiles(topExtractDir, file, installDir, excludePrefixes))
 					return false;
 			}
 		}
