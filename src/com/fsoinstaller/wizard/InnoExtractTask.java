@@ -185,7 +185,7 @@ class InnoExtractTask implements Callable<Boolean>
 		// now move all the files to their proper place
 		// this used to copy everything out of the "app" folder, but now it copies everything from the extract folder, with some exceptions
 		item.setText(XSTR.getString("innoExtractMovingFiles"));
-		if (!moveExtractedFiles(extractDir, installDir, Arrays.asList("__", "innoextract")))
+		if (!moveExtractedFiles(extractDir, extractDir, installDir, Arrays.asList("__", "tmp", "innoextract")))
 		{
 			logger.error("Could not move files to the correct location!");
 			item.logInstallError(XSTR.getString("innoExtractMovingFilesFailed"));
@@ -316,7 +316,7 @@ class InnoExtractTask implements Callable<Boolean>
 		logger.info("...done");
 	}
 	
-	private boolean moveExtractedFiles(File extractedFile, File installDir, List<String> excludePrefixes)
+	private boolean moveExtractedFiles(File topExtractDir, File extractedFile, File installDir, List<String> excludePrefixes)
 	{
 		// if this is a directory, we iterate over it UNLESS it's excluded
 		if (extractedFile.isDirectory())
@@ -349,7 +349,7 @@ class InnoExtractTask implements Callable<Boolean>
 		// if this is a file, we move it
 		else
 		{
-			// build all the file parts until we get up to "app"
+			// build all the file parts until we get to the top
 			LinkedList<String> parts = new LinkedList<String>();
 			File temp = extractedFile;
 			while (true)
@@ -359,8 +359,8 @@ class InnoExtractTask implements Callable<Boolean>
 				// root_fs2 shouldn't be capitalized
 				if (name.equalsIgnoreCase("root_fs2.vp"))
 					name = name.toLowerCase();
-				// stop at "app"
-				else if (name.equals("app"))
+				// stop at the top
+				else if (temp.equals(topExtractDir))
 					break;
 				
 				parts.addFirst(name);
