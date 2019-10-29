@@ -185,7 +185,7 @@ class InnoExtractTask implements Callable<Boolean>
 		// now move all the files to their proper place
 		// this used to copy everything out of the "app" folder, but now it copies everything from the extract folder, with some exceptions
 		item.setText(XSTR.getString("innoExtractMovingFiles"));
-		if (!moveExtractedFiles(extractDir, extractDir, installDir, Arrays.asList("__", "tmp", "innoextract")))
+		if (!moveExtractedFiles(extractDir, extractDir, installDir, Arrays.asList("innoextract", "app", "commonappdata", "tmp", "__")))
 		{
 			logger.error("Could not move files to the correct location!");
 			item.logInstallError(XSTR.getString("innoExtractMovingFilesFailed"));
