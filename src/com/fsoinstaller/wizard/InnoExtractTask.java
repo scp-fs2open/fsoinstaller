@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -182,10 +183,11 @@ class InnoExtractTask implements Callable<Boolean>
 		}
 		
 		// now move all the files to their proper place
+		// this used to copy everything out of the "app" folder, but now it copies everything from the extract folder, with some exceptions
 		item.setText(XSTR.getString("innoExtractMovingFiles"));
-		if (!moveAppFiles(new File(extractDir, "app"), installDir))
+		if (!moveExtractedFiles(extractDir, installDir, Arrays.asList("__", "innoextract")))
 		{
-			logger.error("Could not move app files to the correct location!");
+			logger.error("Could not move files to the correct location!");
 			item.logInstallError(XSTR.getString("innoExtractMovingFilesFailed"));
 			return false;
 		}
@@ -314,23 +316,33 @@ class InnoExtractTask implements Callable<Boolean>
 		logger.info("...done");
 	}
 	
-	private boolean moveAppFiles(File appFile, File installDir)
+	private boolean moveExtractedFiles(File extractedFile, File installDir, List<String> excludePrefixes)
 	{
-		// if this is a directory, we iterate over it
-		if (appFile.isDirectory())
+		// if this is a directory, we iterate over it UNLESS it's excluded
+		if (extractedFile.isDirectory())
 		{
-			logger.info("Moving files from '" + appFile.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'...");
+			// check prefix
+			for (String excludePrefix: excludePrefixes)
+			{
+				if (extractedFile.getName().startsWith(excludePrefix))
+				{
+					logger.info("Excluding folder '" + extractedFile.getAbsolutePath() + "'");
+					return true;
+				}
+			}
 			
-			File[] files = appFile.listFiles();
+			logger.info("Moving files from '" + extractedFile.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'...");
+			
+			File[] files = extractedFile.listFiles();
 			if (files == null)
 			{
-				logger.error("There was a problem iterating over the directory '" + appFile.getAbsolutePath() + "'!");
+				logger.error("There was a problem iterating over the directory '" + extractedFile.getAbsolutePath() + "'!");
 				return false;
 			}
 			
 			for (File file: files)
 			{
-				if (!moveAppFiles(file, installDir))
+				if (!moveExtractedFiles(file, installDir, excludePrefixes))
 					return false;
 			}
 		}
@@ -339,7 +351,7 @@ class InnoExtractTask implements Callable<Boolean>
 		{
 			// build all the file parts until we get up to "app"
 			LinkedList<String> parts = new LinkedList<String>();
-			File temp = appFile;
+			File temp = extractedFile;
 			while (true)
 			{
 				String name = temp.getName();
@@ -356,7 +368,7 @@ class InnoExtractTask implements Callable<Boolean>
 				// go up through the file tree
 				temp = temp.getParentFile();
 				if (temp == null)
-					throw new IllegalStateException(appFile.getAbsolutePath() + " isn't part of the 'app' file tree!");
+					throw new IllegalStateException(extractedFile.getAbsolutePath() + " isn't part of the 'app' file tree!");
 			}
 			
 			// now reconstruct the same path, but under the install dir instead
@@ -370,16 +382,16 @@ class InnoExtractTask implements Callable<Boolean>
 				// make sure the new directory structure exists
 				if (!installFile.getParentFile().exists() && !installFile.getParentFile().mkdirs())
 				{
-					logger.error("Unable to rename '" + appFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "': destination file tree could not be created!");
+					logger.error("Unable to rename '" + extractedFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "': destination file tree could not be created!");
 					return false;
 				}
 				
-				logger.debug("Renaming from '" + appFile.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'");
+				logger.debug("Renaming from '" + extractedFile.getAbsolutePath() + "' to '" + installDir.getAbsolutePath() + "'");
 				
 				// try to rename the files
-				if (!appFile.renameTo(installFile))
+				if (!extractedFile.renameTo(installFile))
 				{
-					logger.error("Unable to rename '" + appFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "'!");
+					logger.error("Unable to rename '" + extractedFile.getAbsolutePath() + "' to '" + installFile.getAbsolutePath() + "'!");
 					return false;
 				}
 			}
