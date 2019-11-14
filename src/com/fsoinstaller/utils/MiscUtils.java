@@ -503,7 +503,14 @@ public class MiscUtils
 	public static boolean loadOpenAL()
 	{
 		logger.info("Attempting to load OpenAL...");
-		
+
+		// don't check on Mac, since it's built-in
+		if (OperatingSystem.getHostOS() == OperatingSystem.MAC)
+		{
+			logger.info("Assume true on Mac...");
+			return true;
+		}
+
 		// tested to work on Windows
 		try
 		{
@@ -515,7 +522,7 @@ public class MiscUtils
 		{
 			// do nothing
 		}
-		
+
 		// tested to work on Linux
 		try
 		{
@@ -569,7 +576,7 @@ public class MiscUtils
 				// Continue with the other rules if there was an exception
 			}
 		}
-		
+
 		// try the above, but with the application path
 		File applicationDir = Configuration.getInstance().getApplicationDir();		
 		
@@ -597,7 +604,6 @@ public class MiscUtils
 			// do nothing
 		}
 
-		
 		logger.warn("Neither 'OpenAL32' nor 'openal' could be loaded!");
 		return false;
 	}
