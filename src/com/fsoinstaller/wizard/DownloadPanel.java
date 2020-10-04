@@ -90,21 +90,21 @@ public class DownloadPanel extends InstallTaskPanel implements DownloadListener
 	
 	public void downloadNotNecessary(DownloadEvent event)
 	{
-		super.setTaskNotNecessary(event.getDownloadName());
+		super.setTaskNotNecessary(event == null ? null : event.getDownloadName());
 	}
 	
 	public void downloadComplete(DownloadEvent event)
 	{
-		super.setTaskComplete(event.getDownloadName());
+		super.setTaskComplete(event == null ? null : event.getDownloadName());
 	}
 	
 	public void downloadFailed(DownloadEvent event)
 	{
-		super.setTaskFailed(event.getDownloadName());
+		super.setTaskFailed(event == null ? null : event.getDownloadName());
 	}
 	
 	public void downloadCancelled(DownloadEvent event)
 	{
-		super.setTaskCancelled(event.getDownloadName());
+		super.setTaskCancelled(event == null ? null : event.getDownloadName());
 	}
 }
