@@ -379,6 +379,9 @@ public class Downloader
 		{
 			totalBytes = connector.getContentLength(sourceURL);
 			
+			if (totalBytes < 0)
+				throw new IOException("Server returned invalid Content-Length value of " + totalBytes);
+			
 			logger.debug("Opening connection to archive...");
 			inStream = new InputStreamInStream(getInputStreamSource(connector, sourceURL, totalBytes), totalBytes);
 			archive = SevenZip.openInArchive(format, inStream);

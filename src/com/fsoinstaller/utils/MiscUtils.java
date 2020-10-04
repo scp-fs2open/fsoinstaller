@@ -66,6 +66,8 @@ public class MiscUtils
 	 */
 	public static String humanReadableByteCount(long bytes, boolean si)
 	{
+		if (bytes < 0)
+			return "Unknown";
 		int unit = si ? 1000 : 1024;
 		if (bytes < unit)
 			return bytes + " B";

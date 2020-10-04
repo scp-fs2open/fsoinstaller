@@ -87,8 +87,15 @@ public class InstallTaskPanel extends JPanel
 				MiscUtils.humanReadableByteCount(currentBytes, true),
 				MiscUtils.humanReadableByteCount(totalBytes, true)));
 
-		progressBar.setIndeterminate(false);
-		progressBar.setValue((int) ((double) currentBytes / totalBytes * GUIConstants.BAR_MAXIMUM));
+		if (totalBytes < 0)
+		{
+			progressBar.setIndeterminate(true);
+		}
+		else
+		{
+			progressBar.setIndeterminate(false);
+			progressBar.setValue((int) ((double) currentBytes / totalBytes * GUIConstants.BAR_MAXIMUM));
+		}
 	}
 	
 	public void setTaskNotNecessary(String taskName)

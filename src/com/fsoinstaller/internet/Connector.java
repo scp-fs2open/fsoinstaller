@@ -246,7 +246,8 @@ public class Connector
 	 *                fallback with this set to false
 	 * @return The content length.
 	 */
-	private int getContentLengthImpl(URL url, boolean useHead) throws IOException {
+	private int getContentLengthImpl(URL url, boolean useHead) throws IOException
+	{
 		URLConnection conn = null;
 		try
 		{
@@ -268,18 +269,13 @@ public class Connector
 				}
 			}
 
-			// check length for validity
-			if (length < 0)
-			{
-				throw new IOException("Server returned invalid Content-Length value of " + length + " with HTTP response code " + response);
-			}
-
 			return length;
 		}
 		finally
 		{
 			// Cleanup resources when we are done
-			if (conn != null && conn instanceof HttpURLConnection) {
+			if (conn != null && conn instanceof HttpURLConnection)
+			{
 				((HttpURLConnection) conn).disconnect();
 			}
 		}
@@ -294,7 +290,7 @@ public class Connector
 		}
 		catch(IOException e)
 		{
-			logger.info("Host failed to retreive content length with HEAD, retrying with GET...", e);
+			logger.info("Host failed to retrieve content length with HEAD, retrying with GET...", e);
 			return getContentLengthImpl(url, false);
 		}
 	}
@@ -317,7 +313,8 @@ public class Connector
 		return lastModified;
 	}
 
-	public long getLastModified(URL url) throws IOException {
+	public long getLastModified(URL url) throws IOException
+	{
 		// First try using HEAD and if that's not supported use GET
 		try
 		{
@@ -325,7 +322,7 @@ public class Connector
 		}
 		catch(IOException e)
 		{
-			logger.info("Host failed to retreive last modifies with HEAD, retrying with GET...", e);
+			logger.info("Host failed to retrieve last modified with HEAD, retrying with GET...", e);
 			return getLastModifiedImpl(url, false);
 		}
 	}
