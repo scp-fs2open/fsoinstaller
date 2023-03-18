@@ -44,7 +44,8 @@
 
   <target name="compile">
     <mkdir dir="${build}"/>
-    <javac classpathref="build.class.path" debug="on" srcdir="${src}" destdir="${build}" source="1.5" target="1.5"/>
+    <!-- FSO Installer can work on 1.5, but GitHub workflow only supports 1.6. -->
+    <javac classpathref="build.class.path" debug="on" srcdir="${src}" destdir="${build}" source="1.6" target="1.6"/>
   </target>
 
   <target name="run" depends="compile">

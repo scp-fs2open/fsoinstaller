@@ -1,0 +1,73 @@
+
+http://www.jcraft.com/jzlib/
+* maybe use JZLib instead of java.util.zip
+
+* check for presence of mods by looking to see which files have been downloaded (as saved in fsoinstaller.properties)
+	check saved files against files present in file system
+	if saved file list isn't present, do one-time processing through mod list (peek into the zip)
+
+* make VP extractor/builder for FSPort that copies cbanims, voice, music to tango_fs1, stu_fs1, warble_fs1 vps
+	Yarn completed this, IIRC
+
+
+
+
+
+
+
+make a new JarExtractor class to complement Downloader
+
+change listeners & events into generic ProgressListener etc. and put them in com.fsoinstaller.common (or, meh, maybe not)
+	*don't* split the extraction functionality out of Downloader (otherwise lots of large zips would be downloaded unnecessarily) but *do* make a separate JarExtractor for getting mod files out of the jar itself
+
+
+
+
+
+add some descriptive text to say that selecting a parent won't automatically select items under it
+
+investigate jazsync to download chunks of files instead of the entire file
+	which we can't do because 7zip JBinding can only extract the entire file, not part of it
+
+use a download bandwidth limiter?
+
+
+
+
+
+construct installation...
+
+
+Main page:
+
+[You have a tree of nodes; you can Add Child Node or Add Sibling Node, and Delete Selected node]
+[At the bottom, there are three buttons: Save Project, Create Installation, and Exit]
+
+
+
+Adding a node:
+
+Name
+Description
+Files
+URLs to try for the above files
+Version
+EndNote
+
+List of files to rename
+List of files to delete
+
+
+Create Installation page:
+
+Choose an option
+--Create FSOInstaller-compatible text file
+--Create standalone installation
+
+[unchecked checkbox] Create with a subset of the full tree
+
+
+Create With a Subset page:
+
+[display a tree of all available nodes, each with a checkbox]
+[unchecking one node will uncheck all its children]
