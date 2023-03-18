@@ -7,7 +7,7 @@
   <property name="checkxstr-class" value="com.fsoinstaller.utils.CheckXSTR"/>
   <property name="jar-launcher" value="com.jdotsoft.jarloader.JarLauncher"/>
 
-    <!-- CHange this path to the actual location of Launch4j when using the launch4j task -->
+    <!-- Change this path to the actual location of Launch4j when using the launch4j task -->
 <!--
   <property name="launch4j.dir" location="C:\Program Files (x86)\Launch4j" />
   <taskdef name="launch4j"
