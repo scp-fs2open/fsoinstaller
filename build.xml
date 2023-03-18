@@ -14,6 +14,7 @@
            classname="net.sf.launch4j.ant.Launch4jTask"
            classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
 -->
+
   <property name="build" value="build"/>
   <property name="dist" value="dist"/>
   <property name="docs" value="docs"/>
